@@ -1,0 +1,52 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Python/cache artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local-only data and generated outputs
+local_only/*
+!local_only/README.md
+outputs/
+tmp/
+temp/
+logs/
+screenshots/
+verification_screens/
+**/outputs/
+**/tmp/
+**/temp/
+**/logs/
+**/screenshots/
+**/verification_screens/
+
+# Real business exports and raw data
+*.xlsx
+*.xls
+*.xlsm
+*.csv
+*.tsv
+*.parquet
+*.jsonl
+*.zip
+*.rar
+*.7z
+*.pdf
+
+# SQL or database dumps
+*.sql
+*.dump
+*.bak
+
+# Office temporary lock files
+~$*
+.~*
+
+# Environment files
+.env
+.env.*
