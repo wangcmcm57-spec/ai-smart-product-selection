@@ -57,13 +57,7 @@
         ↓
 算法 04：识别现有高表现锚点商品
         ↓
-购物篮算法：寻找真实关联商品或食材
-        ↓
-锚点商品属性 + 已验证关联属性
-        ↓
-历史差销、现有货盘、价格、竞品、趋势和风险过滤
-        ↓
-具象新品候选
+后续购物篮、价格、竞品、趋势和新品机会算法
 ```
 
 锚点与新品必须分开：
@@ -218,10 +212,10 @@ orderable_sellable_flag
 | 算法 02 正式门店品类等级 | 必须 | 取得正式门店群和 `final_level` | `mart_store_category_level` |
 | 算法 03 消费者贡献结果 | 必须 | 取得主力、相对主力和消费者类型范围 | `mart_profile_contribution` 或算法 03 正式交付表 |
 | 小票商品明细 | 必须 | 销售、销量、小票、会员及购买时间 | Doris 小票商品明细 |
-| 商品基础表 | 必须 | 商品编码、名称、品类、单位、属性、SPU | 商品基础表 |
+| 商品基础表 | 必须 | 商品编码、名称、品类、单位、单位重量；属性、SPU、换码关系为可选增强字段 | 商品基础表 |
 | 实际到货/订购明细 | 必须 | 有效在售 SKU 日、实际收货量、订购覆盖 | 毛利损耗表 + 门店 SKU 可订可售表 |
-| 商品毛利明细 | 必须 | 销售额、成本金额、毛利额 | 毛利损耗表，成本口径需确认 |
-| 促销与原价明细 | 必须 | 非促销 SKU 日、实付价格和折扣阶梯 | V1 用 `discount_amt > 0` 代理 |
+| 商品毛利明细 | 必须 | 销售额、全链路毛利额；成本金额由销售额和全链路毛利额反推 | 毛利损耗表，字段稳定性由开发交付验收 |
+| 折扣代理字段 | 必须 | 非促销 SKU 日、实付价格和折扣阶梯 | V1 不接促销活动表，用 Doris `discount_amt > 0` 代理 |
 | 日历、门店、城市群 | 必须 | 日期、月份、门店及正式范围 | 门店基础表 + 城市算法区域映射表 |
 | 7 天复购结果 | 必须 | 复购分子、分母、原始复购率 | V1 先产出 `mart_sku_repurchase_7d_pre19` |
 
@@ -327,7 +321,7 @@ is_sellable = 1 AND is_orderable = 1 -> orderable_sellable_flag = 1
 ```text
 customer_id 非空且不以“6”开头
 只保留正常完成的正向销售
-销售数量 > 0
+sales_standard_qty > 0，即 Doris `weight` > 0
 实付金额 > 0
 剔除退货、取消、冲销、测试交易
 剔除赠品/零金额行
@@ -382,8 +376,7 @@ ticket_key = order_id
 ```text
 paid_sales_amt = SUM(usual_amt)
 discount_amt = SUM(discount_amt)
-weight = SUM(weight)
-sales_qty = SUM(sales_qty)
+sales_standard_qty = SUM(weight)
 sale_time = MIN(inc_time)
 ```
 
@@ -981,9 +974,9 @@ cost_allocation_method = UNIT_COST_BY_STANDARD_QTY
 cost_allocation_status = COST_ALLOCATED_V1
 ```
 
-由于 Doris `weight` 已确认可统一作为目标画像标准销售量，V1 默认不启用销售额占比分摊成本。
+由于算法 04 统一使用 `sales_standard_qty = weight`，V1 默认不启用销售额占比分摊成本。
 
-只有在个别 SKU 或个别日期出现 `weight` 缺失、`weight <= 0`、计量类型无法识别等异常，导致目标画像标准销售量无法取得时，才允许进入异常兜底判断：
+只有在个别 SKU 或个别日期出现 `weight` 缺失、`weight <= 0`、计量类型无法识别等异常，导致目标画像标准销售量无法取得时，才允许进入异常兜底：
 
 ```text
 target_profile_daily_store_sku_cost_amt
@@ -995,7 +988,7 @@ cost_allocation_method = SALES_AMOUNT_SHARE_DEGRADED
 cost_allocation_status = COST_ALLOCATED_DEGRADED
 ```
 
-销售额占比分摊不是默认口径。若需求评审未明确允许异常兜底，则相关 SKU 输出：
+销售额占比分摊不是默认口径，只能作为异常兜底。若异常兜底仍无法保证可解释，则相关 SKU 输出：
 
 ```text
 result_status = DATA_INCOMPLETE
@@ -1074,6 +1067,8 @@ attribute_source
 attribute_confidence
 attribute_version
 ```
+
+V1 正式落地只强依赖商品基础表已有字段。配方/BOM、供应商规格书、AI 抽取不作为一期阻断来源；缺失属性输出 `ATTRIBUTE_INCOMPLETE`。
 
 AI 只能提取文本中实际存在的属性，不能猜测。
 
@@ -1757,6 +1752,133 @@ promotion_identify_method
 cost_source
 ```
 
+### 29.6 正式输出字段中文注释补充
+
+本节补充 `mart_target_profile_sku_performance`、`mart_target_profile_product_performance`、`mart_target_profile_anchor_summary` 和参数表中的关键字段中文注释。开发建表时必须保留中文注释，不能只保留英文字段。
+
+范围、版本与分组字段：
+
+| 逻辑字段名 | 中文注释 |
+|---|---|
+| sku_performance_model_version | 算法 04 本次计算版本 |
+| performance_start_date / performance_end_date | 本次 SKU 表现统计周期 |
+| scope_version / scope_type / scope_id / scope_name | 城市或城市群算法范围版本、类型、编码和名称 |
+| category_granularity | 品类颗粒度：大类 / 中类 / 小类 |
+| large_category_code / large_category_name | 商品大类编码和名称 |
+| middle_category_code / middle_category_name | 商品中类编码和名称 |
+| small_category_code / small_category_name | 商品小类编码和名称 |
+| store_group_type / final_level / store_cnt | 门店群类型、门店品类等级和门店数量 |
+| final_profile | 算法 01 输出的消费者画像标签 |
+| is_main_profile | 是否为算法 03 判定的主力画像 |
+| is_relative_main_candidate | 是否为算法 03 判定的相对主力候选画像 |
+| profile_model_version | 会员画像算法版本 |
+| category_level_model_version | 门店品类等级算法版本 |
+| consumer_contribution_model_version | 门店群消费者画像贡献算法版本 |
+| category_mapping_version | 商品基础表当前分类口径版本 |
+| sku_attribute_version | 商品属性版本 |
+| listing_snapshot_date | 当前可订可售快照日期 |
+
+商品、在售和计量字段：
+
+| 逻辑字段名 | 中文注释 |
+|---|---|
+| sku_id / product_code / sku_name | 销售 SKU 编码、商品主数据编码和商品名称 |
+| spu_id / replacement_group_id | SPU 编码、换码或替代关系组；V1 可为空 |
+| standard_product_mode | 标准商品聚合方式；V1 无可靠关系时为 `SKU_ONLY` |
+| orderable_sellable_flag / listing_status | 当前是否可订可售及在售状态 |
+| measurement_type / source_unit / standard_unit | 商品计量类型、来源单位和算法标准单位 |
+| conversion_factor | 从来源单位换算到标准单位的系数 |
+| measurement_mapping_status | 计量单位映射状态，无法识别时为 `UNKNOWN` |
+| ordered_store_cnt | 周期内实际订购或收货过该 SKU 的门店数 |
+| store_order_rate | 订购门店数 / 允许订购该 SKU 的有效门店数 |
+| ordered_store_day_rate | 有实际收货的门店日数 / 允许订购的有效门店营业日数 |
+
+行为、偏好和复购字段：
+
+| 逻辑字段名 | 中文注释 |
+|---|---|
+| sku_sales_amt / sku_sales_qty | 目标画像购买该 SKU 的销售额和销售标准量 |
+| sku_ticket_cnt / sku_buyer_cnt | 目标画像购买该 SKU 的去重小票数和去重会员数 |
+| sku_sales_share | 该 SKU 在目标画像该品类销售额中的占比 |
+| sku_ticket_penetration | 购买该 SKU 的小票数 / 目标画像该品类小票数 |
+| sku_buyer_penetration_raw | 购买该 SKU 的会员数 / 目标画像该品类会员数 |
+| sku_buyer_penetration_lower_95 / sku_buyer_penetration_upper_95 | 目标画像会员渗透率的 Jeffreys 95% 可信区间上下界 |
+| target_penetration / reference_penetration | 目标画像渗透率和其他画像参考渗透率 |
+| preference_index_raw | 目标画像原始偏好指数 |
+| smoothed_preference_index | Jeffreys 平滑后的偏好指数 |
+| preference_lower_95 / preference_upper_95 | 偏好指数 95% 区间上下界，正式评分使用下界 |
+| repeat_buyer_cnt_7d_pre19 | 7 天内且 19:00 前复购该 SKU 的会员数 |
+| eligible_first_buyer_cnt_7d | 有完整 7 天观察窗口的首购会员数 |
+| repurchase_rate_7d_pre19_raw | 7 天 19:00 前原始复购率 |
+| repurchase_rate_7d_pre19_lower_95 / repurchase_rate_7d_pre19_upper_95 | 复购率 Jeffreys 95% 区间上下界，正式评分使用下界 |
+
+经营、毛利和价格字段：
+
+| 逻辑字段名 | 中文注释 |
+|---|---|
+| available_store_day_cnt | 周期内有实际收货条件的门店 SKU 日数 |
+| sales_per_available_store_day | 每有效门店 SKU 日目标画像销售额 |
+| buyers_per_available_store_day | 每有效门店 SKU 日目标画像购买会员数 |
+| pre1930_sell_through_rate | 19:30 前销售标准量 / 实际收货标准量 |
+| non_promo_pre1930_sell_through_rate | 非促销代理窗口内的 19:30 前售罄率 |
+| pre1930_sales_volume_per_available_store_day | 每有效门店 SKU 日 19:30 前销售标准量 |
+| target_profile_pre1930_absorption_rate | 目标画像 19:30 前销售标准量 / 门店群该 SKU 19:30 前总销售标准量 |
+| discount_ladder_json | 19:30 后每半小时折扣阶梯解释明细 |
+| target_profile_sku_sales_amt | 目标画像该 SKU 销售额 |
+| target_profile_sku_cost_amt | 按 V1 成本口径分摊到目标画像的 SKU 成本金额 |
+| target_profile_sku_margin_amt / target_profile_sku_margin_rate | 目标画像该 SKU 毛利额和毛利率 |
+| sku_total_sales_amt / sku_total_cost_amt | 该 SKU 在比较组内总销售额和总成本金额 |
+| sku_total_margin_amt / sku_total_margin_rate | 该 SKU 在比较组内总毛利额和毛利率 |
+| cost_source | 成本来源，如全链路毛利反推成本 |
+| cost_allocation_method | 目标画像成本分摊方法，默认按标准量单位成本分摊 |
+| cost_allocation_status | 成本分摊状态 |
+| sku_avg_paid_price / standardized_paid_price | SKU 实际成交均价和标准化价格指标 |
+| promotion_identify_method | 促销识别方式；V1 为 `DISCOUNT_PROXY_V1` |
+
+得分、锚点、稳定性和状态字段：
+
+| 逻辑字段名 | 中文注释 |
+|---|---|
+| contribution_dimension_score | 目标画像贡献维度分 |
+| preference_dimension_score | 目标画像偏好维度分 |
+| natural_sales_dimension_score | 19:30 前自然动销维度分 |
+| margin_dimension_score | 商品毛利维度分 |
+| dimension_weights_json | 两级 CRITIC 计算出的维度权重 |
+| point_evidence_score | 使用后验均值计算的观察分，用于低证据对比 |
+| sku_performance_score | 正式保守综合表现分，使用 95% 下界 |
+| selected_cluster_count | Jenks+BIC 选择的分组数量 |
+| jenks_breaks_json / sse_by_k_json / bic_by_k_json | Jenks 分割点、各 K 的 SSE 和 BIC 结果 |
+| performance_group | 高表现组 / 中表现组 / 低表现组 / 无明显高表现 |
+| is_formal_anchor | 是否通过正式锚点准入 |
+| anchor_evidence_type | 锚点证据类型，如稳定锚点、时间敏感锚点等 |
+| top1_store_sales_share / store_sales_hhi | 门店集中度指标 |
+| leave_one_store_anchor_rate / store_stability_status | 留一门店稳定率和门店稳定状态 |
+| leave_one_month_anchor_rate / time_stability_status | 留一月稳定率和时间稳定状态 |
+| attribute_source_json / attribute_confidence_json | 商品属性来源和置信度 |
+| result_status / profitability_status / evidence_status | 计算结果状态、盈利状态和统计证据状态 |
+| natural_sales_status / order_coverage_status / attribute_status | 自然动销状态、订购覆盖状态和商品属性完整度状态 |
+| data_quality_flags | 数据质量标记集合 |
+| calculated_at | 计算完成时间 |
+
+标准商品表、锚点汇总表和参数表字段：
+
+| 逻辑字段名 | 中文注释 |
+|---|---|
+| product_key | 标准商品主键；V1 `SKU_ONLY` 时等于 `sku_id` |
+| member_sku_list_json | 汇总到同一标准商品下的 SKU 列表 |
+| replacement_source | SPU、换码或替代关系来源 |
+| active_anchor_skus_json | 当前可订可售且通过正式准入的锚点 SKU |
+| historical_anchor_skus_json | 历史表现好但当前不可订不可售的锚点 SKU |
+| low_order_high_performance_skus_json | 低订购覆盖但高表现的机会 SKU |
+| time_sensitive_anchor_skus_json | 对月份或时段依赖较强的锚点 SKU |
+| store_concentrated_anchor_skus_json | 表现集中在少数门店的锚点 SKU |
+| relative_anchor_candidates_json | 小样本或双 SKU 场景下的相对锚点候选 |
+| quality_metrics_json | 本组结果质量指标汇总 |
+| parameter_scope_key | 参数表的比较组键 |
+| critic_weights_json | CRITIC 权重、相关矩阵和回退状态 |
+| jeffreys_params_json | Jeffreys 区间计算参数 |
+| jenks_bic_params_json | Jenks+BIC 分组参数和候选 K 结果 |
+
 ---
 
 ## 30. 产品端应用边界
@@ -1792,9 +1914,171 @@ sku_performance_score
 
 ---
 
-## 31. 开发验收
+## 31. 完整演示案例复算
 
-### 31.1 上游对账
+本章用于开发复算和业务抽样验收，不作为线上展示文案。
+
+### 31.1 案例 A：稳定成熟锚点
+
+范围：
+
+```text
+周期：2026 年 4-6 月
+范围：上海
+品类：即烹类 / 牛肉制品
+门店群：A 级门店群
+目标画像：上班族晚高峰型-小家庭-中频-价格非敏感
+```
+
+输入样例：
+
+```text
+目标画像品类购买会员数 = 1200
+其他画像品类购买会员数 = 3000
+```
+
+| SKU | 销售占比 | 目标购买人数 | 其他购买人数 | 7天复购 | 非促销19:30前售罄 | 目标毛利额 | 整体毛利额 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 黑椒牛柳丝200g | 30% | 360 | 400 | 96/300 | 82% | 120000 | 300000 |
+| 蚝油牛肉片200g | 25% | 300 | 600 | 63/280 | 84% | 85000 | 240000 |
+| 香辣牛肉丝200g | 20% | 240 | 650 | 36/220 | 55% | 50000 | 150000 |
+| 黑椒牛排200g | 15% | 180 | 450 | 18/160 | 65% | 35000 | 100000 |
+| 孜然牛肉粒180g | 10% | 1 | 0 | 1/1 | 30% | 10000 | 15000 |
+
+关键复算：
+
+```text
+黑椒牛柳丝原始会员渗透率 = 360 / 1200 = 30%
+黑椒牛柳丝会员渗透率 Jeffreys 95% 下界约 = 27.46%
+
+目标画像渗透率 = 360 / 1200 = 30%
+其他画像渗透率 = 400 / 3000 = 13.33%
+原始偏好指数 = 30% / 13.33% = 2.25
+偏好指数 95% 下界约 = 1.98
+
+原始 7 天 19 点前复购率 = 96 / 300 = 32%
+复购率 Jeffreys 95% 下界约 = 26.91%
+```
+
+四维得分样例：
+
+| SKU | 画像贡献 | 画像偏好 | 自然动销 | 商品毛利 |
+|---|---:|---:|---:|---:|
+| 黑椒牛柳丝200g | 88 | 90 | 82 | 78 |
+| 蚝油牛肉片200g | 76 | 62 | 84 | 72 |
+| 香辣牛肉丝200g | 60 | 70 | 55 | 50 |
+| 黑椒牛排200g | 45 | 40 | 65 | 58 |
+| 孜然牛肉粒180g | 30 | 25 | 30 | 35 |
+
+一级 CRITIC 权重样例：
+
+```text
+目标画像贡献权重 = 17.24%
+目标画像偏好权重 = 41.05%
+自然动销权重     = 25.57%
+商品毛利权重     = 16.14%
+```
+
+黑椒牛柳丝综合得分：
+
+```text
+88 * 17.24% + 90 * 41.05% + 82 * 25.57% + 78 * 16.14% = 85.67
+```
+
+Jenks/BIC 样例：
+
+```text
+K=1：SSE=1868.15，BIC=31.23
+K=2：SSE=530.40，BIC=26.54
+K=3：SSE=159.33，BIC=22.14
+```
+
+期望结果：
+
+```text
+高表现组：黑椒牛柳丝200g、蚝油牛肉片200g
+黑椒牛柳丝200g：
+is_formal_anchor = 1
+anchor_evidence_type = ACTIVE_STABLE_ANCHOR
+```
+
+算法 04 到此为止，只输出现有锚点，不输出圆葱、青椒或新品配料结论。
+
+### 31.2 案例 B：低订购率高表现
+
+输入样例：
+
+```text
+SKU：青椒牛肉丝180g
+可订可售：是
+允许订购门店：20 家
+实际订购门店：4 家
+门店订购率：20%
+```
+
+实际订购门店表现：
+
+```text
+目标画像偏好指数下界 = 1.72
+7 天 19 点前复购率下界 = 24%
+非促销 19:30 前售罄率 = 88%
+目标画像和 SKU 整体商品毛利均为正
+综合得分 = 82
+Jenks = 高表现组
+```
+
+期望结果：
+
+```text
+is_formal_anchor = 1
+order_coverage_status = LOW
+anchor_evidence_type = LOW_ORDER_HIGH_PERFORMANCE
+```
+
+订购率低不能直接扣进综合分，应作为覆盖解释字段保留。
+
+### 31.3 案例 C：1 人中 1 人复购
+
+输入样例：
+
+```text
+SKU：孜然牛肉粒180g
+目标画像品类购买会员数 = 1200
+购买该 SKU 会员数 = 1
+具备完整 7 天观察窗口会员数 = 1
+发生复购会员数 = 1
+其他画像购买该 SKU 会员数 = 0
+```
+
+原始值：
+
+```text
+原始复购率 = 1 / 1 = 100%
+原始偏好指数 = 无穷大
+```
+
+统计校正后：
+
+```text
+复购率 Jeffreys 平滑值 = 75%
+复购率 95% 下界约 = 14.67%
+平滑偏好指数 = 7.50
+偏好指数 95% 下界约 = 0.31
+会员渗透率 = 1 / 1200 = 0.083%
+会员渗透率 95% 下界约 = 0.009%
+```
+
+期望结果：
+
+```text
+evidence_status = LOW_EVIDENCE
+is_formal_anchor = 0
+不作为默认购物篮锚点
+```
+
+## 32. 开发验收
+
+### 32.1 上游对账
 
 检查：
 
@@ -1804,11 +2088,11 @@ sku_performance_score
 算法 04 使用的 final_level 与算法 02 唯一
 ```
 
-### 31.2 唯一性
+### 32.2 唯一性
 
 正式结果表不允许同一唯一粒度重复。
 
-### 31.3 公式复算
+### 32.3 公式复算
 
 抽样复算：
 
@@ -1825,7 +2109,7 @@ Jenks+BIC 分组
 is_formal_anchor
 ```
 
-### 31.4 分层追溯
+### 32.4 分层追溯
 
 必须能从正式结果追溯到：
 
@@ -1841,7 +2125,7 @@ is_formal_anchor
 参数表
 ```
 
-### 31.5 稳定性与后验
+### 32.5 稳定性与后验
 
 检查：
 
@@ -1851,7 +2135,7 @@ is_formal_anchor
 下一周期后验表现
 ```
 
-### 31.6 边界场景
+### 32.6 边界场景
 
 必须覆盖：
 
@@ -1869,7 +2153,7 @@ is_formal_anchor
 
 ---
 
-## 32. 当前已确认口径
+## 33. 当前已确认口径
 
 | 事项 | 结论 |
 |---|---|
@@ -1883,7 +2167,7 @@ is_formal_anchor
 
 ---
 
-## 33. 当前仍需开发确认
+## 34. 当前仍需开发确认
 
 | 编号 | 确认项 | 影响 |
 |---|---|---|
@@ -1895,7 +2179,7 @@ is_formal_anchor
 
 ---
 
-## 34. 不能做的事
+## 35. 不能做的事
 
 ```text
 不能把候选新品当成算法 04 已验证的现有锚点
