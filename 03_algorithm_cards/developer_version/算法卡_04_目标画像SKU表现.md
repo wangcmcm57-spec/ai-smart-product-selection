@@ -238,7 +238,7 @@ orderable_sellable_flag
 | 销售时间 | sale_time | inc_time | 必须 | 判断 19:00 复购和 19:30 自然动销 |
 | 商品行实付金额 | paid_sales_amt | usual_amt | 必须 | 目标画像 SKU 销售额 |
 | 商品行优惠金额 | discount_amt | discount_amt | 条件必须 | V1 促销/折扣代理 |
-| 销售标准量 | sales_standard_qty | weight | 必须 | Doris `weight` 是商品行计价数量，算法统一映射为销售标准量；称重商品表示计价重量，计件商品表示件数/份数/袋数/只数，具体单位需从商品基础表取得 |
+| 销售标准量 | sales_standard_qty | weight | 必须 | 算法统一使用 `sales_standard_qty = weight`；计量类型和单位由商品基础表解释，字段事实详见 Doris 字段字典 |
 | 是否时段促销 | is_hour_promotion | is_hour_promotion | 可选 | 折扣解释 |
 | 小时优惠金额 | hour_discount_amt | hour_discount_amt | 可选 | 不是商品行时段折扣金额，不直接按行求和 |
 | 交易状态 | transaction_status | 待开发确认 | 条件必须 | 退货、取消、冲销、测试交易过滤 |
@@ -612,14 +612,13 @@ V1 单位识别：
 无法识别 -> UNKNOWN
 ```
 
-Doris `weight` 是商品行计价数量，算法 04 统一映射为销售标准量：
+算法 04 统一使用：
 
 ```text
-称重商品：sales_standard_qty = weight，含义为计价重量
-计件商品：sales_standard_qty = weight，含义为计价数量，例如件数、份数、袋数、只数
+sales_standard_qty = weight
 ```
 
-Doris 小票明细本身没有单位字段，也没有单独的 `qty` / `quantity` / `num` / `unit` / `spec` / `uom` 字段。因此算法 04 不再要求 Doris 额外提供独立 `sale_qty` 字段，但必须关联商品基础表取得单位、规格或单位重量，用来解释 `weight` 的业务单位。
+`weight` 的字段事实和样例验证统一维护在 Doris 字段字典中。本算法卡只定义使用规则：读取有效交易中的 `weight`，再关联商品基础表取得 `source_unit`、`measurement_type`、`standard_unit` 和必要的换算关系。
 
 ### 11.2 混合计量
 
@@ -1879,7 +1878,7 @@ is_formal_anchor
 | SKU 维度复购 | V1 先产出 `mart_sku_repurchase_7d_pre19` |
 | SPU / 换码关系不足 | V1 允许 `standard_product_mode = SKU_ONLY`，但保留标准商品层设计 |
 | 商品属性缺失 | 不阻断经营表现计算，标记 `ATTRIBUTE_INCOMPLETE` |
-| 小票销售标准量字段 | Doris `weight` 是商品行计价数量，可统一映射为销售标准量；称重商品表示计价重量，计件商品表示件数/份数/袋数/只数；单位需商品基础表补充 |
+| 小票销售标准量字段 | 算法 04 使用 `sales_standard_qty = weight`；计量类型和单位由商品基础表解释，字段事实详见 Doris 字段字典 |
 | 毛利损耗表数量字段 | 数据开发可按数据合同交付进货数量、进货重量、订购数量订购单位、订购数量重量口径 |
 
 ---
@@ -1888,7 +1887,7 @@ is_formal_anchor
 
 | 编号 | 确认项 | 影响 |
 |---|---|---|
-| D1 | 开发交付时抽样验收 Doris `weight` 在计件商品中的件数/份数/袋数/只数口径是否稳定，并校验商品基础表单位可解释 | 目标画像标准销售量、毛利、售罄率、折扣阶梯 |
+| D1 | 开发交付时抽样验收 `sales_standard_qty = weight` 与商品基础表单位是否匹配 | 目标画像标准销售量、毛利、售罄率、折扣阶梯 |
 | D2 | 开发交付的毛利损耗表是否按数据合同实现，并在营业日期 + 门店编码 + 交易商品编码粒度稳定提供全链路毛利额 | 成本反推 |
 | D3 | 开发交付的门店 SKU 可订可售表是否按数据合同实现，并在日期 + 门店编码 + 销售商品编码粒度主键唯一 | 当前在售、正式锚点 |
 | D4 | 毛利损耗表中的门店进货数量、门店进货重量、门店订购数量（订购单位）、门店订购数量（重量口径）是否按数据合同稳定交付 | 有效在售 SKU 日、售罄率、订购覆盖 |
