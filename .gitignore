@@ -2,6 +2,9 @@
 .DS_Store
 **/.DS_Store
 
+# IDE/local editor state
+.idea/
+
 # Python/cache artifacts
 __pycache__/
 *.py[cod]
