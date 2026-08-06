@@ -39,7 +39,7 @@
 |---|---|---|
 | `mart_sku_repurchase_7d_pre19` | 一个周期 + 一个范围 + 一个门店群 + 一个消费者画像 + 一个 SKU 的 7 天 19 点前复购结果 | 先补齐 SKU 维度复购，供算法 04 读取 |
 | `mart_target_profile_sku_performance` | 一个周期 + 一个范围 + 一个品类 + 一个门店群 + 一个消费者画像 + 一个 SKU 的表现 | 算法 04 的核心明细结果 |
-| `mart_target_profile_product_performance` | 一个标准商品的汇总表现 | 有 SPU 或换码关系时汇总同一实物商品；V1 可先 `SKU_ONLY` |
+| `mart_target_profile_product_performance` | 一个标准商品的汇总表现 | V1 使用商品基础表现有 SPU 汇总；SPU 缺失时按 `SKU_ONLY` |
 | `mart_target_profile_anchor_summary` | 一个门店群消费者画像下的锚点汇总 | 给后续购物篮、新品候选和机会评分读取 |
 | `mart_target_profile_sku_performance_params` | 一个模型版本下的参数、权重、断点和口径 | 用于复算、验收和追溯 |
 
@@ -288,13 +288,17 @@ V1 计量识别：
 
 ```text
 千克、kg、公斤、g、克 -> 重量
-件、份、盒、包、袋、瓶、个 -> 数量
+件、份、盒、包、袋、瓶、个、只 -> 普通计件数量
+枚 -> 蛋类或枚数型数量
+L、ml、毫升、升 -> 体积
 无法识别 -> UNKNOWN
 ```
 
 称重商品使用标准重量。
 
 计件商品使用标准数量。
+
+体积商品和蛋类枚数商品也单独保留计量类型。数量、到货量和售罄率只在同一计量类型里比较，不能把 kg、件、枚、L 混在一起算一个数量排名。
 
 算法 04 统一使用小票里的 `weight` 作为销售标准量：
 
@@ -331,7 +335,7 @@ measurement_mapping_status = UNKNOWN
 如果比较范围里只有一个消费者画像：
 
 ```text
-preference_status = SINGLE_PROFILE
+preference_reference_status = SINGLE_PROFILE
 偏好维度不参与 CRITIC
 其他维度照常计算
 ```
@@ -368,10 +372,21 @@ preference_status = SINGLE_PROFILE
 自然动销主要看：
 
 ```text
+19:30 前售罄率
 非促销 19:30 前售罄率
 19:30 前每有效在售门店日标准销售量
 目标画像 19:30 前吸收贡献
 ```
+
+其中 `19:30 前售罄率` 看全部有效 SKU 日，`非促销 19:30 前售罄率` 只看 19:30 前没有折扣代理的有效 SKU 日，两者不能混成一个指标。
+
+如果出现：
+
+```text
+19:30 前销售量 / 实际收货量 > 1.10
+```
+
+说明售罄率分子分母可能异常，不能截断成 100% 继续评分，开发版会标记 `SELL_THROUGH_DATA_ERROR`。
 
 如果整个周期没有自然销售窗口：
 
@@ -480,7 +495,6 @@ sku_total_margin_amt > 0
 包装方式
 储存温层
 品牌
-供应商
 ```
 
 V1 如果商品属性缺失，不阻断经营表现计算：
@@ -491,13 +505,13 @@ attribute_status = ATTRIBUTE_INCOMPLETE
 
 但属性缺失会影响后续新品方向生成，因为新品方向需要知道锚点的主材料、口味、规格、形态等。
 
-SPU 或换码关系不足时：
+SPU 缺失或无法稳定映射时：
 
 ```text
 standard_product_mode = SKU_ONLY
 ```
 
-也就是第一期先按销售 SKU 计算，不自动把名称相似商品合并。
+也就是第一期不新增独立换码或替代关系；有商品基础表 SPU 就按 SPU 汇总，没有 SPU 就按销售 SKU 计算，不自动把名称相似商品合并。
 
 ## 19. 价格指标和算法 05 边界
 
@@ -739,7 +753,7 @@ time_stability_status
 不要把 19:30 后销售占比当成自然动销。
 不要把订购率扣进综合分。
 不要按销售额占比分摊成本作为默认毛利口径。
-不要自动合并名称相似但没有正式 SPU / 换码关系的商品。
+不要自动合并名称相似但没有商品基础表 SPU 的商品。
 不要让大模型替代离线算法判断锚点。
 ```
 
