@@ -48,9 +48,9 @@ Agent Harness 负责理解采购问题、抽取参数、调用工具和轻量重
 如果已经从根目录 `README.md` 进入项目，继续按下面顺序阅读。第一次接触项目的人，应先看完整架构图、Agent 运行架构图和运行时序图，再看开发评审细节。
 
 ```text
-1. 05_architecture/AI选品V1_完整架构图.md
-2. 05_architecture/runtime_design/AI新品推荐Agent_运行架构图.md
-3. 05_architecture/AI选品V1_运行时序图.md
+1. 05_architecture/01_AI选品V1_整体架构.md
+2. 05_architecture/02_AI新品推荐Agent_运行架构.md
+3. 05_architecture/03_AI选品V1_运行时序.md
 4. README_开发评审入口.md
 5. 00_project_management/development_review/AI选品V1_当前开发链路.md
 6. 02_data_contracts/
@@ -81,11 +81,11 @@ ai-selection-agent/
 │   └── AI选品V1_开发评审问题清单.md
 │       └── 评审会上需要确认的问题和会后行动项
 ├── 05_architecture/
-│   ├── AI选品V1_完整架构图.md
+│   ├── 01_AI选品V1_整体架构.md
 │   │   └── 说明项目完整分层：数据、算法、机会引擎、后端 API、Agent Harness、反馈
-│   ├── runtime_design/AI新品推荐Agent_运行架构图.md
+│   ├── 02_AI新品推荐Agent_运行架构.md
 │   │   └── 说明工作流型 Agent + 工具调用型 Harness 的运行边界
-│   └── AI选品V1_运行时序图.md
+│   └── 03_AI选品V1_运行时序.md
 │       └── 说明离线产表、在线查询解释和反馈回流
 └── 02_data_contracts/ + 03_algorithm_cards/
     └── 开发真正落地时读取的数据合同和算法卡
@@ -98,9 +98,9 @@ ai-selection-agent/
 先看当前架构图：
 
 ```text
-05_architecture/AI选品V1_完整架构图.md
-05_architecture/runtime_design/AI新品推荐Agent_运行架构图.md
-05_architecture/AI选品V1_运行时序图.md
+05_architecture/01_AI选品V1_整体架构.md
+05_architecture/02_AI新品推荐Agent_运行架构.md
+05_architecture/03_AI选品V1_运行时序.md
 ```
 
 架构图图片：
@@ -145,7 +145,7 @@ Agent 运行架构图图片：
 请你作为数据开发，阅读本仓库：
 
 1. 先读 README.md，理解项目目标和仓库结构。
-2. 再读 05_architecture/AI选品V1_完整架构图.md、05_architecture/runtime_design/AI新品推荐Agent_运行架构图.md 和 05_architecture/AI选品V1_运行时序图.md，理解完整架构和运行方式。
+2. 再读 05_architecture/01_AI选品V1_整体架构.md、05_architecture/02_AI新品推荐Agent_运行架构.md 和 05_architecture/03_AI选品V1_运行时序.md，理解完整架构和运行方式。
 3. 再读 README_开发评审入口.md，理解本次评审范围。
 4. 再读 00_project_management/development_review/AI选品V1_当前开发链路.md。
 5. 再读 02_data_contracts/。
@@ -169,9 +169,9 @@ Agent 运行架构图图片：
 请你作为后端和 Agent 开发，阅读本仓库：
 
 1. 先读 README.md，理解项目目标和仓库结构。
-2. 再读 05_architecture/AI选品V1_完整架构图.md。
-3. 再读 05_architecture/runtime_design/AI新品推荐Agent_运行架构图.md。
-4. 再读 05_architecture/AI选品V1_运行时序图.md。
+2. 再读 05_architecture/01_AI选品V1_整体架构.md。
+3. 再读 05_architecture/02_AI新品推荐Agent_运行架构.md。
+4. 再读 05_architecture/03_AI选品V1_运行时序.md。
 5. 再读 README_开发评审入口.md 和 00_project_management/development_review/AI选品V1_开发评审问题清单.md。
 
 请重点判断：

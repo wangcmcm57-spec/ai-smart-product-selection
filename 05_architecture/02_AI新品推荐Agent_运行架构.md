@@ -1,6 +1,6 @@
-# AI 新品推荐 Agent 运行架构图
+# AI 新品推荐 Agent 运行架构
 
-本文是 [AI选品V1_完整架构图.md](../AI选品V1_完整架构图.md) 的运行详图，用来说明：
+本文是 [01_AI选品V1_整体架构.md](01_AI选品V1_整体架构.md) 的运行详图，用来说明：
 
 ```text
 算法结果表怎么进入推荐表
@@ -13,7 +13,7 @@ Harness 怎么控制 Agent
 它不是一张新的项目总架构图。项目总入口仍然是：
 
 ```text
-05_architecture/AI选品V1_完整架构图.md
+05_architecture/01_AI选品V1_整体架构.md
 ```
 
 ## 1. 架构原则
@@ -37,7 +37,7 @@ AI 新品推荐 Agent V1 采用：
 
 视觉口径采用纯飞书文档风：轻背景、白卡片、浅蓝标签、少量强调色和清晰留白，优先保证开发评审可读性。
 
-![AI新品推荐Agent运行架构图](../diagrams/ai_new_product_agent_runtime_architecture.png)
+![AI新品推荐Agent运行架构图](diagrams/ai_new_product_agent_runtime_architecture.png)
 
 ## 3. 开发怎么理解
 

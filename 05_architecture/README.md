@@ -1,68 +1,34 @@
 # 架构资料
 
-这里存放 AI 选品项目的数据流、算法流、机会引擎运行方式、Agent 调用链路和相关架构图。
+本目录只放 AI 选品 V1 的架构说明和架构图图片。完整开发评审阅读顺序仍维护在根目录 [README_开发评审入口.md](../README_开发评审入口.md)。
 
-## 推荐阅读
+## 阅读顺序
 
-第一次进入项目时，建议先从根目录 `README.md` 建立背景，再看本目录架构资料：
+| 顺序 | 文档 | 解决的问题 |
+|---|---|---|
+| 01 | [01_AI选品V1_整体架构.md](01_AI选品V1_整体架构.md) | 项目从数据底座、算法主题表、机会引擎到应用层怎么分层 |
+| 02 | [02_AI新品推荐Agent_运行架构.md](02_AI新品推荐Agent_运行架构.md) | 后端 API、Agent Harness、大模型和前端分别负责什么 |
+| 03 | [03_AI选品V1_运行时序.md](03_AI选品V1_运行时序.md) | 离线批量产表、在线查询解释、反馈回流按什么顺序运行 |
 
-```text
-README.md
-05_architecture/AI选品V1_完整架构图.md
-05_architecture/runtime_design/AI新品推荐Agent_运行架构图.md
-05_architecture/AI选品V1_运行时序图.md
-```
+## 文件放置规则
 
-当前架构图图片：
+| 位置 | 内容 |
+|---|---|
+| `01_*.md` | 项目整体架构，不展开 Agent 细节 |
+| `02_*.md` | Agent / Harness / API 运行架构详图 |
+| `03_*.md` | 离线和在线运行时序 |
+| `diagrams/` | PNG 图片生成物，不直接写说明正文 |
 
-![AI选品V1完整架构图](diagrams/ai_selection_v1_full_architecture.png)
-
-当前 Agent 运行架构图图片：
-
-![AI新品推荐Agent运行架构图](diagrams/ai_new_product_agent_runtime_architecture.png)
-
-当前运行时序图图片：
-
-![AI选品V1运行时序图](diagrams/ai_selection_v1_sequence.png)
-
-## 当前 V1 完整链路
-
-当前架构从采购新品推荐需求开始，到数据底座、算法主题表、新品机会引擎、推荐结果表、后端 / Agent / 前端应用和反馈闭环。
-
-```mermaid
-flowchart LR
-    BIZ["采购新品推荐需求"]
-    DATA["数据底座<br/>内部交易经营数据 + 外部竞品趋势"]
-    QC["数据合同与质量<br/>字段口径 / 主键粒度 / 有效交易 / 版本血缘"]
-    ALG["算法主题表<br/>01～07：画像、门店、贡献、SKU、价格、购物篮、趋势"]
-    ENGINE["新品机会引擎<br/>08～10：证据合成、风险门禁、候选标准化、优先级编排"]
-    RESULT["AI 新品机会推荐表<br/>推荐方向 / 证据 / 价格 / 风险 / 试点建议"]
-    API["后端 API<br/>推荐查询 / 证据查询 / 反馈写入"]
-    HARNESS["Agent Harness<br/>意图识别 / 参数抽取 / 工具路由 / 轻量重排"]
-    LLM["大模型解释<br/>只解释结构化结果"]
-    APP["采购工作台 / 对话入口"]
-    FEEDBACK["采购反馈与试点复盘"]
-
-    BIZ --> DATA
-    DATA --> QC
-    QC --> ALG
-    ALG --> ENGINE
-    ENGINE --> RESULT
-    RESULT --> API
-    API --> HARNESS
-    HARNESS --> LLM
-    LLM --> APP
-    APP --> FEEDBACK
-    FEEDBACK --> ALG
-```
-
-## 当前评审入口
-
-开发评审优先阅读：
+图片生成脚本在：
 
 ```text
-README_开发评审入口.md
-00_project_management/development_review/AI选品V1_当前开发链路.md
-02_data_contracts/
-00_project_management/development_review/算法01-06_结果表总览.md
+06_scripts/diagram_generation/
 ```
+
+## 当前图片
+
+| 图片 | 对应文档 |
+|---|---|
+| `diagrams/ai_selection_v1_full_architecture.png` | `01_AI选品V1_整体架构.md` |
+| `diagrams/ai_new_product_agent_runtime_architecture.png` | `02_AI新品推荐Agent_运行架构.md` |
+| `diagrams/ai_selection_v1_sequence.png` | `03_AI选品V1_运行时序.md` |
