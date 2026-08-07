@@ -16,8 +16,10 @@ AI 选品 V1 要做的是：
 
 ```text
 大模型不直接扫描小票实时算算法。
-数据开发先准备基础数据表和公共过滤逻辑，再产出正式算法结果表。
-后端和 Agent 读取结果表，做查询、证据组装和解释。
+数据开发先准备基础数据表和公共过滤逻辑，再产出正式算法结果表和推荐结果表。
+后端 API 读取推荐表和证据表。
+Agent Harness 负责理解采购问题、抽取参数、调用工具和轻量重排。
+大模型只解释结构化结果。
 ```
 
 ## 1. 当前评审目标
@@ -26,12 +28,14 @@ AI 选品 V1 要做的是：
 
 ```text
 让开发可以先启动 AI 选品 V1 的基础数据表整理、公共交易过滤逻辑和算法 01～03。
+同时让后端和 Agent 开发理解后续 API、Harness、大模型解释和反馈日志边界。
 ```
 
 本次优先确认：
 
 | 优先级 | 范围 | 评审目标 |
 |---|---|---|
+| P0 | 总架构和 Agent 运行边界 | 确认离线预计算、推荐结果表、后端 API、Agent Harness、大模型解释的分工 |
 | P0 | 基础数据表整理 | 确认 Doris 小票、商品、门店、城市算法区域、毛利损耗、日价格、可订可售等字段和粒度，并明确开发产表方式 |
 | P0 | 算法 01 会员画像 | 确认能否产出正式会员画像结果表 |
 | P0 | 算法 02 门店品类等级 | 确认能否产出正式门店品类等级结果表 |
@@ -41,19 +45,20 @@ AI 选品 V1 要做的是：
 
 ## 2. 开发阅读顺序
 
-如果已经从根目录 `README.md` 进入项目，继续按下面顺序阅读。第一次接触项目的人，应先看完整架构图和运行时序图，再看开发评审细节。
+如果已经从根目录 `README.md` 进入项目，继续按下面顺序阅读。第一次接触项目的人，应先看完整架构图、Agent 运行架构图和运行时序图，再看开发评审细节。
 
 ```text
 1. 05_architecture/AI选品V1_完整架构图.md
-2. 05_architecture/AI选品V1_运行时序图.md
-3. README_开发评审入口.md
-4. 00_project_management/development_review/AI选品V1_当前开发链路.md
-5. 02_data_contracts/
-6. 00_project_management/development_review/算法01-06_结果表总览.md
-7. 03_algorithm_cards/developer_version/算法卡_01_会员画像.md
-8. 03_algorithm_cards/developer_version/算法卡_02_门店品类等级.md
-9. 03_algorithm_cards/developer_version/算法卡_03_门店群消费者画像贡献.md
-10. 00_project_management/development_review/AI选品V1_开发评审问题清单.md
+2. 05_architecture/runtime_design/AI新品推荐Agent_运行架构图.md
+3. 05_architecture/AI选品V1_运行时序图.md
+4. README_开发评审入口.md
+5. 00_project_management/development_review/AI选品V1_当前开发链路.md
+6. 02_data_contracts/
+7. 00_project_management/development_review/算法01-06_结果表总览.md
+8. 03_algorithm_cards/developer_version/算法卡_01_会员画像.md
+9. 03_algorithm_cards/developer_version/算法卡_02_门店品类等级.md
+10. 03_algorithm_cards/developer_version/算法卡_03_门店群消费者画像贡献.md
+11. 00_project_management/development_review/AI选品V1_开发评审问题清单.md
 ```
 
 算法 04～06 建议先扫读业务链路和输出表，不要求本次全部评审完。
@@ -78,6 +83,8 @@ ai-selection-agent/
 ├── 05_architecture/
 │   ├── AI选品V1_完整架构图.md
 │   │   └── 说明项目完整分层：数据、算法、机会引擎、后端 API、Agent Harness、反馈
+│   ├── runtime_design/AI新品推荐Agent_运行架构图.md
+│   │   └── 说明工作流型 Agent + 工具调用型 Harness 的运行边界
 │   └── AI选品V1_运行时序图.md
 │       └── 说明离线产表、在线查询解释和反馈回流
 └── 02_data_contracts/ + 03_algorithm_cards/
@@ -92,12 +99,17 @@ ai-selection-agent/
 
 ```text
 05_architecture/AI选品V1_完整架构图.md
+05_architecture/runtime_design/AI新品推荐Agent_运行架构图.md
 05_architecture/AI选品V1_运行时序图.md
 ```
 
 架构图图片：
 
 ![AI选品V1完整架构图](05_architecture/diagrams/ai_selection_v1_full_architecture.png)
+
+Agent 运行架构图图片：
+
+![AI新品推荐Agent运行架构图](05_architecture/diagrams/ai_new_product_agent_runtime_architecture.png)
 
 运行时序图图片：
 
@@ -125,13 +137,15 @@ ai-selection-agent/
 
 ## 4. Codex 预审 Prompt
 
-开发可以让 Codex 先读取仓库并输出预审结果。推荐 prompt：
+开发可以让 Codex 先读取仓库并输出预审结果。
+
+### 4.1 数据开发预审 Prompt
 
 ```text
 请你作为数据开发，阅读本仓库：
 
 1. 先读 README.md，理解项目目标和仓库结构。
-2. 再读 05_architecture/AI选品V1_完整架构图.md 和 05_architecture/AI选品V1_运行时序图.md，理解完整架构和运行方式。
+2. 再读 05_architecture/AI选品V1_完整架构图.md、05_architecture/runtime_design/AI新品推荐Agent_运行架构图.md 和 05_architecture/AI选品V1_运行时序图.md，理解完整架构和运行方式。
 3. 再读 README_开发评审入口.md，理解本次评审范围。
 4. 再读 00_project_management/development_review/AI选品V1_当前开发链路.md。
 5. 再读 02_data_contracts/。
@@ -149,26 +163,45 @@ ai-selection-agent/
 7. 第一批开发任务拆分建议。
 ```
 
-后端和 Agent 开发可以在上面输出要求后追加：
+### 4.2 后端 / Agent 开发预审 Prompt
 
 ```text
-请重点判断后端需要提供哪些查询接口、Agent 需要调用哪些工具、哪些结果表适合作为前端查询入口。
+请你作为后端和 Agent 开发，阅读本仓库：
+
+1. 先读 README.md，理解项目目标和仓库结构。
+2. 再读 05_architecture/AI选品V1_完整架构图.md。
+3. 再读 05_architecture/runtime_design/AI新品推荐Agent_运行架构图.md。
+4. 再读 05_architecture/AI选品V1_运行时序图.md。
+5. 再读 README_开发评审入口.md 和 00_project_management/development_review/AI选品V1_开发评审问题清单.md。
+
+请重点判断：
+1. 后端需要提供哪些固定查询 API。
+2. Agent Harness 需要调用哪些工具。
+3. 采购自然语言问题如何转成结构化参数。
+4. 哪些表适合作为查询入口，哪些表只作为证据明细。
+5. 在线轻量重排应该发生在哪里。
+6. 大模型可以做什么，禁止做什么。
+7. 请求日志和采购反馈应该怎么记录。
+8. 哪些能力依赖算法 07～10 和 mart_opportunity_recommendation 完成后才能开发。
 ```
 
 ## 5. 开发评审方式
 
 评审会不要逐页过算法卡。
 
+本次主评审仍以基础数据表和算法 01～03 开工为主；Agent 架构作为整体预审，让后端和 Agent 开发先理解后续边界，不要求立刻进入完整开发。
+
 建议 90 分钟：
 
 | 时间 | 内容 | 目标 |
 |---|---|---|
 | 0～10 分钟 | V1 目标和当前链路 | 确认第一批先做 01～03 |
-| 10～25 分钟 | 基础数据表整理 | 确认基础表粒度、主键、字段来源、调度周期和公共过滤口径 |
-| 25～45 分钟 | 算法 01 | 确认会员画像输入、输出、版本和验收 |
-| 45～65 分钟 | 算法 02 | 确认门店品类等级输入、输出、权重/分层和验收 |
-| 65～80 分钟 | 算法 03 | 确认 01/02 依赖、贡献口径、输出表和验收 |
-| 80～90 分钟 | 行动项 | 明确谁建表、谁写调度、谁对字段、谁补口径 |
+| 10～20 分钟 | Agent 运行边界预审 | 确认离线计算、后端 API、Harness、大模型解释和反馈边界 |
+| 20～35 分钟 | 基础数据表整理 | 确认基础表粒度、主键、字段来源、调度周期和公共过滤口径 |
+| 35～55 分钟 | 算法 01 | 确认会员画像输入、输出、版本和验收 |
+| 55～72 分钟 | 算法 02 | 确认门店品类等级输入、输出、权重/分层和验收 |
+| 72～85 分钟 | 算法 03 | 确认 01/02 依赖、贡献口径、输出表和验收 |
+| 85～90 分钟 | 行动项 | 明确谁建表、谁写调度、谁对字段、谁补口径 |
 
 ## 6. 本次评审不做什么
 
@@ -189,5 +222,6 @@ ai-selection-agent/
 | 基础数据表整理任务清单 | 数据开发 | 明确基础表建表、字段映射、主键验收和调度任务 |
 | 字段口径确认清单 | 数据开发 / 业务 / 财务口径负责人 | 解决阻塞字段 |
 | 结果表建表计划 | 数据开发 | 确认表名、主键、分区、版本字段 |
+| 后端 API / Agent Harness 预审问题 | 后端 / Agent 开发 | 标注接口、工具调用、轻量重排、日志反馈的待确认点 |
 | 第一批试跑验收方案 | 数据开发 / 业务 | 上海或华东试跑对数 |
 | 后续 04～06 评审计划 | 产品 / 算法 / 数据开发 | 进入下一轮开发评审 |

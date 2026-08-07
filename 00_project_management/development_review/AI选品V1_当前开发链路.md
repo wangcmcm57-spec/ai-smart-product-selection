@@ -31,6 +31,12 @@
 05_architecture/AI选品V1_运行时序图.md
 ```
 
+如果要看后端 API、Agent Harness、大模型解释和反馈日志的运行边界，先看：
+
+```text
+05_architecture/runtime_design/AI新品推荐Agent_运行架构图.md
+```
+
 ```mermaid
 flowchart LR
     CONTRACT["第0步：基础数据合同<br/>02_data_contracts/"]

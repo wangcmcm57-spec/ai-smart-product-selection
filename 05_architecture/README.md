@@ -4,17 +4,22 @@
 
 ## 推荐阅读
 
-第一次进入项目时，建议先从根目录 `README.md` 建立背景，再看本目录两张图：
+第一次进入项目时，建议先从根目录 `README.md` 建立背景，再看本目录架构资料：
 
 ```text
 README.md
 05_architecture/AI选品V1_完整架构图.md
+05_architecture/runtime_design/AI新品推荐Agent_运行架构图.md
 05_architecture/AI选品V1_运行时序图.md
 ```
 
 当前架构图图片：
 
 ![AI选品V1完整架构图](diagrams/ai_selection_v1_full_architecture.png)
+
+当前 Agent 运行架构图图片：
+
+![AI新品推荐Agent运行架构图](diagrams/ai_new_product_agent_runtime_architecture.png)
 
 当前运行时序图图片：
 
@@ -32,7 +37,10 @@ flowchart LR
     ALG["算法主题表<br/>01～07：画像、门店、贡献、SKU、价格、购物篮、趋势"]
     ENGINE["新品机会引擎<br/>08～10：证据合成、风险门禁、候选标准化、优先级编排"]
     RESULT["AI 新品机会推荐表<br/>推荐方向 / 证据 / 价格 / 风险 / 试点建议"]
-    APP["后端接口 / 采购工作台 / Agent 解释"]
+    API["后端 API<br/>推荐查询 / 证据查询 / 反馈写入"]
+    HARNESS["Agent Harness<br/>意图识别 / 参数抽取 / 工具路由 / 轻量重排"]
+    LLM["大模型解释<br/>只解释结构化结果"]
+    APP["采购工作台 / 对话入口"]
     FEEDBACK["采购反馈与试点复盘"]
 
     BIZ --> DATA
@@ -40,7 +48,10 @@ flowchart LR
     QC --> ALG
     ALG --> ENGINE
     ENGINE --> RESULT
-    RESULT --> APP
+    RESULT --> API
+    API --> HARNESS
+    HARNESS --> LLM
+    LLM --> APP
     APP --> FEEDBACK
     FEEDBACK --> ALG
 ```

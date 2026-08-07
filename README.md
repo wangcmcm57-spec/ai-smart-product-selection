@@ -4,39 +4,23 @@
 
 当前 V1 目标是：围绕采购新品推荐场景，基于 Doris 基础数据、业务算法规则、外部竞品数据和机会评分逻辑，形成可被采购使用的 AI 选品能力。
 
-## 给开发的快速入口
+## 入口
 
-开发第一次进入项目时，先建立背景、架构和运行方式，再进入开发评审材料：
+本仓库只保留一个完整开发评审阅读顺序：
 
 ```text
-README.md
-05_architecture/AI选品V1_完整架构图.md
-05_architecture/AI选品V1_运行时序图.md
 README_开发评审入口.md
-00_project_management/development_review/AI选品V1_当前开发链路.md
-02_data_contracts/
-00_project_management/development_review/算法01-06_结果表总览.md
-03_algorithm_cards/developer_version/算法卡_01_会员画像.md
-03_algorithm_cards/developer_version/算法卡_02_门店品类等级.md
-03_algorithm_cards/developer_version/算法卡_03_门店群消费者画像贡献.md
-00_project_management/development_review/AI选品V1_开发评审问题清单.md
 ```
 
-## 开发怎么读这个仓库
+其他 README 只说明各自目录放什么，不再重复维护完整阅读顺序。
 
-开发第一次打开仓库时，按下面顺序理解项目，不需要从业务原始文档开始读。
-
-| 顺序 | 看什么 | 文件位置 | 读完要知道什么 |
-|---|---|---|---|
-| 1 | 项目背景和仓库地图 | [README.md](README.md) | V1 做什么、仓库里每个目录干什么 |
-| 2 | 完整架构 | [AI选品V1_完整架构图.md](05_architecture/AI选品V1_完整架构图.md) | 数据、算法、机会引擎、后端 API、Agent Harness、反馈怎么串起来 |
-| 3 | 运行时序 | [AI选品V1_运行时序图.md](05_architecture/AI选品V1_运行时序图.md) | 离线产表、在线查询解释、反馈回流怎么跑 |
-| 4 | 开发评审入口 | [README_开发评审入口.md](README_开发评审入口.md) | 本次评审范围、开发阅读顺序、会议方式 |
-| 5 | 第一批开发链路 | [AI选品V1_当前开发链路.md](00_project_management/development_review/AI选品V1_当前开发链路.md) | 第一批先做基础数据表和算法 01～03 |
-| 6 | 基础数据合同 | [02_data_contracts/](02_data_contracts/README.md) | 需要准备哪些基础表、每张表字段和粒度是什么 |
-| 7 | 结果表总览 | [算法01-06_结果表总览.md](00_project_management/development_review/算法01-06_结果表总览.md) | 基础数据表、01～06 会产出哪些正式表和关键表 |
-| 8 | 开发版算法卡 | [03_algorithm_cards/developer_version/](03_algorithm_cards/developer_version/) | 每个算法怎么建表、取字段、算指标、验收 |
-| 9 | 评审问题清单 | [AI选品V1_开发评审问题清单.md](00_project_management/development_review/AI选品V1_开发评审问题清单.md) | 评审会上要确认哪些结论和行动项 |
+| 角色 | 建议入口 | 用途 |
+|---|---|---|
+| 开发评审 | [README_开发评审入口.md](README_开发评审入口.md) | 唯一完整阅读顺序、评审范围、预审 Prompt 和会议方式 |
+| 架构理解 | [05_architecture/](05_architecture/README.md) | 完整架构图、Agent 运行架构图、运行时序图 |
+| 数据开发 | [02_data_contracts/](02_data_contracts/README.md) | 基础表、外部表、Doris 表字段合同 |
+| 算法落地 | [03_algorithm_cards/developer_version/](03_algorithm_cards/developer_version/) | 开发版算法卡，按表、字段、公式、调度和验收落地 |
+| 产品 / Agent | [04_product/](04_product/README.md) | 后续沉淀工作台、对话入口和 Agent 产品形态 |
 
 第一批开发不是直接从算法 01 开始。数据开发需要先确认并准备基础数据表：
 
@@ -54,6 +38,10 @@ mart_store_sku_daily_sale_order_status 门店商品每日可订可售表
 
 ![AI选品V1完整架构图](05_architecture/diagrams/ai_selection_v1_full_architecture.png)
 
+当前 AI 新品推荐 Agent 运行架构图：
+
+![AI新品推荐Agent运行架构图](05_architecture/diagrams/ai_new_product_agent_runtime_architecture.png)
+
 当前 V1 运行时序图：
 
 ![AI选品V1运行时序图](05_architecture/diagrams/ai_selection_v1_sequence.png)
@@ -62,8 +50,9 @@ mart_store_sku_daily_sale_order_status 门店商品每日可订可售表
 
 ```text
 数据开发先准备基础数据表和公共过滤逻辑，再产出正式算法结果表；
-后端和 Agent 读取结果表，做查询、证据组装和解释；
-大模型不直接扫描小票实时计算算法。
+后端 API 读取推荐表和证据表；
+Agent Harness 负责意图识别、参数抽取、工具路由、轻量重排和安全护栏；
+大模型只解释结构化结果，不直接扫描小票实时计算算法。
 ```
 
 ## 仓库边界
