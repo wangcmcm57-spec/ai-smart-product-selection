@@ -29,7 +29,7 @@ README_开发评审入口.md
 | 顺序 | 看什么 | 文件位置 | 读完要知道什么 |
 |---|---|---|---|
 | 1 | 项目背景和仓库地图 | [README.md](README.md) | V1 做什么、仓库里每个目录干什么 |
-| 2 | 完整架构 | [AI选品V1_完整架构图.md](05_architecture/AI选品V1_完整架构图.md) | 数据、算法、机会引擎、Agent、反馈怎么串起来 |
+| 2 | 完整架构 | [AI选品V1_完整架构图.md](05_architecture/AI选品V1_完整架构图.md) | 数据、算法、机会引擎、后端 API、Agent Harness、反馈怎么串起来 |
 | 3 | 运行时序 | [AI选品V1_运行时序图.md](05_architecture/AI选品V1_运行时序图.md) | 离线产表、在线查询解释、反馈回流怎么跑 |
 | 4 | 开发评审入口 | [README_开发评审入口.md](README_开发评审入口.md) | 本次评审范围、开发阅读顺序、会议方式 |
 | 5 | 第一批开发链路 | [AI选品V1_当前开发链路.md](00_project_management/development_review/AI选品V1_当前开发链路.md) | 第一批先做基础数据表和算法 01～03 |
