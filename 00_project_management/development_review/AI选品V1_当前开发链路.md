@@ -28,7 +28,13 @@
 如果要看离线产表和在线查询的运行顺序，先看：
 
 ```text
-05_architecture/AI选品V1_运行时序图.md
+05_architecture/03_AI选品V1_运行时序.md
+```
+
+如果要看后端 API、Agent Harness、大模型解释和反馈日志的运行边界，先看：
+
+```text
+05_architecture/02_AI新品推荐Agent_运行架构.md
 ```
 
 ```mermaid

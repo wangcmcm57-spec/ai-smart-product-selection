@@ -2,6 +2,14 @@
 
 本目录存放 SDD 开发评审用的规格文件。开发不用逐页阅读业务原始文档，先按这里的入口理解本次评审范围、算法结果表和待确认问题。
 
+完整开发评审阅读顺序只维护在根目录：
+
+```text
+README_开发评审入口.md
+```
+
+本 README 只说明本目录里的 SDD 评审文件用途，不重复维护完整阅读顺序。
+
 ## 文件说明
 
 | 文件 | 用途 |
@@ -26,16 +34,6 @@
 02_data_contracts/
 ```
 
-## 推荐阅读顺序
+## 阅读方式
 
-1. 根目录 `README.md`
-2. `05_architecture/AI选品V1_完整架构图.md`
-3. `05_architecture/AI选品V1_运行时序图.md`
-4. 根目录 `README_开发评审入口.md`
-5. 本目录 `AI选品V1_当前开发链路.md`
-6. `02_data_contracts/`
-7. 本目录 `算法01-06_结果表总览.md`
-8. `03_algorithm_cards/developer_version/算法卡_01_会员画像.md`
-9. `03_algorithm_cards/developer_version/算法卡_02_门店品类等级.md`
-10. `03_algorithm_cards/developer_version/算法卡_03_门店群消费者画像贡献.md`
-11. 本目录 `AI选品V1_开发评审问题清单.md`
+先从根目录 [README_开发评审入口.md](../../README_开发评审入口.md) 进入，再按其中顺序读取本目录文件。
