@@ -87,7 +87,11 @@ Agent Harness 负责意图识别、参数抽取、工具路由、轻量重排和
 | `AGENTS.md` | Codex | 文档整理和算法卡复核规则，开发可以忽略 |
 | `00_project_management/` | 产品 / 项目侧 / 开发评审 | 项目计划、业务确认、开发评审资料 |
 | `00_project_management/development_review/` | 开发 / 产品 / 项目侧 | SDD 评审包：开发链路、结果表总览、评审问题清单 |
-| `00_project_management/business_confirmations/` | 产品 / 业务 / 项目侧 | 业务原文承接矩阵、审阅清单、口径确认材料 |
+| `00_project_management/business_confirmations/` | 产品 / 业务 / 项目侧 | 业务确认材料入口，按用途拆分为待确认、审阅、溯源和交付核对 |
+| `00_project_management/business_confirmations/pending_items/` | 业务 / 产品 / 项目侧 | 需要业务集中补充或确认的事项，优先给业务看 |
+| `00_project_management/business_confirmations/review_checklists/` | 你 / 项目侧复核人 | 算法审阅清单和红线问题，内部复核用 |
+| `00_project_management/business_confirmations/source_traceability/` | 你 / 项目侧复核人 | 业务原文承接矩阵，证明业务原文没有漏掉、删掉或改写 |
+| `00_project_management/business_confirmations/delivery_checks/` | 项目侧 / Codex | 输出前逐项核对和交付前复核结论，避免旧结论误导 |
 | `01_source_docs/` | 产品 / 算法 / 需要溯源的人 | 业务原始与补充算法文档，只做溯源，不让开发自行猜口径 |
 | `02_data_contracts/` | 数据开发 | 基础表、外部表、Doris 表字段合同；第一批开发必须先看 |
 | `03_algorithm_cards/developer_version/` | 数据开发 | 开发版算法卡，按表、字段、公式、调度和验收落地 |
