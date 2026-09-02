@@ -222,8 +222,8 @@ def build():
     offline_cards = [
         ("基础数据表", "Doris 小票、门店、商品、价格、毛利损耗、可订可售、竞品数据。"),
         ("算法证据表", "算法 01～07 产出画像、门店等级、SKU、价格、购物篮、竞品趋势。"),
-        ("机会引擎", "算法 08～10 完成证据合成、风险门禁、候选合并和优先级。"),
-        ("推荐结果表", "mart_opportunity_recommendation\n保存方向、分数、证据、风险、试点建议。"),
+        ("机会引擎", "08 候选标准化；09 证据合成与风险门禁；10 优先级编排。"),
+        ("推荐结果表", "mart_opportunity_recommendation\n保存方向、优先级、证据、风险、试点建议。"),
     ]
     for x, (title, body) in zip(xs, offline_cards):
         card(draw, (x, top_y, x + card_w, top_y + card_h), title, body)
