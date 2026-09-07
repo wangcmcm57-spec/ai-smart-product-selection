@@ -18,11 +18,11 @@ README_开发评审入口.md
 |---|---|---|
 | 开发评审 | [README_开发评审入口.md](README_开发评审入口.md) | 唯一完整阅读顺序、评审范围、预审 Prompt 和会议方式 |
 | 架构理解 | [05_architecture/](05_architecture/README.md) | 完整架构图、Agent 运行架构图、运行时序图 |
-| 数据开发 | [02_data_contracts/](02_data_contracts/README.md) | 基础表、外部表、Doris 表字段合同 |
+| 数据开发 | [02_data_contracts/](02_data_contracts/README.md) | 基础表、外部表、Doris 表和规则配置表字段合同 |
 | 算法落地 | [03_algorithm_cards/developer_version/](03_algorithm_cards/developer_version/) | 开发版算法卡，按表、字段、公式、调度和验收落地 |
 | 产品 / Agent | [04_product/](04_product/README.md) | 后续沉淀工作台、对话入口和 Agent 产品形态 |
 
-第一批开发不是直接从算法 01 开始。数据开发需要先确认并准备基础数据表：
+开发首步不是直接从算法 01 开始。数据开发需要先确认并准备基础数据表、外部表、规则表和公共过滤逻辑：
 
 ```text
 Doris 小票商品明细
@@ -32,6 +32,7 @@ dim_city_algorithm_region 城市算法区域映射表
 mart_sku_margin_loss 毛利损耗表
 mart_store_sku_daily_price 门店商品日价格表
 mart_store_sku_daily_sale_order_status 门店商品每日可订可售表
+dim_product_status 商品状态表
 ```
 
 当前 V1 完整架构图：
@@ -61,7 +62,7 @@ Agent Harness 负责意图识别、参数抽取、工具路由、轻量重排和
 
 - 项目计划、待办、业务确认材料
 - 业务原始算法规则的 Markdown 溯源材料
-- 基础表、外部表、Doris 表的数据合同
+- 基础表、外部表、Doris 表和规则配置表的数据合同
 - 给数据开发使用的算法卡
 - 给业务和产品理解使用的业务解读版
 - 架构图、时序图、运行流程图
@@ -93,7 +94,7 @@ Agent Harness 负责意图识别、参数抽取、工具路由、轻量重排和
 | `00_project_management/business_confirmations/source_traceability/` | 你 / 项目侧复核人 | 业务原文承接矩阵，证明业务原文没有漏掉、删掉或改写 |
 | `00_project_management/business_confirmations/delivery_checks/` | 项目侧 / Codex | 输出前逐项核对和交付前复核结论，避免旧结论误导 |
 | `01_source_docs/` | 产品 / 算法 / 需要溯源的人 | 业务原始与补充算法文档，只做溯源，不让开发自行猜口径 |
-| `02_data_contracts/` | 数据开发 | 基础表、外部表、Doris 表字段合同；第一批开发必须先看 |
+| `02_data_contracts/` | 数据开发 | 基础表、外部表、Doris 表和规则配置表字段合同；开发首步必须先看 |
 | `03_algorithm_cards/developer_version/` | 数据开发 | 开发版算法卡，按表、字段、公式、调度和验收落地 |
 | `03_algorithm_cards/business_readable/` | 业务 / 产品 / 采购 / 开发评审 | 业务解读版，帮助理解算法目的和业务含义 |
 | `04_product/` | 产品 / 前后端 / Agent | 产品需求、业务流程、原型资料 |
@@ -103,6 +104,8 @@ Agent Harness 负责意图识别、参数抽取、工具路由、轻量重排和
 | `local_only/` | 本地个人使用 | 真实业务数据、临时验证结果，不进入 Git |
 
 说明：真实业务数据、本地导出文件和临时验证结果可以放在本机 `local_only/` 目录，但该目录不进入 Git。
+
+当前规则标准导入包如需本地暂存，放在 `02_data_contracts/rule_tables/import_ready/` 或 `local_only/`；该目录内容不进入正式 Git，开发优先使用标准 CSV 落 Doris。
 
 ## 当前项目原则
 

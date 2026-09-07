@@ -1,0 +1,1772 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>上海试点 AI 新品推荐工作台原型</title>
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      --page-bg: #f3f5f7;
+      --first-nav: #292b39;
+      --second-nav: #ffffff;
+      --content: #ffffff;
+      --section-bg: #ffffff;
+      --table-head: #f8fafc;
+      --line: #ebeef5;
+      --line-strong: #dcdfe6;
+      --text: #303133;
+      --normal: #606266;
+      --muted: #909399;
+      --blue: #409eff;
+      --blue-weak: #edf6ff;
+      --blue-active: #e8f3ff;
+      --orange: #e67e22;
+      --red: #f56c6c;
+      --green: #67c23a;
+      --radius-main: 16px;
+      --radius-section: 4px;
+      --radius-control: 4px;
+      font-family: "Microsoft YaHei", Arial, sans-serif;
+      color: var(--text);
+      background: var(--page-bg);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-width: 1280px;
+      min-height: 100vh;
+      background: var(--page-bg);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      border: 0;
+      background: transparent;
+    }
+
+    ::selection {
+      background: #d9ecff;
+      color: #1f5f99;
+    }
+
+    .header {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--page-bg);
+      padding-right: 32px;
+    }
+
+    .logo-column {
+      width: 96px;
+      height: 64px;
+      background: var(--first-nav);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.16);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      background: rgba(255,255,255,.04);
+    }
+
+    .logo-mark svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      height: 64px;
+      flex: 1;
+    }
+
+    .global-search {
+      width: 420px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+      background: #fff;
+      border: 1px solid var(--blue);
+      border-radius: 8px;
+      color: var(--muted);
+    }
+
+    .global-search svg {
+      width: 17px;
+      height: 17px;
+      color: #30343f;
+    }
+
+    .global-search input {
+      flex: 1;
+      min-width: 0;
+      height: 28px;
+      border: 0;
+      outline: 0;
+      color: var(--text);
+      background: transparent;
+    }
+
+    .global-search input::placeholder {
+      color: #a8abb2;
+    }
+
+    .search-tip {
+      color: var(--normal);
+      white-space: nowrap;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .header-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      position: relative;
+      height: 36px;
+      color: var(--text);
+    }
+
+    .header-action svg {
+      width: 18px;
+      height: 18px;
+      stroke-width: 2;
+    }
+
+    .badge {
+      position: absolute;
+      top: 1px;
+      right: -12px;
+      min-width: 17px;
+      height: 14px;
+      padding: 0 4px;
+      border-radius: 10px;
+      background: var(--red);
+      color: #fff;
+      font-size: 10px;
+      line-height: 14px;
+      text-align: center;
+    }
+
+    .avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #d9e8ff;
+      color: #2d67c8;
+      font-weight: 700;
+    }
+
+    .view {
+      height: calc(100vh - 64px);
+      display: grid;
+      grid-template-columns: 96px 112px minmax(0, 1fr);
+    }
+
+    .first-side {
+      background: var(--first-nav);
+      color: #b9bfcc;
+      display: flex;
+      flex-direction: column;
+      padding-top: 12px;
+      overflow: hidden;
+    }
+
+    .first-menu {
+      display: grid;
+      gap: 6px;
+    }
+
+    .first-item {
+      height: 34px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-left: 18px;
+      color: #aab1bf;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .first-item svg {
+      width: 17px;
+      height: 17px;
+      color: #8f98aa;
+    }
+
+    .first-item.active {
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .first-item.active svg {
+      color: #579dff;
+    }
+
+    .collapse {
+      margin-top: auto;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-left: 26px;
+      color: #aeb5c3;
+    }
+
+    .collapse svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .second-side-wrap {
+      background: var(--second-nav);
+      border-radius: var(--radius-main) 0 0 var(--radius-main);
+      overflow: hidden;
+      padding: 18px 12px;
+    }
+
+    .second-title {
+      margin: 0 0 18px;
+      font-size: 18px;
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .second-group-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 0 0 10px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .second-list {
+      display: grid;
+      gap: 4px;
+      margin-bottom: 22px;
+    }
+
+    .second-item {
+      height: 36px;
+      display: flex;
+      align-items: center;
+      padding-left: 10px;
+      border-radius: 8px;
+      color: #606266;
+      font-size: 12px;
+    }
+
+    .second-item.active {
+      background: var(--blue-active);
+      color: #1b7de2;
+      font-weight: 700;
+    }
+
+    .view-content {
+      min-width: 0;
+      height: calc(100vh - 64px);
+      background: #fff;
+      border-radius: 0 var(--radius-main) var(--radius-main) 0;
+      overflow: hidden;
+    }
+
+    .main {
+      height: 100%;
+      padding: 16px;
+      background: #fff;
+      overflow: auto;
+    }
+
+    .tabs {
+      height: 40px;
+      display: flex;
+      align-items: center;
+      border-bottom: 2px solid #e4e7ed;
+      margin-bottom: 14px;
+    }
+
+    .tab {
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 20px 0 0;
+      margin-right: 26px;
+      color: var(--text);
+      font-size: 14px;
+      position: relative;
+    }
+
+    .tab.active {
+      color: #1f6fbf;
+      font-weight: 700;
+    }
+
+    .tab.active::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 20px;
+      bottom: -2px;
+      height: 2px;
+      background: var(--blue);
+    }
+
+    .toolbar {
+      min-height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .toolbar-left,
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      min-width: 72px;
+      height: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      border-radius: 3px;
+      padding: 0 13px;
+      border: 1px solid var(--line-strong);
+      background: #fff;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .btn:hover {
+      color: var(--blue);
+      border-color: #c6e2ff;
+      background: #ecf5ff;
+    }
+
+    .btn.primary {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+
+    .btn.primary:hover {
+      background: #66b1ff;
+      border-color: #66b1ff;
+      color: #fff;
+    }
+
+    .btn.info {
+      background: #f2f5f7;
+      border-color: #f2f5f7;
+      color: #000;
+    }
+
+    .btn.text {
+      min-width: 0;
+      border: 0;
+      background: transparent;
+      color: var(--blue);
+      padding: 0 6px;
+    }
+
+    .page-con {
+      background: var(--page-bg);
+      min-height: calc(100vh - 166px);
+      padding-bottom: 18px;
+    }
+
+    .tips-con {
+      height: 41px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 10px;
+      border-radius: 4px;
+      background: #edf6ff;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+
+    .tips-con svg {
+      width: 15px;
+      height: 15px;
+      color: var(--orange);
+      fill: rgba(230,126,34,.18);
+    }
+
+    .column-con {
+      background: var(--section-bg);
+      border-radius: var(--radius-section);
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+
+    .column-title {
+      margin: 0 0 18px;
+      font-size: 16px;
+      line-height: 22px;
+      font-weight: 700;
+      color: #000;
+    }
+
+    .query-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 42px;
+      row-gap: 14px;
+      max-width: 1120px;
+    }
+
+    .form-item {
+      min-height: 32px;
+      display: grid;
+      grid-template-columns: 152px 370px;
+      align-items: center;
+    }
+
+    .form-title {
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 10px;
+      color: #000;
+      font-size: 12px;
+    }
+
+    .required {
+      color: var(--red);
+      margin-right: 2px;
+    }
+
+    .control {
+      position: relative;
+      width: 370px;
+    }
+
+    .control select,
+    .control input {
+      width: 100%;
+      height: 32px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-control);
+      background: #fff;
+      color: var(--normal);
+      padding: 0 30px 0 12px;
+      outline: 0;
+    }
+
+    .control select {
+      appearance: none;
+    }
+
+    .control svg {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 14px;
+      height: 14px;
+      color: #c0c4cc;
+      pointer-events: none;
+    }
+
+    .control input:focus,
+    .control select:focus {
+      border-color: var(--blue);
+    }
+
+    .nl-row {
+      grid-column: 1 / span 2;
+      display: grid;
+      grid-template-columns: 152px minmax(0, 782px);
+      align-items: center;
+    }
+
+    .nl-control {
+      position: relative;
+      max-width: 782px;
+    }
+
+    .nl-control input {
+      width: 100%;
+      height: 32px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-control);
+      padding: 0 118px 0 12px;
+      color: var(--normal);
+      outline: 0;
+    }
+
+    .nl-control .inside-action {
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 104px;
+      height: 32px;
+      border-radius: 0 4px 4px 0;
+      background: #f5f7fa;
+      color: var(--blue);
+      border-left: 1px solid var(--line-strong);
+    }
+
+    .form-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-left: 152px;
+      margin-top: 16px;
+    }
+
+    .query-error {
+      display: none;
+      margin-left: 10px;
+      color: var(--red);
+    }
+
+    .query-error.show {
+      display: inline;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .metric {
+      background: #f8fafc;
+      border-radius: 4px;
+      border: 1px solid #edf0f4;
+      height: 54px;
+      padding: 8px 12px;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    .metric-value {
+      color: #000;
+      font-size: 18px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .result-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 456px;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .result-main {
+      min-width: 0;
+    }
+
+    .table-wrap {
+      border: 1px solid var(--line);
+      border-bottom: 0;
+      background: #fff;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      min-width: 1100px;
+      border-collapse: collapse;
+      table-layout: fixed;
+      color: var(--normal);
+      font-size: 12px;
+    }
+
+    th {
+      height: 40px;
+      background: var(--table-head);
+      color: var(--text);
+      font-weight: 700;
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      padding: 0 10px;
+    }
+
+    td {
+      height: 54px;
+      border-bottom: 1px solid var(--line);
+      padding: 7px 10px;
+      vertical-align: middle;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .line-cell {
+      white-space: normal;
+      line-height: 1.45;
+      color: var(--text);
+    }
+
+    .line-cell strong {
+      display: block;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .sub-line {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    tr:hover td {
+      background: #f5f7fa;
+    }
+
+    tr.selected td {
+      background: #ecf5ff;
+    }
+
+    .thumb {
+      width: 42px;
+      height: 42px;
+      border-radius: 4px;
+      display: inline-grid;
+      place-items: center;
+      background: #f2f5f7;
+      border: 1px solid #e4e7ed;
+      color: #8c939d;
+      overflow: hidden;
+    }
+
+    .thumb svg {
+      width: 42px;
+      height: 42px;
+      display: block;
+    }
+
+    .product-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .product-name {
+      color: #000;
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .product-sub {
+      margin-top: 3px;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .tag.formal { color: #1b7f38; background: #f0f9eb; border: 1px solid #d8efcf; }
+    .tag.seasonal { color: #7a47bd; background: #f3edff; border: 1px solid #dfd1ff; }
+    .tag.local { color: #1f6fbf; background: #ecf5ff; border: 1px solid #c6e2ff; }
+    .tag.explore { color: #b7791f; background: #fff7e6; border: 1px solid #fde3b8; }
+    .tag.conditional { color: #d46b08; background: #fff4e5; border: 1px solid #ffd8a8; }
+
+    .status {
+      color: #1f6fbf;
+      font-weight: 700;
+    }
+
+    .status.warn {
+      color: #d46b08;
+    }
+
+    .op-btn {
+      color: var(--blue);
+      padding: 0 4px;
+      height: 22px;
+    }
+
+    .op-btn.active-good {
+      color: #1b7f38;
+      font-weight: 700;
+    }
+
+    .op-btn.active-bad {
+      color: #cf1322;
+      font-weight: 700;
+    }
+
+    .decision-panel {
+      min-width: 0;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .decision-head {
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      border-bottom: 1px solid var(--line);
+      background: var(--table-head);
+    }
+
+    .decision-head h3 {
+      margin: 0;
+      font-size: 14px;
+      line-height: 20px;
+      color: #000;
+    }
+
+    .decision-head span,
+    .muted-id {
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    .decision-section {
+      padding: 12px;
+      border-bottom: 1px solid #f0f2f5;
+    }
+
+    .decision-section:last-child {
+      border-bottom: 0;
+    }
+
+    .decision-section-title {
+      margin: 0 0 8px;
+      color: #000;
+      font-weight: 700;
+    }
+
+    .evidence-mini {
+      display: grid;
+      gap: 6px;
+    }
+
+    .evidence-mini-row {
+      display: grid;
+      grid-template-columns: 98px 1fr 68px;
+      gap: 8px;
+      align-items: start;
+      min-height: 28px;
+      color: var(--normal);
+    }
+
+    .evidence-mini-row strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 16px;
+    }
+
+    .detail-card {
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: #fff;
+      min-height: 120px;
+    }
+
+    .detail-card-title {
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      border-bottom: 1px solid var(--line);
+      background: var(--table-head);
+      color: #000;
+      font-weight: 700;
+    }
+
+    .detail-body {
+      padding: 12px;
+    }
+
+    .detail-text {
+      color: var(--text);
+      line-height: 1.8;
+      margin: 0;
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      border-bottom: 1px solid #f0f2f5;
+      min-height: 34px;
+    }
+
+    .kv:last-child {
+      border-bottom: 0;
+    }
+
+    .kv span {
+      display: flex;
+      align-items: center;
+      color: var(--muted);
+    }
+
+    .kv strong {
+      display: flex;
+      align-items: center;
+      color: var(--text);
+      font-weight: 500;
+      min-width: 0;
+    }
+
+    .evidence-table {
+      min-width: 0;
+      table-layout: fixed;
+    }
+
+    .evidence-table th,
+    .evidence-table td {
+      height: 38px;
+    }
+
+    .toast {
+      position: fixed;
+      right: 28px;
+      bottom: 68px;
+      min-width: 180px;
+      height: 38px;
+      display: none;
+      align-items: center;
+      padding: 0 14px;
+      border-radius: 4px;
+      background: #f0f9eb;
+      border: 1px solid #d8efcf;
+      color: #1b7f38;
+      z-index: 30;
+    }
+
+    .toast.show {
+      display: flex;
+    }
+
+    .event-panel {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid #2f7df6;
+      display: grid;
+      place-items: center;
+      color: #2f7df6;
+      box-shadow: 0 3px 12px rgba(47,125,246,.22);
+      z-index: 22;
+    }
+
+    .event-panel svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .event-pop {
+      position: fixed;
+      right: 18px;
+      bottom: 62px;
+      width: 360px;
+      display: none;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 6px 20px rgba(0,0,0,.12);
+      z-index: 22;
+      overflow: hidden;
+    }
+
+    .event-pop.show {
+      display: block;
+    }
+
+    .event-title {
+      height: 38px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      color: #000;
+      font-weight: 700;
+      border-bottom: 1px solid var(--line);
+      background: #f8fafc;
+    }
+
+    .event-list {
+      max-height: 220px;
+      overflow: auto;
+      padding: 8px 12px;
+    }
+
+    .event {
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      gap: 8px;
+      padding: 7px 0;
+      border-bottom: 1px solid #f0f2f5;
+      color: var(--normal);
+    }
+
+    .event:last-child {
+      border-bottom: 0;
+    }
+
+    .event code {
+      color: var(--blue);
+      font-family: Consolas, Monaco, monospace;
+      font-size: 11px;
+    }
+
+    .watermark {
+      pointer-events: none;
+      position: fixed;
+      inset: 64px 0 0 208px;
+      z-index: 0;
+      opacity: .07;
+      background-image: repeating-linear-gradient(-24deg, transparent 0 120px, rgba(0,0,0,.12) 121px, transparent 122px);
+    }
+
+    .main > * {
+      position: relative;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-left">
+      <div class="logo-column">
+        <div class="logo-mark"><i data-lucide="search-check"></i></div>
+      </div>
+      <div class="global-search">
+        <i data-lucide="search"></i>
+        <input value="" placeholder="请输入关键词搜索" aria-label="全局搜索" />
+        <span class="search-tip">Enter/点击查询</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="header-action"><i data-lucide="messages-square"></i><span>消息</span></div>
+      <div class="header-action"><i data-lucide="square-check-big"></i><span>待办</span><span class="badge">0</span></div>
+      <div class="header-action"><span class="avatar">王</span><span>王帅</span><i data-lucide="chevron-down"></i></div>
+    </div>
+  </div>
+
+  <div class="view">
+    <aside class="first-side" aria-label="一级菜单">
+      <div class="first-menu">
+        <div class="first-item"><i data-lucide="store"></i><span>门店</span></div>
+        <div class="first-item"><i data-lucide="home"></i><span>运营</span></div>
+        <div class="first-item"><i data-lucide="notebook-tabs"></i><span>订购</span></div>
+        <div class="first-item active"><i data-lucide="package"></i><span>商品</span></div>
+        <div class="first-item"><i data-lucide="shopping-cart"></i><span>订单</span></div>
+        <div class="first-item"><i data-lucide="target"></i><span>私域</span></div>
+        <div class="first-item"><i data-lucide="badge-percent"></i><span>营销</span></div>
+        <div class="first-item"><i data-lucide="wallet-cards"></i><span>财务</span></div>
+        <div class="first-item"><i data-lucide="gem"></i><span>新零售</span></div>
+        <div class="first-item"><i data-lucide="file-text"></i><span>报表</span></div>
+        <div class="first-item"><i data-lucide="grid-2x2"></i><span>系统</span></div>
+      </div>
+      <div class="collapse"><i data-lucide="panel-left-close"></i><span>收起</span></div>
+    </aside>
+
+    <aside class="second-side-wrap" aria-label="二级菜单">
+      <h1 class="second-title">商品</h1>
+      <div class="second-group">
+        <p class="second-group-title">AI 选品 <i data-lucide="chevron-up"></i></p>
+        <div class="second-list">
+          <div class="second-item active">新品推荐</div>
+          <div class="second-item">推荐证据</div>
+          <div class="second-item">反馈复盘</div>
+          <div class="second-item">算法批次</div>
+        </div>
+      </div>
+      <div class="second-group">
+        <p class="second-group-title">商品管理 <i data-lucide="chevron-down"></i></p>
+        <div class="second-list">
+          <div class="second-item">商品主档</div>
+          <div class="second-item">商品池</div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="view-content">
+      <main class="main">
+        <div class="tabs" role="tablist">
+          <button class="tab active" type="button">AI 新品推荐</button>
+          <button class="tab" type="button">推荐证据追溯</button>
+          <button class="tab" type="button">反馈记录</button>
+        </div>
+
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <button class="btn info" type="button"><i data-lucide="chevron-left"></i>返回</button>
+          </div>
+          <div class="toolbar-right">
+            <span style="color:#909399;">推荐批次：RUN-202609-SH</span>
+            <span style="color:#909399;">数据截止：2026-08-31 23:59</span>
+          </div>
+        </div>
+
+        <div class="page-con">
+          <div class="tips-con">
+            <i data-lucide="info"></i>
+            <span>当前页面只按采购选择条件筛选已离线产出的算法10推荐结果；查询和反馈不会在页面内实时改变排序和门禁结论。</span>
+          </div>
+
+          <section class="column-con">
+            <h2 class="column-title">查询条件</h2>
+            <div class="query-grid">
+              <div class="form-item">
+                <div class="form-title">运营大区：</div>
+                <div class="control">
+                  <select id="regionSelect">
+                    <option value="全部">全部</option>
+                    <option value="华东1区">华东1区</option>
+                    <option value="华东2区">华东2区</option>
+                    <option value="华东3区">华东3区</option>
+                  </select>
+                  <i data-lucide="chevron-down"></i>
+                </div>
+              </div>
+
+              <div class="form-item">
+                <div class="form-title"><span class="required">*</span>城市：</div>
+                <div class="control">
+                  <select id="citySelect">
+                    <option value="上海">上海</option>
+                  </select>
+                  <i data-lucide="chevron-down"></i>
+                </div>
+              </div>
+
+              <div class="form-item">
+                <div class="form-title"><span class="required">*</span>大分类：</div>
+                <div class="control">
+                  <select id="majorSelect">
+                    <option value="">请选择</option>
+                  </select>
+                  <i data-lucide="chevron-down"></i>
+                </div>
+              </div>
+
+              <div class="form-item">
+                <div class="form-title"><span class="required">*</span>中分类：</div>
+                <div class="control">
+                  <select id="middleSelect" disabled>
+                    <option value="">请选择</option>
+                  </select>
+                  <i data-lucide="chevron-down"></i>
+                </div>
+              </div>
+
+              <div class="form-item">
+                <div class="form-title">小分类：</div>
+                <div class="control">
+                  <select id="leafSelect" disabled>
+                    <option value="">全部小分类</option>
+                  </select>
+                  <i data-lucide="chevron-down"></i>
+                </div>
+              </div>
+
+              <div class="form-item">
+                <div class="form-title">推荐标签：</div>
+                <div class="control">
+                  <select id="labelSelect">
+                    <option value="">全部推荐标签</option>
+                    <option value="FORMAL_RECOMMENDATION">正式推荐</option>
+                    <option value="SEASONAL_RECOMMENDATION">季节推荐</option>
+                    <option value="LOCAL_PILOT_RECOMMENDATION">局部试点</option>
+                    <option value="EXPLORATORY_RECOMMENDATION">探索推荐</option>
+                    <option value="CONDITIONAL_RECOMMENDATION">条件推荐</option>
+                  </select>
+                  <i data-lucide="chevron-down"></i>
+                </div>
+              </div>
+
+              <div class="nl-row">
+                <div class="form-title">自然语言：</div>
+                <div class="nl-control">
+                  <input id="nlInput" value="上海鲜食肉禽制品有什么新品推荐" aria-label="自然语言查询" />
+                  <button id="parseBtn" class="inside-action" type="button">带入筛选条件</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button id="queryBtn" class="btn primary" type="button"><i data-lucide="search"></i>查询</button>
+              <button id="resetBtn" class="btn" type="button"><i data-lucide="refresh-cw"></i>重置</button>
+              <span id="queryError" class="query-error">请先选择大分类和中分类</span>
+            </div>
+          </section>
+
+          <section class="column-con">
+            <h2 class="column-title">推荐结果</h2>
+            <div class="metrics">
+              <div class="metric"><div class="metric-label">推荐结果</div><div id="mTotal" class="metric-value">0</div></div>
+              <div class="metric"><div class="metric-label">正式推荐</div><div id="mFormal" class="metric-value">0</div></div>
+              <div class="metric"><div class="metric-label">条件推荐</div><div id="mConditional" class="metric-value">0</div></div>
+              <div class="metric"><div class="metric-label">图片可展示</div><div id="mImage" class="metric-value">0</div></div>
+              <div class="metric"><div class="metric-label">当前页</div><div class="metric-value">1 / 1</div></div>
+            </div>
+
+            <div class="result-layout">
+              <div class="result-main">
+                <div class="table-wrap">
+                  <table aria-label="推荐结果表格">
+                    <thead>
+                      <tr>
+                        <th style="width:230px;">推荐新品</th>
+                        <th style="width:88px;">推荐标签</th>
+                        <th style="width:112px;">适用范围</th>
+                        <th style="width:92px;">用户画像</th>
+                        <th style="width:132px;">价格参考</th>
+                        <th style="width:178px;">机会依据</th>
+                        <th style="width:166px;">风险和试点</th>
+                        <th style="width:82px;">状态</th>
+                        <th style="width:104px;">反馈</th>
+                      </tr>
+                    </thead>
+                    <tbody id="resultBody">
+                      <tr>
+                        <td colspan="9" style="text-align:center;color:#909399;height:86px;">请选择大分类和中分类后查询</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <aside class="decision-panel" aria-label="选中推荐详情">
+                <div class="decision-head">
+                  <h3>选中结果详情</h3>
+                  <span>推荐理由 / 证据 / 风险</span>
+                </div>
+                <div id="detailArea">
+                  <div class="decision-section" style="height:120px;display:flex;align-items:center;justify-content:center;color:#909399;">
+                    选中推荐结果后展示推荐理由、证据、风险门禁和试点建议
+                  </div>
+                </div>
+              </aside>
+            </div>
+          </section>
+        </div>
+      </main>
+    </section>
+  </div>
+
+  <button id="eventToggle" class="event-panel" type="button" title="查看模拟埋点">
+    <i data-lucide="activity"></i>
+  </button>
+  <div id="eventPop" class="event-pop">
+    <div class="event-title">模拟埋点事件</div>
+    <div id="eventList" class="event-list"></div>
+  </div>
+  <div id="toast" class="toast">已记录反馈</div>
+
+  <script>
+    const categories = {
+      "鲜食": {
+        "肉禽制品": ["牛肉制品", "鸡肉快手菜"],
+        "面点": ["包点", "馄饨"],
+        "净菜": ["调味菜", "预制配菜"]
+      },
+      "蔬菜": {
+        "叶菜": ["小青菜", "生菜"],
+        "根茎": ["土豆", "春笋"],
+        "菌菇": ["香菇", "口蘑"]
+      },
+      "水果": {
+        "浆果": ["草莓", "蓝莓"],
+        "柑橘": ["橙", "柚"],
+        "热带水果": ["芒果", "凤梨"]
+      },
+      "肉禽": {
+        "牛肉": ["牛肉片", "牛排"],
+        "鸡肉": ["鸡胸", "鸡腿"],
+        "猪肉": ["猪排", "肉丝"]
+      },
+      "水产": {
+        "鱼类": ["鳕鱼", "鲈鱼"],
+        "虾蟹": ["鲜虾", "蟹味棒"],
+        "贝类": ["扇贝", "蛤蜊"]
+      },
+      "乳品烘焙": {
+        "酸奶": ["杯装酸奶", "风味酸奶"],
+        "鲜奶": ["低温鲜奶", "功能鲜奶"],
+        "烘焙": ["吐司", "蛋糕"]
+      },
+      "休闲食品": {
+        "坚果": ["每日坚果", "风味坚果"],
+        "零食": ["薯片", "肉脯"],
+        "饮品": ["茶饮", "果汁"]
+      }
+    };
+
+    const rows = [
+      {
+        id: "REC-SH-0001",
+        region: "华东1区",
+        city: "上海",
+        major: "鲜食",
+        middle: "肉禽制品",
+        leaf: "牛肉制品",
+        name: "青椒黑椒牛柳丝 200g",
+        label: "FORMAL_RECOMMENDATION",
+        labelText: "正式推荐",
+        labelClass: "formal",
+        scope: "上海 / 华东1区",
+        profile: "年轻家庭",
+        price: "建议价 19.9 元",
+        competitor: "18.8-22.9 元",
+        trend: "快手牛肉菜稳定上新",
+        risk: "无明显风险",
+        pilot: "A/B级门店 30 家试点",
+        status: "DISPLAY_READY",
+        imageStatus: "IMAGE_DISPLAY_READY",
+        gate: "PASS",
+        finalStatus: "FORMAL_NEW_PRODUCT",
+        reason: "目标客群对牛肉快手菜需求稳定，青椒、黑椒和牛柳场景清楚，200g 规格更容易控制价格和毛利。",
+        explanation: "建议优先看“青椒黑椒牛柳丝 200g”。适合先放在上海华东1区 A/B 级门店、年轻家庭客群里看。这个范围里，快手牛肉菜卖得比较稳；青椒、黑椒和牛柳经常出现在同一类购物场景里，说明顾客有真实需求。建议价 19.9 元有竞对价格参考，当前没有发现同款冲突。",
+        evidence: [
+          ["目标需求稳定性", "年轻家庭画像下锚点商品表现稳定", "APPLICABLE"],
+          ["价格成本可行余量", "建议价 19.9 元仍保留毛利空间", "APPLICABLE"],
+          ["差异化证据", "与当前货盘同款冲突未命中", "APPLICABLE"]
+        ]
+      },
+      {
+        id: "REC-SH-0002",
+        region: "华东2区",
+        city: "上海",
+        major: "鲜食",
+        middle: "肉禽制品",
+        leaf: "牛肉制品",
+        name: "彩椒牛柳丝 250g",
+        label: "LOCAL_PILOT_RECOMMENDATION",
+        labelText: "局部试点",
+        labelClass: "local",
+        scope: "上海 / 华东2区",
+        profile: "品质型家庭",
+        price: "建议价 22.9 元",
+        competitor: "21.9-25.8 元",
+        trend: "彩椒快手菜有外部线索",
+        risk: "需控制损耗",
+        pilot: "华东2区 A 级门店小范围",
+        status: "DISPLAY_REVIEW_REQUIRED",
+        imageStatus: "IMAGE_PLACEHOLDER_USED",
+        gate: "PASS",
+        finalStatus: "LOCAL_PILOT_NEW_PRODUCT",
+        reason: "局部范围需求更清楚，适合小范围试点；250g 规格价格更高，需关注损耗和动销节奏。",
+        explanation: "“彩椒牛柳丝 250g”适合先做局部试点。它在华东2区品质型家庭画像下信号更集中，彩椒和牛柳组合有一定差异化，但规格偏大、价格带更高，建议先用小范围门店验证动销和损耗。",
+        evidence: [
+          ["目标需求稳定性", "华东2区品质型家庭下表现较好", "APPLICABLE"],
+          ["价格成本可行余量", "建议价 22.9 元，毛利空间可用", "APPLICABLE"],
+          ["跨数据块稳定性", "跨门店等级稳定性不足以全量推荐", "NOT_EVALUABLE"]
+        ]
+      },
+      {
+        id: "REC-SH-0003",
+        region: "华东1区",
+        city: "上海",
+        major: "乳品烘焙",
+        middle: "酸奶",
+        leaf: "杯装酸奶",
+        name: "燕麦酸奶杯 180g",
+        label: "CONDITIONAL_RECOMMENDATION",
+        labelText: "条件推荐",
+        labelClass: "conditional",
+        scope: "上海 / 华东1区",
+        profile: "健康轻食",
+        price: "价格待补",
+        competitor: "8.9-12.9 元",
+        trend: "燕麦乳品组合热度上升",
+        risk: "需补真实报价",
+        pilot: "先补报价和冷链成本",
+        status: "DISPLAY_REVIEW_REQUIRED",
+        imageStatus: "IMAGE_HIDDEN",
+        gate: "CONDITIONAL_PASS",
+        finalStatus: "FORMAL_NEW_PRODUCT",
+        reason: "机会方向成立，但当前缺真实报价和全链路成本，不能当成正式推荐推进。",
+        explanation: "“燕麦酸奶杯 180g”可以先看方向。目标客群和杯装酸奶需求能接上，外部燕麦乳品组合有趋势线索，但本条结果是条件推荐：真实报价、冷链成本和毛利验证还没有补齐。",
+        evidence: [
+          ["目标需求稳定性", "健康轻食画像下酸奶需求稳定", "APPLICABLE"],
+          ["价格成本可行余量", "缺真实报价，不能参与正式比较", "NOT_EVALUABLE"],
+          ["差异化证据", "燕麦和酸奶组合有外部趋势", "APPLICABLE"]
+        ]
+      },
+      {
+        id: "REC-SH-0004",
+        region: "华东3区",
+        city: "上海",
+        major: "鲜食",
+        middle: "肉禽制品",
+        leaf: "鸡肉快手菜",
+        name: "泰式柠檬鸡胸 150g",
+        label: "EXPLORATORY_RECOMMENDATION",
+        labelText: "探索推荐",
+        labelClass: "explore",
+        scope: "上海 / 华东3区",
+        profile: "年轻单身",
+        price: "建议价 16.9 元",
+        competitor: "暂无竞对价格",
+        trend: "东南亚口味早期线索",
+        risk: "趋势证据偏早",
+        pilot: "先做小样评审",
+        status: "DISPLAY_REVIEW_REQUIRED",
+        imageStatus: "IMAGE_PLACEHOLDER_USED",
+        gate: "PASS",
+        finalStatus: "EXPLORATORY_NEW_PRODUCT",
+        reason: "趋势证据偏早，但口味和目标人群方向值得观察，适合先做研究或小样评审。",
+        explanation: "“泰式柠檬鸡胸 150g”属于探索推荐。它不是正式新品结论，而是可以继续观察的机会方向。当前外部趋势偏早，竞对价格证据不足，如果要推进，需要先补竞对价格、试吃反馈和真实成本。",
+        evidence: [
+          ["目标需求稳定性", "年轻单身画像有低负担肉类需求", "APPLICABLE"],
+          ["价格成本可行余量", "建议价 16.9 元可进入观察", "APPLICABLE"],
+          ["风险证据完整度", "竞对价格缺失", "NOT_EVALUABLE"]
+        ]
+      },
+      {
+        id: "REC-SH-0005",
+        region: "华东1区",
+        city: "上海",
+        major: "鲜食",
+        middle: "面点",
+        leaf: "包点",
+        name: "春笋鲜肉包 4只",
+        label: "SEASONAL_RECOMMENDATION",
+        labelText: "季节推荐",
+        labelClass: "seasonal",
+        scope: "上海 / 华东1区",
+        profile: "家庭早餐",
+        price: "建议价 12.9 元",
+        competitor: "11.8-15.9 元",
+        trend: "春笋季节窗口集中",
+        risk: "季节窗口限制",
+        pilot: "销售季内门店群试点",
+        status: "DISPLAY_READY",
+        imageStatus: "IMAGE_DISPLAY_READY",
+        gate: "PASS",
+        finalStatus: "SEASONAL_NEW_PRODUCT",
+        reason: "季节窗口内需求集中，面点场景清楚，建议在销售季内优先查看。",
+        explanation: "“春笋鲜肉包 4只”属于季节推荐。它适合在春笋销售季内查看，不代表全年常态推荐。家庭早餐人群在面点小分类贡献稳定，竞对价格有参考，后续要重点确认销售季窗口和鲜笋供应稳定性。",
+        evidence: [
+          ["目标需求稳定性", "家庭早餐画像下包点需求稳定", "APPLICABLE"],
+          ["价格成本可行余量", "建议价 12.9 元有竞对价格参考", "APPLICABLE"],
+          ["季节证据", "春笋销售季窗口内信号集中", "APPLICABLE"]
+        ]
+      }
+    ];
+
+    const dom = {
+      region: document.getElementById("regionSelect"),
+      city: document.getElementById("citySelect"),
+      major: document.getElementById("majorSelect"),
+      middle: document.getElementById("middleSelect"),
+      leaf: document.getElementById("leafSelect"),
+      label: document.getElementById("labelSelect"),
+      nlInput: document.getElementById("nlInput"),
+      parseBtn: document.getElementById("parseBtn"),
+      main: document.querySelector(".main"),
+      queryBtn: document.getElementById("queryBtn"),
+      resetBtn: document.getElementById("resetBtn"),
+      error: document.getElementById("queryError"),
+      resultBody: document.getElementById("resultBody"),
+      detailArea: document.getElementById("detailArea"),
+      mTotal: document.getElementById("mTotal"),
+      mFormal: document.getElementById("mFormal"),
+      mConditional: document.getElementById("mConditional"),
+      mImage: document.getElementById("mImage"),
+      toast: document.getElementById("toast"),
+      eventToggle: document.getElementById("eventToggle"),
+      eventPop: document.getElementById("eventPop"),
+      eventList: document.getElementById("eventList")
+    };
+
+    let current = [];
+    let selectedId = "";
+    const feedback = new Map();
+
+    function scrollMainTop() {
+      if (dom.main) dom.main.scrollTop = 0;
+    }
+
+    const displayStatusText = {
+      DISPLAY_READY: "可展示",
+      DISPLAY_REVIEW_REQUIRED: "需复核"
+    };
+
+    const gateStatusText = {
+      PASS: "通过",
+      CONDITIONAL_PASS: "条件通过"
+    };
+
+    const finalStatusText = {
+      FORMAL_NEW_PRODUCT: "正式新品",
+      SEASONAL_NEW_PRODUCT: "季节新品",
+      LOCAL_PILOT_NEW_PRODUCT: "局部试点新品",
+      EXPLORATORY_NEW_PRODUCT: "探索新品"
+    };
+
+    const imageStatusText = {
+      IMAGE_DISPLAY_READY: "图片可展示",
+      IMAGE_PLACEHOLDER_USED: "使用占位图",
+      IMAGE_HIDDEN: "暂不展示图片"
+    };
+
+    const evidenceStatusText = {
+      APPLICABLE: "可用",
+      NOT_EVALUABLE: "暂不可评估"
+    };
+
+    function cn(map, value) {
+      return map[value] || value;
+    }
+
+    function iconThumb(status) {
+      const hidden = status === "IMAGE_HIDDEN";
+      const color = hidden ? "#c0c4cc" : "#91c9ff";
+      const fill = hidden ? "#f5f7fa" : "#edf6ff";
+      return `<span class="thumb">
+        <svg viewBox="0 0 42 42" aria-hidden="true">
+          <rect width="42" height="42" fill="${fill}"></rect>
+          <circle cx="29" cy="14" r="4" fill="${color}"></circle>
+          <path d="M8 31l8-10 6 7 5-5 8 8H8z" fill="${hidden ? "#dcdfe6" : "#409eff"}" opacity=".8"></path>
+          ${hidden ? '<path d="M10 10l22 22" stroke="#a8abb2" stroke-width="3" stroke-linecap="round"></path>' : ""}
+        </svg>
+      </span>`;
+    }
+
+    function fillSelect(select, values, firstText) {
+      select.innerHTML = `<option value="">${firstText}</option>`;
+      values.forEach((value) => {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = value;
+        select.appendChild(option);
+      });
+    }
+
+    function initCategories() {
+      fillSelect(dom.major, Object.keys(categories), "请选择");
+    }
+
+    function onMajorChange() {
+      const major = dom.major.value;
+      fillSelect(dom.middle, major ? Object.keys(categories[major]) : [], "请选择");
+      dom.middle.disabled = !major;
+      fillSelect(dom.leaf, [], "全部小分类");
+      dom.leaf.disabled = true;
+    }
+
+    function onMiddleChange() {
+      const major = dom.major.value;
+      const middle = dom.middle.value;
+      fillSelect(dom.leaf, major && middle ? categories[major][middle] : [], "全部小分类");
+      dom.leaf.disabled = !(major && middle);
+    }
+
+    function query(options = {}) {
+      if (!dom.major.value || !dom.middle.value) {
+        dom.error.classList.add("show");
+        if (!options.silent) logEvent("query_validate_failed", "缺少大分类或中分类");
+        return;
+      }
+      dom.error.classList.remove("show");
+      current = rows
+        .filter((row) => row.city === dom.city.value)
+        .filter((row) => dom.region.value === "全部" || row.region === dom.region.value)
+        .filter((row) => row.major === dom.major.value)
+        .filter((row) => row.middle === dom.middle.value)
+        .filter((row) => !dom.leaf.value || row.leaf === dom.leaf.value)
+        .filter((row) => !dom.label.value || row.label === dom.label.value);
+
+      selectedId = current[0]?.id || "";
+      renderTable();
+      renderDetail(current[0]);
+      if (!options.silent) {
+        logEvent("ai_selection_query_click", `${dom.region.value}/${dom.city.value}/${dom.major.value}/${dom.middle.value}/${dom.leaf.value || "全部小分类"}`);
+      }
+    }
+
+    function renderTable() {
+      dom.mTotal.textContent = current.length;
+      dom.mFormal.textContent = current.filter((row) => row.label === "FORMAL_RECOMMENDATION").length;
+      dom.mConditional.textContent = current.filter((row) => row.label === "CONDITIONAL_RECOMMENDATION").length;
+      dom.mImage.textContent = current.filter((row) => row.imageStatus === "IMAGE_DISPLAY_READY").length;
+
+      if (!current.length) {
+        dom.resultBody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#909399;height:86px;">当前条件下暂无新品推荐结果</td></tr>`;
+        return;
+      }
+
+      dom.resultBody.innerHTML = current.map((row) => {
+        const fb = feedback.get(row.id);
+        const displayText = cn(displayStatusText, row.status);
+        return `
+          <tr class="${row.id === selectedId ? "selected" : ""}" data-id="${row.id}">
+            <td>
+              <div class="product-cell">
+                ${iconThumb(row.imageStatus)}
+                <div style="min-width:0;">
+                  <div class="product-name">${row.name}</div>
+                  <div class="product-sub">${row.major} / ${row.middle} / ${row.leaf}</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="tag ${row.labelClass}">${row.labelText}</span></td>
+            <td>${row.scope}</td>
+            <td>${row.profile}</td>
+            <td>
+              <div class="line-cell">
+                <strong>${row.price}</strong>
+                <span class="sub-line">竞对：${row.competitor}</span>
+              </div>
+            </td>
+            <td>
+              <div class="line-cell">
+                <strong>${row.trend}</strong>
+                <span class="sub-line">${row.reason}</span>
+              </div>
+            </td>
+            <td>
+              <div class="line-cell">
+                <strong>${row.risk}</strong>
+                <span class="sub-line">${row.pilot}</span>
+              </div>
+            </td>
+            <td><span class="status ${row.status === "DISPLAY_READY" ? "" : "warn"}">${displayText}</span></td>
+            <td>
+              <button class="op-btn ${fb === "good" ? "active-good" : ""}" data-op="good" data-id="${row.id}" type="button">很好</button>
+              <button class="op-btn ${fb === "bad" ? "active-bad" : ""}" data-op="bad" data-id="${row.id}" type="button">不好</button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+      dom.resultBody.querySelectorAll("tr[data-id]").forEach((tr) => {
+        tr.addEventListener("click", (event) => {
+          if (event.target.closest(".op-btn")) return;
+          selectedId = tr.dataset.id;
+          renderTable();
+          renderDetail(current.find((row) => row.id === selectedId));
+          logEvent("ai_selection_detail_open", selectedId);
+        });
+      });
+
+      dom.resultBody.querySelectorAll(".op-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          selectedId = btn.dataset.id;
+          feedback.set(btn.dataset.id, btn.dataset.op);
+          renderTable();
+          renderDetail(current.find((row) => row.id === selectedId));
+          const label = btn.dataset.op === "good" ? "很好" : "不好";
+          showToast(`已记录反馈：${label}`);
+          logEvent(btn.dataset.op === "good" ? "ai_selection_feedback_good_click" : "ai_selection_feedback_bad_click", `${btn.dataset.id}/${label}`);
+        });
+      });
+    }
+
+    function renderDetail(row) {
+      if (!row) {
+        dom.detailArea.innerHTML = `<div class="decision-section" style="height:120px;display:flex;align-items:center;justify-content:center;color:#909399;">当前条件下没有可展示的推荐结果</div>`;
+        return;
+      }
+      const evidenceRows = row.evidence.map(([name, desc, status]) => `
+        <div class="evidence-mini-row">
+          <strong>${name}</strong>
+          <span>${desc}</span>
+          <span class="status ${status === "APPLICABLE" ? "" : "warn"}">${cn(evidenceStatusText, status)}</span>
+        </div>
+      `).join("");
+
+      dom.detailArea.innerHTML = `
+        <div class="decision-section">
+          <p class="decision-section-title">推荐理由 <span class="muted-id">${row.id}</span></p>
+          <p class="detail-text">${row.reason}</p>
+        </div>
+        <div class="decision-section">
+          <p class="decision-section-title">证据维度</p>
+          <div class="evidence-mini">${evidenceRows}</div>
+        </div>
+        <div class="decision-section">
+          <p class="decision-section-title">风险和试点</p>
+          <div class="kv"><span>用户画像</span><strong>${row.profile}</strong></div>
+          <div class="kv"><span>竞对价格</span><strong>${row.competitor}</strong></div>
+          <div class="kv"><span>行业趋势</span><strong>${row.trend}</strong></div>
+          <div class="kv"><span>风险提示</span><strong>${row.risk}</strong></div>
+          <div class="kv"><span>试点建议</span><strong>${row.pilot}</strong></div>
+        </div>
+        <div class="decision-section">
+          <p class="decision-section-title">系统状态</p>
+          <div class="kv"><span>门禁结果</span><strong>${cn(gateStatusText, row.gate)}</strong></div>
+          <div class="kv"><span>候选状态</span><strong>${cn(finalStatusText, row.finalStatus)}</strong></div>
+          <div class="kv"><span>图片状态</span><strong>${cn(imageStatusText, row.imageStatus)}</strong></div>
+          <div class="kv"><span>推荐批次</span><strong>RUN-202609-SH</strong></div>
+        </div>
+      `;
+    }
+
+    function reset() {
+      dom.region.value = "全部";
+      dom.city.value = "上海";
+      dom.major.value = "";
+      dom.label.value = "";
+      onMajorChange();
+      dom.error.classList.remove("show");
+      current = [];
+      selectedId = "";
+      dom.resultBody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#909399;height:86px;">请选择大分类和中分类后查询</td></tr>`;
+      renderDetail(null);
+      dom.mTotal.textContent = "0";
+      dom.mFormal.textContent = "0";
+      dom.mConditional.textContent = "0";
+      dom.mImage.textContent = "0";
+      scrollMainTop();
+      logEvent("ai_selection_reset_click", "页面条件已重置");
+    }
+
+    function parseNl() {
+      const text = dom.nlInput.value;
+      dom.region.value = /华东\s*2|华东2/.test(text) ? "华东2区" : /华东\s*3|华东3/.test(text) ? "华东3区" : /华东\s*1|华东1/.test(text) ? "华东1区" : "全部";
+      if (/酸奶|燕麦/.test(text)) {
+        dom.major.value = "乳品烘焙";
+        onMajorChange();
+        dom.middle.value = "酸奶";
+        onMiddleChange();
+        dom.leaf.value = "杯装酸奶";
+      } else if (/包|面点|春笋/.test(text)) {
+        dom.major.value = "鲜食";
+        onMajorChange();
+        dom.middle.value = "面点";
+        onMiddleChange();
+        dom.leaf.value = "包点";
+      } else {
+        dom.major.value = "鲜食";
+        onMajorChange();
+        dom.middle.value = "肉禽制品";
+        onMiddleChange();
+        dom.leaf.value = /鸡/.test(text) ? "鸡肉快手菜" : /牛肉制品|牛柳/.test(text) ? "牛肉制品" : "";
+      }
+      logEvent("ai_selection_agent_parse", "自然语言已带入筛选条件");
+      query();
+    }
+
+    function loadDefaultQuery() {
+      dom.region.value = "全部";
+      dom.city.value = "上海";
+      dom.major.value = "鲜食";
+      dom.label.value = "";
+      onMajorChange();
+      dom.middle.value = "肉禽制品";
+      onMiddleChange();
+      dom.leaf.value = "";
+      query({ silent: true });
+      logEvent("ai_selection_default_loaded", "默认展示上海 / 鲜食 / 肉禽制品推荐结果");
+    }
+
+    function showToast(text) {
+      dom.toast.textContent = text;
+      dom.toast.classList.add("show");
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => dom.toast.classList.remove("show"), 1600);
+    }
+
+    function logEvent(name, detail) {
+      const time = new Date().toLocaleTimeString("zh-CN", { hour12: false });
+      const div = document.createElement("div");
+      div.className = "event";
+      div.innerHTML = `<code>${time}</code><span><strong>${name}</strong><br>${detail}</span>`;
+      dom.eventList.prepend(div);
+      while (dom.eventList.children.length > 8) {
+        dom.eventList.removeChild(dom.eventList.lastElementChild);
+      }
+    }
+
+    initCategories();
+    loadDefaultQuery();
+    dom.major.addEventListener("change", onMajorChange);
+    dom.middle.addEventListener("change", onMiddleChange);
+    dom.queryBtn.addEventListener("click", query);
+    dom.resetBtn.addEventListener("click", reset);
+    dom.parseBtn.addEventListener("click", parseNl);
+    dom.nlInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") parseNl();
+    });
+    dom.eventToggle.addEventListener("click", () => {
+      dom.eventPop.classList.toggle("show");
+    });
+    logEvent("ai_selection_page_view", "进入 AI 新品推荐模块");
+    window.requestAnimationFrame(scrollMainTop);
+    if (window.lucide) window.lucide.createIcons();
+  </script>
+</body>
+</html>

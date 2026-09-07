@@ -2,7 +2,17 @@
 
 生成日期：2026-08-10
 
-本文给数据开发使用，目标是说明：本地数据合同目录中 5 张基础表需要哪些字段，当前 Doris `data_db` 现有表能提供什么，还缺什么。
+当前定位：这是给数据开发补齐基础数据字段用的当前工作清单，不是历史归档，也不是替代表合同的字段合同。
+
+本文给数据开发使用，目标是说明：本地数据合同目录中 6 张基础表需要哪些字段，当前 Doris `data_db` 现有表能提供什么，还缺什么。
+
+使用方式：
+
+```text
+1. 字段定义、表粒度、主键以 base_tables/ 下的正式数据合同为准。
+2. 本清单用于开发判断现有 Doris `data_db` 能覆盖哪些字段、哪些字段还需要补源表或补映射。
+3. 开发完成补数后，应回填实际来源表、字段名、主键唯一性、调度周期和缺失原因。
+```
 
 ## 1. 检查范围
 
@@ -14,6 +24,7 @@
 /Users/saihanhabuer/Documents/ai-selection-agent/02_data_contracts/base_tables/mart_sku_margin_loss_毛利损耗表.md
 /Users/saihanhabuer/Documents/ai-selection-agent/02_data_contracts/base_tables/mart_store_sku_daily_price_门店商品日价格表.md
 /Users/saihanhabuer/Documents/ai-selection-agent/02_data_contracts/base_tables/mart_store_sku_daily_sale_order_status_门店商品每日可订可售表.md
+/Users/saihanhabuer/Documents/ai-selection-agent/02_data_contracts/base_tables/dim_product_status_商品状态表.md
 ```
 
 不包含：
@@ -65,6 +76,7 @@ Database: data_db
 | `mart_sku_margin_loss` 毛利损耗表 | 部分满足 | `dwd_date_shop_sku` / `dwd_date_shop_sku_qdm_brand_view` / 必要时 join 维表 | 缺门店+SKU+日粒度的销售重量、进货重量、订购重量、原价销售额、会员来客、会员折扣、更新时间 |
 | `mart_store_sku_daily_price` 门店商品日价格表 | 不满足 | 当前无完整来源 | 缺验收商品编码、仓、采购价、出库价、到店价、销售原价、价格等级、价格带等价格主字段 |
 | `mart_store_sku_daily_sale_order_status` 门店商品每日可订可售表 | 不满足 | 当前无完整来源 | 缺订购商品编码、是否可售、是否可订、更新时间 |
+| `dim_product_status` 商品状态表 | 不满足 | SAP POP 平台待接入 Doris | 缺 SAP POP 平台中区域 + 商品编码 + 商品名称 + 商品状态 A/O/S/D/B 的稳定接入 |
 
 开发优先级建议：
 
@@ -72,6 +84,7 @@ Database: data_db
 |---|---|---|
 | P0 | `mart_store_sku_daily_sale_order_status` | 没有可售 / 可订状态，算法无法判断“没销量”是消费者不买还是商品不可售不可订 |
 | P0 | `mart_store_sku_daily_price` | 价格带、毛利健康、机会评分依赖采购 / 出库 / 到店 / 售价 / 验收 SKU |
+| P0 | `dim_product_status` | 没有商品状态，算法无法区分全年品、试卖品、季节品、淘汰品和备选品 |
 | P1 | `mart_sku_margin_loss` 缺口字段 | 现有经营指标能覆盖一部分，但重量、会员、原价、更新时间字段不完整 |
 | P2 | `dim_sku` 标品 / 自加工映射 | 可先用候选字段派生，但需要数据字典确认 |
 | P2 | `dim_store` 状态码映射 | `sp_store_status` 可用，但需要明确状态码中文含义和是否营业规则 |
@@ -473,25 +486,74 @@ data_db.dim_sku
 日期、门店编码、销售商品编码、订购商品编码、是否可售、是否可订、数据更新时间
 ```
 
-## 9. 给开发的补数任务清单
+## 9. `dim_product_status` 商品状态表
 
-### 9.1 必须补表 / 补字段
+合同粒度：
+
+```text
+一行一个数据版本 + 区域 + 商品的当前商品状态
+主键建议：product_status_version + region_code + sku_id
+```
+
+当前建议来源：
+
+```text
+业务已补充来源为 SAP POP 平台。当前 data_db 未看到已落入 Doris 且可直接满足 A/O/S/D/B 商品状态枚举的完整来源。
+需要数据开发从 SAP POP 平台抽取或同步商品状态数据，并落到 Doris 可稳定读取的数据源。
+```
+
+### 9.1 必须提供字段
+
+| 合同字段 | 英文字段 | 最低要求 |
+|---|---|---|
+| 区域编码 | `region_code` | 必须能和门店区域或算法区域口径建立映射 |
+| 区域名称 | `region_name` | 业务可读的区域名称 |
+| 商品编码 | `sku_id` | 必须对齐小票表 `article_id` 和商品基础表 `dim_sku.sku_id` |
+| 商品名称 | `sku_name` | 必须和商品基础表商品名称可核对 |
+| 商品状态编码 | `product_status_code` | 只能取 `A`、`O`、`S`、`D`、`B` |
+| 状态快照日期 | `status_snapshot_date` | 必须提供，用于标识本批 SAP POP 商品状态快照 |
+| 来源系统 | `source_system` | 固定写 `SAP_POP` |
+| 数据更新时间 | `data_update_time` | 必须提供，支持数据追溯 |
+
+### 9.2 商品状态枚举
+
+| 状态编码 | 英文含义 | 中文含义 | 算法使用提示 |
+|---|---|---|---|
+| `A` | `annual` | 全年品 | 可作为常规在售商品基线 |
+| `O` | `one_time_buy` | 试卖品 | 历史销量和停订不能直接等同常规失败 |
+| `S` | `seasonal` | 季节品 | `S` 本身已代表季节品身份，本表不判断销售季内/外 |
+| `D` | `discontinued` | 淘汰品 | 不应作为常规新品候选，特殊策略需单独标记 |
+| `B` | `backup` | 备选品 | 作为备选货盘或替代关系判断，不等同常规主推 |
+
+### 9.3 需要开发补充 / 反馈
+
+| 需要补充项 | 说明 |
+|---|---|
+| SAP POP 商品状态接入 | 当前 Doris `data_db` 未看到可直接提供 A/O/S/D/B 的字段，需要开发说明 SAP POP 的来源表、接口或同步任务 |
+| 区域口径 | 需要明确区域是大区、管理区域、城市群还是其他业务区域，并说明如何和门店基础表对齐 |
+| 状态快照周期 | 需要说明 SAP POP 商品状态同步频率、快照日期口径和更新时间字段 |
+
+## 10. 给开发的补数任务清单
+
+### 10.1 必须补表 / 补字段
 
 | 目标合同表 | 必补内容 | 最低要求 |
 |---|---|---|
 | `mart_store_sku_daily_sale_order_status` | 每日可售可订状态表 | 日期 + 门店编码 + 销售商品编码 + 订购商品编码 + 是否可售 + 是否可订 + 更新时间 |
 | `mart_store_sku_daily_price` | 门店商品日价格表 | 日期 + 门店编码 + 销售商品编码 + 验收商品编码 + 仓 + 采购价 + 出库价 + 到店价 + 销售原价 + 成交价 + 价格等级 / 价格带 + 更新时间 |
+| `dim_product_status` | 商品状态表 | 区域 + 商品编码 + 商品名称 + 商品状态 A/O/S/D/B + 状态快照日期 + 更新时间 |
 | `mart_sku_margin_loss` | SKU 日粒度缺口经营字段 | 销售重量、进货重量、订购重量、原价销售额、会员来客、19点前会员来客、会员折扣额、会员折扣率、更新时间 |
 
-### 9.2 需要提供字段字典 / 派生规则
+### 10.2 需要提供字段字典 / 派生规则
 
 | 目标表 | 规则 | 当前候选字段 |
 |---|---|---|
 | `dim_store` | `sp_store_status` 状态码中文含义、是否营业 1/0 派生规则 | `dim_shop.sp_store_status` |
 | `dim_sku` | 是否标品派生规则，或直接补字段 | `weight_flag`、`package_attribute_name`、`type_name` |
 | `dim_sku` | 是否自加工商品派生规则，或直接补字段 | `commodity_attribute`、`commodity_attribute_name`、`logistics_process_tag` |
+| `dim_product_status` | SAP POP 平台中商品状态 A/O/S/D/B 的来源字段、枚举字典和区域适用口径 | 当前 Doris `data_db` 未看到可直接映射字段 |
 
-### 9.3 可先用现有 Doris 产出的字段
+### 10.3 可先用现有 Doris 产出的字段
 
 | 目标表 | 可先产出内容 |
 |---|---|
@@ -499,9 +561,9 @@ data_db.dim_sku
 | `dim_sku` | 商品编码、商品名称、类目、SPU、规格、单位、单位重量、品牌、产地、存储条件、温层、保质天数、更新时间 |
 | `mart_sku_margin_loss` | 门店 SKU 日销售额、销售数量、19点前销售、客数、进货额/量、订购额/量、毛利、折扣、损耗等主要金额指标 |
 
-## 10. 建议开发自查 SQL
+## 11. 建议开发自查 SQL
 
-### 10.1 查看门店状态码枚举
+### 11.1 查看门店状态码枚举
 
 ```sql
 SELECT
@@ -512,7 +574,7 @@ GROUP BY sp_store_status
 ORDER BY sp_store_status;
 ```
 
-### 10.2 查看字段注释
+### 11.2 查看字段注释
 
 ```sql
 SELECT
@@ -534,7 +596,7 @@ WHERE TABLE_SCHEMA = 'data_db'
 ORDER BY TABLE_NAME, ORDINAL_POSITION;
 ```
 
-### 10.3 检查价格表关键字段是否已补齐
+### 11.3 检查价格表关键字段是否已补齐
 
 ```sql
 SELECT
@@ -557,7 +619,7 @@ WHERE TABLE_SCHEMA = 'data_db'
 ORDER BY TABLE_NAME, ORDINAL_POSITION;
 ```
 
-### 10.4 检查可售可订状态字段是否已补齐
+### 11.4 检查可售可订状态字段是否已补齐
 
 ```sql
 SELECT
@@ -575,7 +637,33 @@ WHERE TABLE_SCHEMA = 'data_db'
 ORDER BY TABLE_NAME, ORDINAL_POSITION;
 ```
 
-## 11. 最终交付判断
+### 11.5 检查商品状态字段是否已补齐
+
+```sql
+SELECT
+  TABLE_NAME,
+  COLUMN_NAME,
+  COLUMN_COMMENT
+FROM information_schema.COLUMNS
+WHERE TABLE_SCHEMA = 'data_db'
+  AND (
+    COLUMN_NAME LIKE '%status%'
+    OR COLUMN_NAME LIKE '%life%'
+    OR COLUMN_NAME LIKE '%season%'
+    OR COLUMN_NAME LIKE '%annual%'
+    OR COLUMN_NAME LIKE '%discontinued%'
+    OR COLUMN_COMMENT LIKE '%商品状态%'
+    OR COLUMN_COMMENT LIKE '%生命周期%'
+    OR COLUMN_COMMENT LIKE '%全年%'
+    OR COLUMN_COMMENT LIKE '%试卖%'
+    OR COLUMN_COMMENT LIKE '%季节%'
+    OR COLUMN_COMMENT LIKE '%淘汰%'
+    OR COLUMN_COMMENT LIKE '%备选%'
+  )
+ORDER BY TABLE_NAME, ORDINAL_POSITION;
+```
+
+## 12. 最终交付判断
 
 当前 Doris `data_db` 已经具备：
 
@@ -591,8 +679,9 @@ ORDER BY TABLE_NAME, ORDINAL_POSITION;
 1. 价格表缺核心价格和验收 SKU 字段。
 2. 可售可订表缺核心 0/1 状态字段。
 3. 毛利损耗表缺一批门店+SKU+日粒度字段，尤其是重量、会员和原价销售额。
-4. 商品维表缺“是否标品”“是否自加工商品”的直接字段或明确映射。
-5. 门店维表需要 `sp_store_status` 状态码含义和是否营业派生规则。
+4. 商品状态表缺 SAP POP 平台中区域 + 商品编码 + 商品名称 + 商品状态 A/O/S/D/B 的稳定 Doris 接入。
+5. 商品维表缺“是否标品”“是否自加工商品”的直接字段或明确映射。
+6. 门店维表需要 `sp_store_status` 状态码含义和是否营业派生规则。
 ```
 
 因此，数据开发需要先补齐以上缺口，再按合同产出项目侧目标基础表。

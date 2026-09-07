@@ -40,6 +40,9 @@ verification_screens/
 *.7z
 *.pdf
 
+# Standard import packages may contain real business data or rendered previews
+02_data_contracts/rule_tables/import_ready/
+
 # SQL or database dumps
 *.sql
 *.dump

@@ -47,7 +47,9 @@ AI 新品推荐 Agent V1 采用：
 基础数据表
 公共过滤与质量校验
 算法 01～10 离线计算
-mart_opportunity_recommendation 推荐结果表
+mart_new_product_recommendation_priority 推荐优先级主表
+new_product_recommendation_display_brief 展示摘要表
+new_product_recommendation_explanation 自动解释表
 ```
 
 后端开发负责：

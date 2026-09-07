@@ -13,10 +13,13 @@
 
 ## 业务优先看
 
-当前需要业务集中复核的文件：
+当前需要业务或项目侧集中复核的文件：
 
 ```text
 00_project_management/business_confirmations/pending_items/算法05-08_业务待确认事项汇总.md
+00_project_management/business_confirmations/pending_items/算法09_业务待确认事项汇总.md
+00_project_management/business_confirmations/pending_items/算法10_业务待确认事项汇总.md
+00_project_management/business_confirmations/delivery_checks/算法卡全量复核与修复记录_2026-09-07.md
 ```
 
 业务不需要逐份阅读 `source_traceability/` 和 `review_checklists/`。这两类文件主要是我们内部保证算法卡没有漏承接、没有混入错误口径。
