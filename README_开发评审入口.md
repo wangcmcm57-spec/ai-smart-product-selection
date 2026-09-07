@@ -192,19 +192,21 @@ AI 选品 V1 = 离线把新品机会算成表，在线让采购通过页面或 A
 请你作为数据开发，阅读本仓库：
 
 1. 先读 README.md 和 README_开发评审入口.md，理解项目目标、仓库结构和完整 V1 评审范围。
-2. 再读 05_architecture/01_AI选品V1_整体架构.md、05_architecture/02_AI新品推荐Agent_运行架构.md 和 05_architecture/03_AI选品V1_运行时序.md。
-3. 再读 00_project_management/development_review/AI选品V1_当前开发链路.md。
-4. 再读 02_data_contracts/。
-5. 再读 00_project_management/development_review/算法01-10_结果表总览.md。
-6. 再按算法顺序读 03_algorithm_cards/developer_version/ 下 01～10 的开发版算法卡。
-7. 最后读 00_project_management/development_review/AI选品V1_开发评审问题清单.md。
+2. 再读 00_project_management/development_review/quick_read/，先建立项目、链路、调度和算法 01～10 的整体理解。
+3. 再读 05_architecture/01_AI选品V1_整体架构.md、05_architecture/02_AI新品推荐Agent_运行架构.md 和 05_architecture/03_AI选品V1_运行时序.md。
+4. 再读 00_project_management/development_review/AI选品V1_当前开发链路.md。
+5. 再读 02_data_contracts/。
+6. 再读 00_project_management/development_review/算法01-10_结果表总览.md。
+7. 再按算法顺序读 03_algorithm_cards/developer_version/ 下 01～10 的开发版算法卡。
+8. 最后读 00_project_management/development_review/AI选品V1_开发评审问题清单.md。
 
 请输出：
 1. 你理解的 V1 开发目标和离线/在线边界。
 2. 基础表、外部表、规则表和公共过滤需要建设什么。
-3. 算法 01～10 每张正式表的输入来源、主键、调度依赖和验收风险。
-4. 哪些字段或规则会阻塞开发。
-5. 你建议的分阶段开发任务拆分。
+3. 算法 01～10 调度周期总览，说明月度正式、每日采集、事件重算和查询只读边界。
+4. 算法 01～10 每张正式表的输入来源、主键、调度依赖和验收风险。
+5. 哪些字段或规则会阻塞开发。
+6. 你建议的分阶段开发任务拆分。
 ```
 
 ### 8.2 后端 / Agent 开发预审 Prompt
@@ -213,11 +215,12 @@ AI 选品 V1 = 离线把新品机会算成表，在线让采购通过页面或 A
 请你作为后端和 Agent 开发，阅读本仓库：
 
 1. 先读 README.md 和 README_开发评审入口.md，理解项目目标、仓库结构和完整 V1 评审范围。
-2. 再读 05_architecture/01_AI选品V1_整体架构.md。
-3. 再读 05_architecture/02_AI新品推荐Agent_运行架构.md。
-4. 再读 05_architecture/03_AI选品V1_运行时序.md。
-5. 再读 03_algorithm_cards/developer_version/算法卡_10_新品推荐优先级与开发需求编排.md。
-6. 再读 00_project_management/development_review/AI选品V1_开发评审问题清单.md。
+2. 再读 00_project_management/development_review/quick_read/AI选品V1_项目导读.md、AI选品V1_链路图导读.md 和 算法01-10_导读总览.md。
+3. 再读 05_architecture/01_AI选品V1_整体架构.md。
+4. 再读 05_architecture/02_AI新品推荐Agent_运行架构.md。
+5. 再读 05_architecture/03_AI选品V1_运行时序.md。
+6. 再读 03_algorithm_cards/developer_version/算法卡_10_新品推荐优先级与开发需求编排.md。
+7. 再读 00_project_management/development_review/AI选品V1_开发评审问题清单.md。
 
 请重点判断：
 1. 后端需要提供哪些固定查询 API。
@@ -228,6 +231,7 @@ AI 选品 V1 = 离线把新品机会算成表，在线让采购通过页面或 A
 6. 在线轻量重排应该发生在哪里。
 7. 大模型可以做什么，禁止做什么。
 8. 请求日志和采购反馈应该怎么记录。
+9. 请求日志、采购反馈、用户权限、图片授权状态和批次回退是否需要单独接口合同。
 ```
 
 ## 9. 后续维护规则

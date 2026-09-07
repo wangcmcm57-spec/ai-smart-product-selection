@@ -24,6 +24,12 @@
 | [竞品 SKU 基础表](dim_competitor_sku_竞品SKU基础表.md) | `dim_competitor_sku` | 保存竞品商品稳定属性 |
 | [竞品每日快照表](fact_competitor_sku_daily_snapshot_竞品每日快照表.md) | `fact_competitor_sku_daily_snapshot` | 保存价格、销量、促销、评价、覆盖门店数等每日变化指标 |
 
+外部数据采集模块实现边界见：
+
+```text
+外部数据采集模块_开发说明.md
+```
+
 开发需要并行确认久谦 API 是否能提供以下字段：
 
 - 评论数
