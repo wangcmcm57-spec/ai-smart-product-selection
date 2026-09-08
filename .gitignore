@@ -40,8 +40,19 @@ verification_screens/
 *.7z
 *.pdf
 
-# Standard import packages may contain real business data or rendered previews
-02_data_contracts/rule_tables/import_ready/
+# Temporary developer-review rule import package.
+# Keep this visible in Git only while the first import package is under review.
+# After review, move it back to local_only/ or another non-Git delivery channel.
+!03_data_contracts/rule_tables/import_ready/
+!03_data_contracts/rule_tables/import_ready/**
+!03_data_contracts/rule_tables/import_ready/**/*.csv
+!03_data_contracts/rule_tables/import_ready/**/*.xlsx
+!03_data_contracts/rule_tables/import_ready/**/*.json
+!03_data_contracts/rule_tables/import_ready/**/*.md
+!03_data_contracts/rule_tables/import_ready/**/*.png
+
+# Legacy development-review spreadsheets kept as archive source files.
+!archive/development_review/2026-09-08_legacy_development_review/*.xlsx
 
 # SQL or database dumps
 *.sql

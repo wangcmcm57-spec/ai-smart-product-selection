@@ -31,16 +31,16 @@
 每次整理、修改或复核算法卡前，必须先读取：
 
 ```text
-00_project_management/算法文档输出规范.md
+04_algorithm_cards/算法文档输出规范.md
 ```
 
 涉及字段、表粒度、主键、Doris 字段含义时，还必须先读取数据合同目录：
 
 ```text
-02_data_contracts/
+03_data_contracts/
 ```
 
-如果旧工作目录中的字段资料与正式仓库数据合同冲突，先以正式仓库 `02_data_contracts/` 为准，再在审阅清单中标记冲突。
+如果旧工作目录中的字段资料与正式仓库数据合同冲突，先以正式仓库 `03_data_contracts/` 为准，再在审阅清单中标记冲突。
 
 ## 原始文档
 
@@ -91,21 +91,21 @@
 
 | 文档 | 路径 | 用途 |
 |---|---|---|
-| 业务原文承接矩阵 | `00_project_management/business_confirmations/source_traceability/` | 项目内部复核，证明业务原文没有漏掉、删掉或改写 |
-| 业务解读版 | `03_algorithm_cards/business_readable/` | 给用户、业务、采购、产品和开发评审人员理解算法流程 |
-| 开发版算法卡 | `03_algorithm_cards/developer_version/` | 给数据开发直接建表、写逻辑、跑数、验收 |
-| 审阅清单 | `00_project_management/business_confirmations/review_checklists/` | 给用户和项目侧复核真正需要人工判断的红线 |
+| 业务原文承接矩阵 | `archive/business_confirmations/source_traceability/` | 项目内部复核，证明业务原文没有漏掉、删掉或改写 |
+| 业务解读版 | `04_algorithm_cards/business_readable/` | 给用户、业务、采购、产品和开发评审人员理解算法流程 |
+| 开发版算法卡 | `04_algorithm_cards/developer_version/` | 给数据开发直接建表、写逻辑、跑数、验收 |
+| 审阅清单 | `archive/business_confirmations/review_checklists/` | 给用户和项目侧复核真正需要人工判断的红线 |
 
 业务待确认事项汇总统一放在：
 
 ```text
-00_project_management/business_confirmations/pending_items/
+archive/business_confirmations/pending_items/
 ```
 
 交付前核对和早期归档核对统一放在：
 
 ```text
-00_project_management/business_confirmations/delivery_checks/
+archive/business_confirmations/delivery_checks/
 ```
 
 ## 业务解读版要求

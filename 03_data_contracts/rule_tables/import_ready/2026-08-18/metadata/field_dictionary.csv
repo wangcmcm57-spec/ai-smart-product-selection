@@ -1,0 +1,259 @@
+table_name,table_chinese_name,field_order,field_name,chinese_field_name,field_description_cn,sample_value
+dim_company_margin_target_config,公司毛利目标配置表,1,margin_config_version,毛利配置版本,本次毛利配置的版本号，用于算法结果追溯。,MARGIN_2026_V1
+dim_company_margin_target_config,公司毛利目标配置表,2,scope_type,适用范围类型,全国、区域、城市组或城市。,NATIONAL
+dim_company_margin_target_config,公司毛利目标配置表,3,scope_id,适用范围编码,按区域名称生成的稳定编码；后续可替换为正式组织编码。,NATIONAL
+dim_company_margin_target_config,公司毛利目标配置表,4,scope_name,适用范围名称,业务 Excel 中的区域名称。,全国
+dim_company_margin_target_config,公司毛利目标配置表,5,category_level,品类层级,ALL 表示全品类；CATEGORY_LEVEL1 表示一级分类。,ALL
+dim_company_margin_target_config,公司毛利目标配置表,6,category_code,品类编码,全品类写 ALL；具体品类尽量映射内部分类编码。,ALL
+dim_company_margin_target_config,公司毛利目标配置表,7,category_name,品类名称,业务 Excel 中的品类名称，已做同义规范化。,全品类
+dim_company_margin_target_config,公司毛利目标配置表,8,company_margin_floor,公司毛利底线,最低可接受毛利率；低于该值不建议开发。,0.10920588
+dim_company_margin_target_config,公司毛利目标配置表,9,company_margin_target,公司目标毛利,目标毛利率；算法05计算建议价格和成本谈判上限时使用。,0.11564401
+dim_company_margin_target_config,公司毛利目标配置表,10,total_sales_amt,总销售额,来源测算中的总销售额，用于审计。,16472892788.4738
+dim_company_margin_target_config,公司毛利目标配置表,11,sales_share_rate,销售额占比,该品类在适用范围内的销售额占比。,1.0
+dim_company_margin_target_config,公司毛利目标配置表,12,outbound_amt,出库额,来源测算中的出库额；品类无拆分时为空。,12554556347.8073
+dim_company_margin_target_config,公司毛利目标配置表,13,supply_chain_margin_amt,供应链毛利额,来源测算中的毛利额。,1451859298.11233
+dim_company_margin_target_config,公司毛利目标配置表,14,remark_requirement,备注要求,业务 Excel 中的区域备注或约束。,
+dim_company_margin_target_config,公司毛利目标配置表,15,effective_start_date,生效开始日期,规则开始生效日期。,2026-01-01
+dim_company_margin_target_config,公司毛利目标配置表,16,effective_end_date,生效结束日期,当前有效规则为空。,
+dim_company_margin_target_config,公司毛利目标配置表,17,is_active,是否当前有效,1 表示当前有效。,1
+dim_company_margin_target_config,公司毛利目标配置表,18,source_file,来源文件,规则来自哪个业务补充文件。,B1—公司最低毛利率和目标毛利率是多少—2026年集团区毛利目标.xlsx
+dim_company_margin_target_config,公司毛利目标配置表,19,source_sheet,来源 sheet,规则来自哪个 Excel sheet。,各个区域毛利额-V2
+dim_company_margin_target_config,公司毛利目标配置表,20,confirmed_by,配置确认人,当前按项目侧确认写入；可后续补业务/财务确认人。,业务/财务待补确认人
+dim_company_margin_target_config,公司毛利目标配置表,21,confirmed_date,配置确认日期,规则确认日期。,
+dim_company_margin_target_config,公司毛利目标配置表,22,updated_at,数据更新时间,本次标准化转换时间。,2026-09-01 18:00:00
+dim_price_point_rule_config,价格点规则配置表,1,price_rule_version,价格规则版本,本次价格点配置版本号。,PRICE_POINT_2026_V1
+dim_price_point_rule_config,价格点规则配置表,2,category_level,品类层级,V1 使用一级分类。,CATEGORY_LEVEL1
+dim_price_point_rule_config,价格点规则配置表,3,category_code,品类编码,映射内部一级分类编码。,10
+dim_price_point_rule_config,价格点规则配置表,4,category_name,品类名称,适用的商品大类。,蔬菜类
+dim_price_point_rule_config,价格点规则配置表,5,unit,计价单位,kg、份/个等。,kg
+dim_price_point_rule_config,价格点规则配置表,6,price_tail,价格尾数,例如 0.98 或 0.90。,0.98
+dim_price_point_rule_config,价格点规则配置表,7,price_step_amt,价格点步长,V1 确认为每 1 元一个价格点。,1.0
+dim_price_point_rule_config,价格点规则配置表,8,price_bound_source,价格上下限来源,V1 固定来自算法05消费者价格带。,CONSUMER_PRICE_BAND
+dim_price_point_rule_config,价格点规则配置表,9,allow_extended_band_flag,是否允许扩展价格带,1 表示扩展价格带场景可以生成候选价格点。,1
+dim_price_point_rule_config,价格点规则配置表,10,effective_start_date,生效开始日期,规则开始生效日期。,2026-09-01
+dim_price_point_rule_config,价格点规则配置表,11,effective_end_date,生效结束日期,当前有效规则为空。,
+dim_price_point_rule_config,价格点规则配置表,12,is_active,是否当前有效,1 表示当前有效。,1
+dim_price_point_rule_config,价格点规则配置表,13,source_file,来源文件,用户在会话中确认的价格尾数规则。,USER_CONFIRMED_CHAT
+dim_price_point_rule_config,价格点规则配置表,14,source_sheet,来源 sheet,非 Excel 来源为空。,
+dim_price_point_rule_config,价格点规则配置表,15,confirmed_by,配置确认人,用户确认。,用户确认
+dim_price_point_rule_config,价格点规则配置表,16,confirmed_date,配置确认日期,确认日期。,2026-09-01
+dim_price_point_rule_config,价格点规则配置表,17,updated_at,数据更新时间,本次标准化转换时间。,2026-09-01 18:00:00
+dim_basket_attribute_transfer_rule,购物篮属性转化规则表,1,basket_rule_version,购物篮规则版本,本次购物篮属性转化规则版本号。,BASKET_ATTR_2026_V1
+dim_basket_attribute_transfer_rule,购物篮属性转化规则表,2,anchor_category_level,锚点品类层级,锚点A所属分类层级。,CATEGORY_LEVEL2
+dim_basket_attribute_transfer_rule,购物篮属性转化规则表,3,anchor_category_code,锚点品类编码,锚点A分类编码，尽量映射内部分类库。,2415
+dim_basket_attribute_transfer_rule,购物篮属性转化规则表,4,anchor_category_name,锚点品类名称,配方型品类，例如牛肉类、鸡类。,牛肉类
+dim_basket_attribute_transfer_rule,购物篮属性转化规则表,5,related_category_level,关联品类层级,关联商品B所属分类层级。,CATEGORY_LEVEL2
+dim_basket_attribute_transfer_rule,购物篮属性转化规则表,6,related_category_code,关联品类编码,关联品类编码，尽量映射内部分类库。,1001
+dim_basket_attribute_transfer_rule,购物篮属性转化规则表,7,related_category_name,关联品类名称,可以作为配料或搭配属性的品类。,根茎类
+dim_basket_attribute_transfer_rule,购物篮属性转化规则表,8,transfer_type,转化类型,V1 来源为主材料+配料正向表，统一写 INGREDIENT。,INGREDIENT
+dim_basket_attribute_transfer_rule,购物篮属性转化规则表,9,is_allowed_transfer,是否允许转新品属性,1 表示允许转属性。,1
+dim_basket_attribute_transfer_rule,购物篮属性转化规则表,10,attribute_dimension,属性维度,V1 写配料。,配料
+dim_basket_attribute_transfer_rule,购物篮属性转化规则表,11,not_covered_action,未覆盖处理方式,没有规则时算法06输出 CATEGORY_RULE_NOT_CONFIGURED。,CATEGORY_RULE_NOT_CONFIGURED
+dim_basket_attribute_transfer_rule,购物篮属性转化规则表,12,rule_status,规则状态,ACTIVE 表示可直接使用，REVIEW_REQUIRED 表示需复核。,ACTIVE
+dim_basket_attribute_transfer_rule,购物篮属性转化规则表,13,effective_start_date,生效开始日期,规则开始生效日期。,2026-08-18
+dim_basket_attribute_transfer_rule,购物篮属性转化规则表,14,effective_end_date,生效结束日期,当前有效规则为空。,
+dim_basket_attribute_transfer_rule,购物篮属性转化规则表,15,is_active,是否当前有效,1 表示当前有效。,1
+dim_basket_attribute_transfer_rule,购物篮属性转化规则表,16,source_file,来源文件,规则来自哪个业务补充文件。,B4-哪些购物篮关联能够转化为新品属性.xlsx
+dim_basket_attribute_transfer_rule,购物篮属性转化规则表,17,source_sheet,来源 sheet,规则来自哪个 Excel sheet。,算法6主材料+配料，正向
+dim_basket_attribute_transfer_rule,购物篮属性转化规则表,18,updated_at,数据更新时间,本次标准化转换时间。,2026-09-01 18:00:00
+dim_product_naming_rule,商品命名规则表,1,naming_rule_version,命名规则版本,本次命名规则版本号。,NAMING_2026_V1
+dim_product_naming_rule,商品命名规则表,2,category_level1_name,一级分类名称,内部大类。,蔬菜类
+dim_product_naming_rule,商品命名规则表,3,category_level2_code,二级分类编码,内部中类编码。,1001
+dim_product_naming_rule,商品命名规则表,4,category_level2_name,二级分类名称,内部中类名称。,根茎类
+dim_product_naming_rule,商品命名规则表,5,covered_category_names,覆盖小分类名称,该中类规则覆盖的小分类。,其他根茎类、土豆类、山药类、番薯类、笋类、芋头类、茭白类、莴苣类、萝卜类、藕类、豆芽豆苗类、马蹄类
+dim_product_naming_rule,商品命名规则表,6,competitor_sample_count,竞对样本数量,B3统计的竞对样例数。,1695
+dim_product_naming_rule,商品命名规则表,7,master_data_sample_count,主数据样本数量,B3统计的内部主数据样本数。,649
+dim_product_naming_rule,商品命名规则表,8,recommended_name_structure,推荐命名结构,该中类建议的商品名称组成。,产地/种植方式 + 品种/品名 + 处理形态 + 规格/净含量 + 销售单位
+dim_product_naming_rule,商品命名规则表,9,required_name_fields,名称必填字段,进入正式候选名称必须有的字段。,品名、处理/销售形态、规格或称重规则、销售单位
+dim_product_naming_rule,商品命名规则表,10,optional_key_fields,可选关键字段,有则用于命名或证据增强。,规格、产地、种植方式、等级、有机/绿色、处理形态
+dim_product_naming_rule,商品命名规则表,11,special_required_rule,特殊必填规则说明,特殊商品更细规则说明。,
+dim_product_naming_rule,商品命名规则表,12,dedupe_key_fields,查重字段,生成候选去重键时使用。,公司中类 + 品牌 + 品类 + 口味/型号 + 净含量 + 件数 + 包装单位
+dim_product_naming_rule,商品命名规则表,13,exception_rule,异常拦截规则,缺字段、错分类等异常怎么处理。,中类无法唯一匹配时需人工确认；缺规格/净含量时不建议直建
+dim_product_naming_rule,商品命名规则表,14,example_names,示例商品名称,用于验收命名结构。,叮咚买菜：【24h鲜】安心绿豆芽 300g/份；叮咚买菜：【24h鲜】安心黄豆芽 300g/份；叮咚买菜：【GAP认证】安心绿豆芽 300g/份；叮咚买菜：【GAP认证】安心黄豆芽 300g/份
+dim_product_naming_rule,商品命名规则表,15,rule_status,规则状态,ACTIVE 表示可直接使用。,ACTIVE
+dim_product_naming_rule,商品命名规则表,16,effective_start_date,生效开始日期,规则开始生效日期。,2026-08-18
+dim_product_naming_rule,商品命名规则表,17,effective_end_date,生效结束日期,当前有效规则为空。,
+dim_product_naming_rule,商品命名规则表,18,is_active,是否当前有效,1 表示当前有效。,1
+dim_product_naming_rule,商品命名规则表,19,source_file,来源文件,规则来自哪个业务补充文件。,B3-按竞对商品名称梳理的命名规则.xlsx
+dim_product_naming_rule,商品命名规则表,20,source_sheet,来源 sheet,规则来自哪个 Excel sheet。,中类规则主表
+dim_product_naming_rule,商品命名规则表,21,updated_at,数据更新时间,本次标准化转换时间。,2026-09-01 18:00:00
+dim_special_product_required_attribute_rule,特殊品类必填属性规则表,1,special_rule_version,特殊规则版本,本次特殊必填规则版本号。,SPECIAL_ATTR_2026_V1
+dim_special_product_required_attribute_rule,特殊品类必填属性规则表,2,category_level1_name,一级分类名称,内部大类。,水果类
+dim_special_product_required_attribute_rule,特殊品类必填属性规则表,3,category_level2_code,二级分类编码,内部中类编码。,1202
+dim_special_product_required_attribute_rule,特殊品类必填属性规则表,4,category_level2_name,二级分类名称,内部中类名称。,浆果类
+dim_special_product_required_attribute_rule,特殊品类必填属性规则表,5,category_level3_code,三级分类编码,内部小类编码；没有明确小类时为空。,
+dim_special_product_required_attribute_rule,特殊品类必填属性规则表,6,category_level3_name,三级分类名称,内部小类名称；没有明确小类时为空。,
+dim_special_product_required_attribute_rule,特殊品类必填属性规则表,7,product_keyword,商品关键词,触发特殊必填规则的商品词。,蓝莓
+dim_special_product_required_attribute_rule,特殊品类必填属性规则表,8,required_attributes,必填属性列表,该商品必须具备的属性。,果径/粒径
+dim_special_product_required_attribute_rule,特殊品类必填属性规则表,9,name_rule,命名规则说明,这些属性在名称中如何表达。,蓝莓名称必须露出果径/粒径，例如 12mm+、14mm+、16mm+。
+dim_special_product_required_attribute_rule,特殊品类必填属性规则表,10,missing_action,缺失处理动作,缺字段时不生成正式候选，先进入补充确认。,DO_NOT_CREATE_FORMAL_CANDIDATE
+dim_special_product_required_attribute_rule,特殊品类必填属性规则表,11,sample_count,样本数量,支撑该规则的竞对样本数量。,102
+dim_special_product_required_attribute_rule,特殊品类必填属性规则表,12,review_sample_count,需复核样例数量,B3统计的需复核样例数。,0
+dim_special_product_required_attribute_rule,特殊品类必填属性规则表,13,positive_examples,正例,符合规则的商品名样例。,叮咚买菜：Driscoll's进口超大蓝莓（平均20mm）125g；叮咚买菜：云南高山超大蓝莓(平均果径18mm)125g；叮咚买菜：优诺蓝莓草莓混合莓奶昔摇摇杯 240g/杯；叮咚买菜：国产蓝莓（平均果径14mm） 125g/盒
+dim_special_product_required_attribute_rule,特殊品类必填属性规则表,14,negative_examples,反例,不符合规则的样例，当前源表未给时为空。,
+dim_special_product_required_attribute_rule,特殊品类必填属性规则表,15,rule_status,规则状态,ACTIVE 表示可直接使用。,ACTIVE
+dim_special_product_required_attribute_rule,特殊品类必填属性规则表,16,effective_start_date,生效开始日期,规则开始生效日期。,2026-08-18
+dim_special_product_required_attribute_rule,特殊品类必填属性规则表,17,effective_end_date,生效结束日期,当前有效规则为空。,
+dim_special_product_required_attribute_rule,特殊品类必填属性规则表,18,is_active,是否当前有效,1 表示当前有效。,1
+dim_special_product_required_attribute_rule,特殊品类必填属性规则表,19,source_file,来源文件,规则来自哪个业务补充文件。,B3-按竞对商品名称梳理的命名规则.xlsx
+dim_special_product_required_attribute_rule,特殊品类必填属性规则表,20,source_sheet,来源 sheet,规则来自哪个 Excel sheet。,特殊物种必填规则
+dim_special_product_required_attribute_rule,特殊品类必填属性规则表,21,updated_at,数据更新时间,本次标准化转换时间。,2026-09-01 18:00:00
+dim_competitor_category_mapping_rule,竞对分类映射规则表,1,mapping_rule_version,映射规则版本,本次竞对分类映射规则版本号。,COMP_CAT_MAP_2026_V1
+dim_competitor_category_mapping_rule,竞对分类映射规则表,2,competitor_source,外部来源,当前 B3 为多竞对汇总样本。,B3_MULTI_COMPETITOR_POOL
+dim_competitor_category_mapping_rule,竞对分类映射规则表,3,competitor_category_path,外部分类路径,外部菜品类型和商品类型拼出的分类路径。,烧烤露营 / 零食/水果
+dim_competitor_category_mapping_rule,竞对分类映射规则表,4,competitor_dish_type,外部菜品类型,外部平台或久谦归纳的菜品类型。,烧烤露营
+dim_competitor_category_mapping_rule,竞对分类映射规则表,5,competitor_product_type,外部商品类型,外部平台或久谦归纳的商品类型。,零食/水果
+dim_competitor_category_mapping_rule,竞对分类映射规则表,6,internal_category_level1_code,内部一级分类编码,内部大类编码。,27
+dim_competitor_category_mapping_rule,竞对分类映射规则表,7,internal_category_level1_name,内部一级分类名称,内部大类名称。,标品类
+dim_competitor_category_mapping_rule,竞对分类映射规则表,8,internal_category_level2_code,内部二级分类编码,内部中类编码。,2740
+dim_competitor_category_mapping_rule,竞对分类映射规则表,9,internal_category_level2_name,内部二级分类名称,内部中类名称。,休闲零食类
+dim_competitor_category_mapping_rule,竞对分类映射规则表,10,internal_category_level3_code,内部三级分类编码,V1 映射到中类，通常为空。,
+dim_competitor_category_mapping_rule,竞对分类映射规则表,11,internal_category_level3_name,内部三级分类名称,V1 映射到中类，通常为空。,
+dim_competitor_category_mapping_rule,竞对分类映射规则表,12,sample_count,样本数量,支撑该映射的去重样例数。,1458
+dim_competitor_category_mapping_rule,竞对分类映射规则表,13,mapping_confidence,映射置信度,映射完整写 1；缺编码需复核写 0.5。,1.0
+dim_competitor_category_mapping_rule,竞对分类映射规则表,14,mapping_basis,映射依据,按 B3 映射统计表生成。,B3 竞对中类映射：竞对菜品类型 + 竞对商品类型 -> 公司大类 + 公司中类
+dim_competitor_category_mapping_rule,竞对分类映射规则表,15,mapping_status,映射状态,ACTIVE 可使用；REVIEW_REQUIRED 不进入正式候选。,ACTIVE
+dim_competitor_category_mapping_rule,竞对分类映射规则表,16,effective_start_date,生效开始日期,规则开始生效日期。,2026-08-18
+dim_competitor_category_mapping_rule,竞对分类映射规则表,17,effective_end_date,生效结束日期,当前有效规则为空。,
+dim_competitor_category_mapping_rule,竞对分类映射规则表,18,is_active,是否当前有效,1 表示当前有效。,1
+dim_competitor_category_mapping_rule,竞对分类映射规则表,19,source_file,来源文件,规则来自哪个业务补充文件。,B3-按竞对商品名称梳理的命名规则.xlsx
+dim_competitor_category_mapping_rule,竞对分类映射规则表,20,source_sheet,来源 sheet,规则来自哪个 Excel sheet。,竞对中类映射
+dim_competitor_category_mapping_rule,竞对分类映射规则表,21,updated_at,数据更新时间,本次标准化转换时间。,2026-09-01 18:00:00
+dim_candidate_attribute_dictionary,候选属性字典表,1,attribute_dict_version,属性字典版本,本次候选属性字典版本号。,ATTR_DICT_2026_V1
+dim_candidate_attribute_dictionary,候选属性字典表,2,canonical_attribute_code,标准属性编码,系统生成的标准属性唯一编码。,ATTR_402FB4203A
+dim_candidate_attribute_dictionary,候选属性字典表,3,canonical_attribute_name,标准属性名称,归一后的标准词。,根茎类
+dim_candidate_attribute_dictionary,候选属性字典表,4,attribute_dimension,属性维度,主体商品、主材料、口味、工艺、功能、规格等。,MAIN_PRODUCT
+dim_candidate_attribute_dictionary,候选属性字典表,5,term_language,词语语言,zh、en、mixed 等。,zh
+dim_candidate_attribute_dictionary,候选属性字典表,6,term_alias,词语别名,原始词、同义词或变体。,根茎类
+dim_candidate_attribute_dictionary,候选属性字典表,7,applicable_category_code,适用品类编码,适用的内部分类编码。,1001
+dim_candidate_attribute_dictionary,候选属性字典表,8,applicable_category_name,适用品类名称,适用的内部分类名称。,根茎类
+dim_candidate_attribute_dictionary,候选属性字典表,9,rule_source,规则来源,来自 B3、合规词库或系统生成。,B3_RULE
+dim_candidate_attribute_dictionary,候选属性字典表,10,confidence,识别置信度,0 到 1；规则明确时写 1。,1.0
+dim_candidate_attribute_dictionary,候选属性字典表,11,review_status,复核状态,AUTO_APPROVED、REVIEW_REQUIRED、APPROVED、REJECTED。,AUTO_APPROVED
+dim_candidate_attribute_dictionary,候选属性字典表,12,allow_in_candidate_name,是否允许入名,1 表示允许进入正式候选名称。,1
+dim_candidate_attribute_dictionary,候选属性字典表,13,is_risk_term,是否风险词,1 表示需要进入合规/风险校验。,0
+dim_candidate_attribute_dictionary,候选属性字典表,14,effective_start_date,生效开始日期,规则开始生效日期。,2026-08-18
+dim_candidate_attribute_dictionary,候选属性字典表,15,effective_end_date,生效结束日期,当前有效规则为空。,
+dim_candidate_attribute_dictionary,候选属性字典表,16,is_active,是否当前有效,1 表示当前有效。,1
+dim_candidate_attribute_dictionary,候选属性字典表,17,source_file,来源文件,规则来自哪个业务补充文件。,B3-按竞对商品名称梳理的命名规则.xlsx
+dim_candidate_attribute_dictionary,候选属性字典表,18,source_sheet,来源 sheet,规则来自哪个 Excel sheet。,中类规则主表
+dim_candidate_attribute_dictionary,候选属性字典表,19,updated_at,数据更新时间,本次标准化转换时间。,2026-09-01 18:00:00
+dim_naming_compliance_term_rule,命名合规词规则表,1,compliance_rule_version,合规规则版本,本次合规词规则版本号。,COMPLIANCE_2026_0818
+dim_naming_compliance_term_rule,命名合规词规则表,2,source_term_no,原始序号,合规词库中的原始编号。,1
+dim_naming_compliance_term_rule,命名合规词规则表,3,term_group_id,词组 ID,同一类表达的唯一编码。,TERM_0001
+dim_naming_compliance_term_rule,命名合规词规则表,4,applicable_category_name,适用品类,通用或具体商品分类。,通用（全部分类）
+dim_naming_compliance_term_rule,命名合规词规则表,5,control_conclusion,管控结论,BANNED、REVIEW_REQUIRED、ALLOW_WITH_CONDITION。,BANNED
+dim_naming_compliance_term_rule,命名合规词规则表,6,risk_level,风险等级,HIGH、MEDIUM、LOW。,HIGH
+dim_naming_compliance_term_rule,命名合规词规则表,7,secondary_scene,二级场景,疾病治疗、功能声称、认证声称等。,疾病治疗
+dim_naming_compliance_term_rule,命名合规词规则表,8,risk_scene,风险场景,归一后的风险场景。,疾病治疗
+dim_naming_compliance_term_rule,命名合规词规则表,9,term_root,词根或表达,风险词根或表达组。,治疗、治愈、根治
+dim_naming_compliance_term_rule,命名合规词规则表,10,common_variants,常见变形或示例,同义、变体、外文或营销表达。,治高血压、治糖尿病、抗癌、防癌、消炎、抗病毒、治便秘、治疗失眠、修复肝损伤
+dim_naming_compliance_term_rule,命名合规词规则表,11,rule_attribute,规则属性,该词属于哪类规则。,法律绝对禁用
+dim_naming_compliance_term_rule,命名合规词规则表,12,risk_reason,风险原因,为什么该词有风险。,普通食品和食用农产品不得明示或暗示具有疾病预防、治疗功能。
+dim_naming_compliance_term_rule,命名合规词规则表,13,required_evidence,应审核材料,需审核或有条件放行时需要的材料。,不设材料审核放行；名称、详情页、图片和标签一并检查。
+dim_naming_compliance_term_rule,命名合规词规则表,14,release_condition,放行条件,满足什么条件可以放行。,删除全部疾病名称、治疗结果和药效暗示。
+dim_naming_compliance_term_rule,命名合规词规则表,15,recommended_expression,建议规范表达,可替换或更稳妥的表述。,按真实品种、部位、加工方式命名。
+dim_naming_compliance_term_rule,命名合规词规则表,16,applicable_form,适用形式,商品名、卖点、详情页、图片文字等。,全部；含商品名、卖点、图片文字
+dim_naming_compliance_term_rule,命名合规词规则表,17,law_reference_code,法源代码,关联法规依据表的代码。,R01、R09
+dim_naming_compliance_term_rule,命名合规词规则表,18,effective_scope,生效口径,规则适用的时间或执行口径。,现行
+dim_naming_compliance_term_rule,命名合规词规则表,19,effective_basis,生效依据,法规、内部质量标准或业务规则依据。,生鲜与食品商品命名合规词库
+dim_naming_compliance_term_rule,命名合规词规则表,20,rule_status,规则状态,ACTIVE 表示可使用。,ACTIVE
+dim_naming_compliance_term_rule,命名合规词规则表,21,effective_start_date,生效开始日期,规则开始生效日期。,2026-08-18
+dim_naming_compliance_term_rule,命名合规词规则表,22,effective_end_date,生效结束日期,当前有效规则为空。,
+dim_naming_compliance_term_rule,命名合规词规则表,23,is_active,是否当前有效,1 表示当前有效。,1
+dim_naming_compliance_term_rule,命名合规词规则表,24,source_file,来源文件,规则来自哪个业务补充文件。,生鲜与食品商品命名合规词库_2026-08-18.xlsx
+dim_naming_compliance_term_rule,命名合规词规则表,25,source_sheet,来源 sheet,规则来自哪个 Excel sheet。,词汇明细
+dim_naming_compliance_term_rule,命名合规词规则表,26,updated_at,数据更新时间,本次标准化转换时间。,2026-09-01 18:00:00
+dim_category_naming_compliance_rule,分类命名合规规则表,1,category_compliance_rule_version,分类合规规则版本,本次分类命名合规规则版本号。,CATEGORY_COMPLIANCE_2026_0818
+dim_category_naming_compliance_rule,分类命名合规规则表,2,category_name,商品分类,合规词库中的商品分类。,蔬菜
+dim_category_naming_compliance_rule,分类命名合规规则表,3,internal_category_code,内部分类编码,能映射内部分类时填写。,10
+dim_category_naming_compliance_rule,分类命名合规规则表,4,internal_category_level,内部分类层级,V1 多数为一级分类。,CATEGORY_LEVEL1
+dim_category_naming_compliance_rule,分类命名合规规则表,5,applicable_form,适用形态,散装、包装、即食、即烹等。,散装/包装鲜蔬菜
+dim_category_naming_compliance_rule,分类命名合规规则表,6,recommended_name_structure,推荐命名结构,该分类下更稳妥的命名结构。,产地（可选）+品种/通用名+规格（可选）
+dim_category_naming_compliance_rule,分类命名合规规则表,7,mandatory_check_items,必须核对或显著标示,进入正式候选前必须核对的事项。,真实品种、真实产地；鲜切/净菜须标加工状态和是否即食
+dim_category_naming_compliance_rule,分类命名合规规则表,8,high_risk_examples,高风险或错误示例,用于风险识别和验收。,高山奶白菜（无基地证据）
+dim_category_naming_compliance_rule,分类命名合规规则表,9,recommended_examples,推荐示例,规范表达方式。,云南产奶白菜；鲜切奶白菜（须熟制）
+dim_category_naming_compliance_rule,分类命名合规规则表,10,license_audit_requirement,SC 或证照提示,是否需要生产许可、证照或供应链材料。,鲜食用农产品通常不以SC作为上架前提；鲜切、调味等加工后需判断生产许可。
+dim_category_naming_compliance_rule,分类命名合规规则表,11,rule_status,规则状态,ACTIVE 表示可使用。,ACTIVE
+dim_category_naming_compliance_rule,分类命名合规规则表,12,effective_start_date,生效开始日期,规则开始生效日期。,2026-08-18
+dim_category_naming_compliance_rule,分类命名合规规则表,13,effective_end_date,生效结束日期,当前有效规则为空。,
+dim_category_naming_compliance_rule,分类命名合规规则表,14,is_active,是否当前有效,1 表示当前有效。,1
+dim_category_naming_compliance_rule,分类命名合规规则表,15,source_file,来源文件,规则来自哪个业务补充文件。,生鲜与食品商品命名合规词库_2026-08-18.xlsx
+dim_category_naming_compliance_rule,分类命名合规规则表,16,source_sheet,来源 sheet,规则来自哪个 Excel sheet。,分类命名规则
+dim_category_naming_compliance_rule,分类命名合规规则表,17,updated_at,数据更新时间,本次标准化转换时间。,2026-09-01 18:00:00
+dim_regulation_reference,法规依据表,1,regulation_version,法规依据版本,本次法规依据版本号。,REGULATION_REF_2026_0818
+dim_regulation_reference,法规依据表,2,law_reference_code,法源代码,合规词库中维护的 R01、R09 等代码。,R01
+dim_regulation_reference,法规依据表,3,regulation_name,法规或标准名称,法律、法规、标准或制度名称。,中华人民共和国食品安全法
+dim_regulation_reference,法规依据表,4,regulation_status,法规状态,ACTIVE、UPDATED、REPEALED、INTERNAL_RULE。,ACTIVE
+dim_regulation_reference,法规依据表,5,status_effective_time_raw,原始状态和生效时间,保留 Excel 原始文字，便于审计。,现行
+dim_regulation_reference,法规依据表,6,effective_date,生效日期,能解析时填写；不能稳定解析时为空。,
+dim_regulation_reference,法规依据表,7,key_clause,关键条款摘要,与商品命名、标签或食品安全相关的条款摘要。,第67、71、73条；特殊食品见第74—82条
+dim_regulation_reference,法规依据表,8,naming_audit_relation,命名审核关系,该依据与商品命名审核的关系。,预包装食品标签必须真实，不得含虚假内容；普通食品不得声称疾病预防、治疗功能；特殊食品另行注册备案。
+dim_regulation_reference,法规依据表,9,official_source_url,官方来源链接,官方链接或可信来源链接，用于追溯。,https://zwfw.nhc.gov.cn/kzx/zcfg/sptjjxpzsp_236/201504/t20150424_1309.html
+dim_regulation_reference,法规依据表,10,last_verified_at,最近核验时间,人工或质量侧复核时间；本次未单独复核则为空。,
+dim_regulation_reference,法规依据表,11,verified_by,核验人,质量或法务核验人；本次未提供则为空。,
+dim_regulation_reference,法规依据表,12,is_active,是否当前有效,1 表示当前有效。,1
+dim_regulation_reference,法规依据表,13,source_file,来源文件,规则来自哪个业务补充文件。,生鲜与食品商品命名合规词库_2026-08-18.xlsx
+dim_regulation_reference,法规依据表,14,source_sheet,来源 sheet,规则来自哪个 Excel sheet。,法规依据
+dim_regulation_reference,法规依据表,15,updated_at,数据更新时间,本次标准化转换时间。,2026-09-01 18:00:00
+fact_rule_review_item,规则复核样例与人工复核表,1,review_item_id,复核项 ID,每条待复核记录唯一 ID。,REV_202608_B3_00001
+fact_rule_review_item,规则复核样例与人工复核表,2,review_batch_id,复核批次 ID,同一次导入或算法运行的批次号。,RULE_IMPORT_20260818
+fact_rule_review_item,规则复核样例与人工复核表,3,review_source_type,复核来源类型,NAMING_SAMPLE、CATEGORY_MAPPING、COMPLIANCE_AUDIT 等。,NAMING_SAMPLE
+fact_rule_review_item,规则复核样例与人工复核表,4,source_file,来源文件,来源文件名。,B3-按竞对商品名称梳理的命名规则.xlsx
+fact_rule_review_item,规则复核样例与人工复核表,5,source_sheet,来源 sheet,来源 sheet 名。,需复核样例
+fact_rule_review_item,规则复核样例与人工复核表,6,source_row_no,来源行号,Excel 来源行号。,5
+fact_rule_review_item,规则复核样例与人工复核表,7,raw_source_name,原始来源名称,久谦、盒马、叮咚买菜等来源。,叮咚买菜
+fact_rule_review_item,规则复核样例与人工复核表,8,competitor_dish_type,竞对菜品类型,外部侧菜品类型。,冷藏及加工类/营养早餐
+fact_rule_review_item,规则复核样例与人工复核表,9,competitor_product_type,竞对商品类型,外部侧商品类型。,饺子馄饨
+fact_rule_review_item,规则复核样例与人工复核表,10,raw_product_name,原始商品名称,需要复核的原始商品名。,【2-3人份】良芯匠人手作苏式泡泡小馄饨(40只) 250g
+fact_rule_review_item,规则复核样例与人工复核表,11,net_weight,净重,原始净重或规格文字。,
+fact_rule_review_item,规则复核样例与人工复核表,12,sales_unit,销售单位,原始销售单位。,
+fact_rule_review_item,规则复核样例与人工复核表,13,raw_category_path,原始分类路径,外部或原始分类路径。,冷藏及加工类/营养早餐 / 饺子馄饨
+fact_rule_review_item,规则复核样例与人工复核表,14,company_category_level1_name,公司大类,复核样例中的公司大类。,冷藏与加工类
+fact_rule_review_item,规则复核样例与人工复核表,15,company_category_level2_name,公司中类,复核样例中的公司中类。,米面制品类
+fact_rule_review_item,规则复核样例与人工复核表,16,suggested_internal_category,建议内部分类,系统建议映射到的内部分类。,冷藏与加工类 / 米面制品类
+fact_rule_review_item,规则复核样例与人工复核表,17,category_mapping_basis,中类归类依据,Excel 中类归类依据或系统依据。,关键词命中：馄饨
+fact_rule_review_item,规则复核样例与人工复核表,18,identified_subject,识别主体商品,系统识别出的主体商品。,馄饨
+fact_rule_review_item,规则复核样例与人工复核表,19,identified_species_or_product_name,识别物种或品名,Excel 中识别出的物种或品名。,馄饨
+fact_rule_review_item,规则复核样例与人工复核表,20,extracted_spec,提取规格,系统或 Excel 提取出的规格。,250g
+fact_rule_review_item,规则复核样例与人工复核表,21,spec_content_excerpt,规格或净含量摘录,名称里提取的规格片段。,250g
+fact_rule_review_item,规则复核样例与人工复核表,22,grade_excerpt,等级摘录,名称里提取的等级片段。,
+fact_rule_review_item,规则复核样例与人工复核表,23,fruit_size_excerpt,果径或果规摘录,名称里提取的果径/果规片段。,
+fact_rule_review_item,规则复核样例与人工复核表,24,size_level_excerpt,个头大小摘录,名称里提取的个头大小片段。,
+fact_rule_review_item,规则复核样例与人工复核表,25,temperature_status_excerpt,温层或状态摘录,名称里提取的温层或状态。,
+fact_rule_review_item,规则复核样例与人工复核表,26,processing_form_excerpt,处理形态摘录,名称里提取的处理形态。,
+fact_rule_review_item,规则复核样例与人工复核表,27,category_rule_hint,中类规则提示,B3 给出的规则提示。,米面制品缺馅料
+fact_rule_review_item,规则复核样例与人工复核表,28,proposed_full_name,拟用完整名称,人工审核时拟使用的完整名称。,
+fact_rule_review_item,规则复核样例与人工复核表,29,triggered_term_code,触发词或词库编号,命中的合规词或词库编号。,
+fact_rule_review_item,规则复核样例与人工复核表,30,evidence_material_ref,证据材料编号或链接,人工审核使用的证明材料。,
+fact_rule_review_item,规则复核样例与人工复核表,31,system_release_conclusion,系统放行结论,系统初步判断。,
+fact_rule_review_item,规则复核样例与人工复核表,32,missing_reason,缺失或异常原因,为什么需要人工复核。,米面制品缺馅料
+fact_rule_review_item,规则复核样例与人工复核表,33,triggered_rule_id,触发规则 ID,触发的命名、属性、合规或分类规则。,
+fact_rule_review_item,规则复核样例与人工复核表,34,review_priority,复核优先级,P0、P1、P2、P3。,P1
+fact_rule_review_item,规则复核样例与人工复核表,35,review_status,复核状态,PENDING、APPROVED、REJECTED 等。,PENDING
+fact_rule_review_item,规则复核样例与人工复核表,36,review_result,复核结论,人工确认后的结论。,
+fact_rule_review_item,规则复核样例与人工复核表,37,reviewer,复核人,业务、商品、质量或法务复核人。,
+fact_rule_review_item,规则复核样例与人工复核表,38,reviewed_at,复核时间,完成复核时间。,
+fact_rule_review_item,规则复核样例与人工复核表,39,review_comment,复核备注,复核补充说明。,
+fact_rule_review_item,规则复核样例与人工复核表,40,created_at,创建时间,复核项创建时间。,2026-09-01 18:00:00
+fact_rule_review_item,规则复核样例与人工复核表,41,updated_at,数据更新时间,复核项更新时间。,2026-09-01 18:00:00
+dim_product_season_window,商品季节状态销售季窗口表,1,season_rule_version,季节规则版本,本次季节规则版本号。,
+dim_product_season_window,商品季节状态销售季窗口表,2,product_scope_type,适用对象类型,SKU、SPU、CATEGORY_LEVEL2、CATEGORY_LEVEL3。,
+dim_product_season_window,商品季节状态销售季窗口表,3,product_scope_code,适用对象编码,SKU/SPU/品类编码。,
+dim_product_season_window,商品季节状态销售季窗口表,4,product_scope_name,适用对象名称,商品、SPU 或品类名称。,
+dim_product_season_window,商品季节状态销售季窗口表,5,is_seasonal,是否季节商品,1 季节商品，0 常年商品。,
+dim_product_season_window,商品季节状态销售季窗口表,6,season_id,销售季 ID,季节商品必须填写。,
+dim_product_season_window,商品季节状态销售季窗口表,7,season_name,销售季名称,例如夏季、年货季。,
+dim_product_season_window,商品季节状态销售季窗口表,8,season_start_month_day,销售季开始月日,每年重复季节用 MM-DD。,
+dim_product_season_window,商品季节状态销售季窗口表,9,season_end_month_day,销售季结束月日,每年重复季节用 MM-DD。,
+dim_product_season_window,商品季节状态销售季窗口表,10,season_start_date,销售季开始日期,明确年份销售季。,
+dim_product_season_window,商品季节状态销售季窗口表,11,season_end_date,销售季结束日期,明确年份销售季。,
+dim_product_season_window,商品季节状态销售季窗口表,12,repeat_yearly,是否每年重复,1 每年重复，0 指定日期。,
+dim_product_season_window,商品季节状态销售季窗口表,13,season_status,季节状态,IN_SEASON、OFF_SEASON、YEAR_ROUND。,
+dim_product_season_window,商品季节状态销售季窗口表,14,effective_start_date,生效开始日期,规则开始生效日期。,
+dim_product_season_window,商品季节状态销售季窗口表,15,effective_end_date,生效结束日期,当前有效规则为空。,
+dim_product_season_window,商品季节状态销售季窗口表,16,is_active,是否当前有效,1 表示当前有效。,
+dim_product_season_window,商品季节状态销售季窗口表,17,source_file,来源文件,来源文件名或来源系统。,
+dim_product_season_window,商品季节状态销售季窗口表,18,source_sheet,来源 sheet,来源 sheet 名。,
+dim_product_season_window,商品季节状态销售季窗口表,19,confirmed_by,配置确认人,业务或商品确认人。,
+dim_product_season_window,商品季节状态销售季窗口表,20,updated_at,数据更新时间,本次标准化转换时间。,
