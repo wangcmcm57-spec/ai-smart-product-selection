@@ -1,0 +1,2189 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>上海试点 AI 新品推荐工作台 - 新品雷达 Demo</title>
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      --bg: #eff4f2;
+      --surface: #ffffff;
+      --surface-soft: #f7faf9;
+      --surface-warm: #fffdf8;
+      --surface-tint: #e9f5f0;
+      --ink: #12201f;
+      --text: #334340;
+      --muted: #66766f;
+      --subtle: #8a9994;
+      --line: #d8e3df;
+      --line-soft: #e7efeb;
+      --teal: #14786f;
+      --teal-deep: #083f3b;
+      --teal-soft: #ddf0eb;
+      --mint: #bdded5;
+      --blue: #2f65b7;
+      --blue-soft: #edf4ff;
+      --orange: #b96918;
+      --orange-soft: #fff2de;
+      --red: #a64238;
+      --red-soft: #fff0ed;
+      --green: #2f8356;
+      --green-soft: #e7f5ec;
+      --plum: #6652a3;
+      --berry: #9c3545;
+      --shadow: 0 18px 38px rgba(26, 45, 43, 0.09), 0 2px 8px rgba(26, 45, 43, 0.04);
+      --shadow-sm: 0 8px 22px rgba(26, 45, 43, 0.06);
+      --radius: 8px;
+      --ease: cubic-bezier(.2, .8, .2, 1);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+      margin: 0;
+      background:
+        linear-gradient(180deg, #f8faf7 0, var(--bg) 34%, #edf3f1 100%);
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    body {
+      overflow: hidden;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    ::selection {
+      background: #cde9e1;
+      color: var(--teal-deep);
+    }
+
+    :focus-visible {
+      outline: 3px solid rgba(15, 118, 110, .22);
+      outline-offset: 2px;
+    }
+
+    .app-shell {
+      height: 100vh;
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: 56px minmax(0, 1fr);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      background: rgba(255, 255, 255, .92);
+      border-bottom: 1px solid var(--line-soft);
+      backdrop-filter: blur(18px);
+      position: relative;
+      z-index: 5;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 260px;
+    }
+
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background:
+        linear-gradient(145deg, #0d625c 0%, var(--teal-deep) 100%);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      letter-spacing: 0;
+      box-shadow: 0 8px 20px rgba(8, 63, 59, .22);
+    }
+
+    .brand-title {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .brand-title strong {
+      font-size: 14px;
+      line-height: 1.1;
+    }
+
+    .brand-title span {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .top-nav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      height: 100%;
+      color: var(--muted);
+    }
+
+    .top-nav button {
+      height: 34px;
+      padding: 0 14px;
+      border-radius: 8px;
+      background: transparent;
+      color: inherit;
+      transition: background .18s var(--ease), color .18s var(--ease);
+    }
+
+    .top-nav button:hover,
+    .top-nav button.active {
+      background: #edf7f3;
+      color: var(--teal-deep);
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 260px;
+      justify-content: flex-end;
+      color: var(--muted);
+    }
+
+    .icon-button {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: transparent;
+      color: var(--muted);
+      transition: background .18s var(--ease), color .18s var(--ease);
+    }
+
+    .icon-button:hover {
+      background: var(--surface-tint);
+      color: var(--teal-deep);
+    }
+
+    .icon-button svg,
+    .btn svg,
+    .filter-label svg,
+    .chip svg,
+    .feedback-button svg {
+      width: 16px;
+      height: 16px;
+      stroke-width: 2;
+    }
+
+    .user-pill {
+      height: 34px;
+      border: 1px solid #d5e4de;
+      border-radius: 8px;
+      padding: 0 10px 0 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text);
+      background: #fcfffe;
+    }
+
+    .user-pill span:not(.avatar) {
+      white-space: nowrap;
+    }
+
+    .avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 7px;
+      background: var(--teal-soft);
+      color: var(--teal-deep);
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .page {
+      min-width: 1180px;
+      min-height: 0;
+      height: calc(100vh - 56px);
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      gap: 12px;
+      padding: 16px 22px 22px;
+    }
+
+    .page-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      background:
+        linear-gradient(135deg, #083f3b 0%, #126a62 72%, #c47a24 168%);
+      box-shadow: 0 16px 32px rgba(8, 63, 59, .16);
+    }
+
+    .title-block h1 {
+      margin: 0;
+      font-size: 25px;
+      line-height: 1.2;
+      font-weight: 800;
+      letter-spacing: 0;
+      color: #ffffff;
+    }
+
+    .title-block p {
+      margin: 6px 0 0;
+      color: rgba(236, 250, 245, .82);
+      font-size: 13px;
+    }
+
+    .head-side {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .chip {
+      height: 30px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, .2);
+      background: rgba(255, 255, 255, .12);
+      color: rgba(244, 252, 249, .9);
+      white-space: nowrap;
+      font-size: 12px;
+    }
+
+    .chip.good {
+      color: #ffffff;
+      background: rgba(255, 255, 255, .16);
+      border-color: rgba(255, 255, 255, .28);
+    }
+
+    .filter-panel {
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, .98) 0%, rgba(250, 253, 251, .98) 100%);
+      border: 1px solid var(--line-soft);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 10px 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: 148px 132px 152px 168px minmax(150px, 1fr) 112px 112px;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .field {
+      min-width: 0;
+      display: grid;
+      gap: 6px;
+    }
+
+    .filter-label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .required {
+      color: var(--orange);
+      font-weight: 700;
+    }
+
+    .select-wrap {
+      height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfdfc;
+      position: relative;
+      transition: border-color .18s var(--ease), box-shadow .18s var(--ease), background .18s var(--ease);
+    }
+
+    .select-wrap:hover,
+    .select-wrap:focus-within {
+      border-color: #aacfc8;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(20, 120, 111, .09);
+    }
+
+    select {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--ink);
+      padding: 0 32px 0 10px;
+      appearance: none;
+    }
+
+    .select-wrap::after {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-right: 1.5px solid var(--muted);
+      border-bottom: 1.5px solid var(--muted);
+      transform: rotate(45deg);
+      position: absolute;
+      right: 13px;
+      top: 12px;
+      pointer-events: none;
+    }
+
+    .btn {
+      height: 36px;
+      border-radius: 8px;
+      padding: 0 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--text);
+      transition: transform .18s var(--ease), background .18s var(--ease), border-color .18s var(--ease), color .18s var(--ease), box-shadow .18s var(--ease);
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      border-color: #bfd4cf;
+      box-shadow: 0 8px 16px rgba(25, 42, 48, .08);
+    }
+
+    .btn.primary {
+      border-color: var(--teal);
+      background:
+        linear-gradient(180deg, #1a857a 0%, var(--teal) 100%);
+      color: #fff;
+      box-shadow: 0 12px 22px rgba(20, 120, 111, .18);
+    }
+
+    .btn.primary:hover {
+      background: var(--teal-deep);
+      border-color: var(--teal-deep);
+    }
+
+    .filter-note {
+      min-height: 22px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+    }
+
+    .filter-note.error {
+      color: var(--red);
+    }
+
+    .workbench {
+      min-height: 0;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 410px minmax(0, 1fr);
+      gap: 14px;
+    }
+
+    .queue-panel,
+    .detail-panel,
+    .assistant-panel {
+      background: rgba(255, 255, 255, .98);
+      border: 1px solid var(--line-soft);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .queue-panel {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 15px 14px 11px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 760;
+    }
+
+    .panel-head span {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .queue-list {
+      min-height: 0;
+      overflow: auto;
+      padding: 12px;
+      scrollbar-width: thin;
+      scrollbar-color: #b8c9c8 transparent;
+    }
+
+    .queue-list::-webkit-scrollbar,
+    .detail-panel::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    .queue-list::-webkit-scrollbar-thumb,
+    .detail-panel::-webkit-scrollbar-thumb {
+      background: #b8c9c8;
+      border-radius: 999px;
+      border: 3px solid transparent;
+      background-clip: padding-box;
+    }
+
+    .queue-card {
+      width: 100%;
+      min-height: 146px;
+      padding: 12px;
+      margin-bottom: 10px;
+      border: 1px solid #e1ebe7;
+      border-radius: var(--radius);
+      background:
+        linear-gradient(180deg, #ffffff 0%, #fbfdfb 100%);
+      text-align: left;
+      display: grid;
+      grid-template-columns: 78px minmax(0, 1fr);
+      gap: 12px;
+      transition: transform .2s var(--ease), border-color .2s var(--ease), box-shadow .2s var(--ease), background .2s var(--ease);
+      position: relative;
+      cursor: pointer;
+    }
+
+    .queue-card:hover {
+      transform: translateY(-2px);
+      border-color: #aecfc7;
+      box-shadow: 0 14px 28px rgba(22, 46, 43, .09);
+    }
+
+    .queue-card.active {
+      border-color: #64b9ad;
+      background:
+        linear-gradient(180deg, #ffffff 0%, #f4fbf8 100%);
+      box-shadow: 0 16px 30px rgba(20, 120, 111, .13);
+    }
+
+    .rank {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      min-width: 22px;
+      height: 22px;
+      display: grid;
+      place-items: center;
+      border-radius: 7px;
+      background: rgba(255, 255, 255, .92);
+      color: var(--teal-deep);
+      font-size: 12px;
+      font-weight: 800;
+      box-shadow: 0 4px 12px rgba(20, 39, 45, .08);
+      z-index: 1;
+    }
+
+    .thumb {
+      width: 78px;
+      height: 98px;
+      border-radius: 8px;
+      background: #f4f6f2;
+      border: 1px solid #dfe8e3;
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      isolation: isolate;
+    }
+
+    .thumb::before {
+      content: "";
+      position: absolute;
+      inset: auto 8px 12px;
+      height: 20px;
+      border-radius: 50%;
+      background: rgba(16, 30, 29, .09);
+      filter: blur(2px);
+      transform: skewX(-12deg);
+      z-index: -1;
+    }
+
+    .thumb::after {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto auto;
+      width: 30px;
+      height: 100%;
+      background: rgba(255, 255, 255, .34);
+      clip-path: polygon(35% 0, 100% 0, 100% 100%, 0 100%);
+      z-index: -1;
+    }
+
+    .pack {
+      width: 48px;
+      height: 62px;
+      border-radius: 7px 7px 11px 11px;
+      background: #fff;
+      box-shadow: 0 12px 18px rgba(25, 42, 48, .16);
+      border: 1px solid rgba(22,35,41,.08);
+      display: grid;
+      grid-template-rows: 1fr auto;
+      overflow: hidden;
+      transform: rotate(-2deg);
+      position: relative;
+    }
+
+    .pack::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 9px;
+      background: rgba(255, 255, 255, .18);
+      pointer-events: none;
+    }
+
+    .pack b {
+      display: grid;
+      place-items: center;
+      padding: 7px 4px 2px;
+      font-size: 13px;
+      line-height: 1.05;
+      text-align: center;
+      color: #fff;
+    }
+
+    .pack small {
+      padding: 4px;
+      text-align: center;
+      color: var(--text);
+      font-size: 10px;
+      background: rgba(255, 255, 255, .84);
+    }
+
+    .beef.thumb,
+    .beef.product-stage { background: linear-gradient(145deg, #f8f4ee 0%, #edf4ef 100%); }
+    .egg.thumb,
+    .egg.product-stage { background: linear-gradient(145deg, #fff8e9 0%, #edf5ef 100%); }
+    .chicken.thumb,
+    .chicken.product-stage { background: linear-gradient(145deg, #f2f0fb 0%, #eef4f2 100%); }
+    .ball.thumb,
+    .ball.product-stage { background: linear-gradient(145deg, #ecf6f7 0%, #f6f4ee 100%); }
+    .rice.thumb,
+    .rice.product-stage { background: linear-gradient(145deg, #edf8ef 0%, #f6f2e8 100%); }
+    .beef .pack b { background: linear-gradient(180deg, #a43832 0%, #832a28 100%); }
+    .egg .pack b { background: linear-gradient(180deg, #e09a22 0%, #c37812 100%); }
+    .chicken .pack b { background: linear-gradient(180deg, #795bb7 0%, #5b438e 100%); }
+    .ball .pack b { background: linear-gradient(180deg, #357789 0%, #245765 100%); }
+    .rice .pack b { background: linear-gradient(180deg, #348b61 0%, #246b49 100%); }
+
+    .card-main {
+      min-width: 0;
+      display: grid;
+      gap: 7px;
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .card-title {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.3;
+      font-weight: 760;
+      color: var(--ink);
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .tag {
+      flex: 0 0 auto;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 8px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+      color: var(--teal-deep);
+      background: #def2ec;
+      border: 1px solid #c6e5dd;
+    }
+
+    .tag.season {
+      color: #8a5200;
+      background: #fff2d7;
+      border-color: #f1d7a7;
+    }
+
+    .tag.local {
+      color: #1e5c95;
+      background: var(--blue-soft);
+      border-color: #cadcff;
+    }
+
+    .tag.conditional,
+    .tag.explore {
+      color: var(--orange);
+      background: var(--orange-soft);
+      border-color: #f3d4a9;
+    }
+
+    .reason {
+      margin: 0;
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.45;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .mini-facts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .mini-fact {
+      height: 24px;
+      padding: 0 7px;
+      border-radius: 7px;
+      background: #f5f8f6;
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      max-width: 100%;
+    }
+
+    .mini-fact strong {
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .risk {
+      color: var(--orange);
+      background: var(--orange-soft);
+    }
+
+    .feedback-row {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      padding-top: 2px;
+    }
+
+    .feedback-button {
+      height: 28px;
+      padding: 0 9px;
+      border-radius: 7px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: background .18s var(--ease), color .18s var(--ease), border-color .18s var(--ease), transform .18s var(--ease);
+    }
+
+    .feedback-button:hover {
+      transform: translateY(-1px);
+      color: var(--teal-deep);
+      border-color: #b9d8d3;
+    }
+
+    .feedback-button.good.selected {
+      color: var(--green);
+      background: var(--green-soft);
+      border-color: #b8e2c7;
+    }
+
+    .feedback-button.bad.selected {
+      color: var(--red);
+      background: var(--red-soft);
+      border-color: #f2c3bf;
+    }
+
+    .detail-stack {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+      gap: 14px;
+    }
+
+    .detail-panel {
+      min-height: 0;
+      overflow: auto;
+      padding: 16px 18px;
+      background:
+        linear-gradient(180deg, #ffffff 0%, #fbfdfb 100%);
+    }
+
+    .detail-hero {
+      display: grid;
+      grid-template-columns: 188px minmax(0, 1fr);
+      gap: 18px;
+      align-items: stretch;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .product-stage {
+      min-height: 162px;
+      border-radius: 8px;
+      border: 1px solid #dfe8e3;
+      display: grid;
+      place-items: center;
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .product-stage::before,
+    .product-stage::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+    }
+
+    .product-stage::before {
+      inset: 18px 18px auto auto;
+      width: 56px;
+      height: 126px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, .45);
+      transform: rotate(16deg);
+    }
+
+    .product-stage::after {
+      inset: auto 24px 24px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(16, 30, 29, .12);
+      filter: blur(4px);
+    }
+
+    .product-stage .pack {
+      width: 80px;
+      height: 106px;
+      border-radius: 12px 12px 18px 18px;
+      transform: rotate(-3deg);
+    }
+
+    .product-stage .pack b {
+      font-size: 21px;
+      padding: 14px 8px 5px;
+    }
+
+    .product-stage .pack small {
+      font-size: 13px;
+      padding: 7px;
+    }
+
+    .detail-copy {
+      min-width: 0;
+      display: grid;
+      align-content: start;
+      gap: 12px;
+    }
+
+    .detail-meta {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .detail-meta span:not(.tag) {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .detail-copy h2 {
+      margin: 0;
+      font-size: 26px;
+      line-height: 1.18;
+      font-weight: 820;
+      letter-spacing: 0;
+    }
+
+    .verdict {
+      margin: 0;
+      color: var(--text);
+      font-size: 15px;
+      max-width: 70ch;
+      line-height: 1.65;
+    }
+
+    .detail-facts {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .fact-cell {
+      min-height: 58px;
+      border-radius: 8px;
+      background: #f8fbfa;
+      border: 1px solid #e1ebe7;
+      padding: 9px 10px;
+      display: grid;
+      align-content: center;
+      gap: 3px;
+    }
+
+    .fact-cell span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .fact-cell strong {
+      color: var(--ink);
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .section-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 14px 0 10px;
+    }
+
+    .section-tab {
+      height: 34px;
+      padding: 0 12px;
+      border-radius: 8px;
+      color: var(--muted);
+      background: #f8fbfa;
+      border: 1px solid #e1ebe7;
+      transition: background .18s var(--ease), color .18s var(--ease), border-color .18s var(--ease), transform .18s var(--ease);
+    }
+
+    .section-tab:hover {
+      transform: translateY(-1px);
+      color: var(--teal-deep);
+      border-color: #c7ddd9;
+    }
+
+    .section-tab.active {
+      background:
+        linear-gradient(180deg, #155f58 0%, var(--teal-deep) 100%);
+      color: #fff;
+      border-color: var(--teal-deep);
+      box-shadow: 0 8px 18px rgba(8, 63, 59, .18);
+    }
+
+    .decision-section {
+      border-top: 1px solid var(--line-soft);
+      padding-top: 16px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(240px, .85fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .section-copy h3,
+    .next-step h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+      line-height: 1.3;
+    }
+
+    .section-lead {
+      margin: 0;
+      color: var(--text);
+      font-size: 15px;
+      max-width: 72ch;
+    }
+
+    .evidence-list {
+      list-style: none;
+      margin: 14px 0 0;
+      padding: 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    .evidence-list li {
+      display: grid;
+      grid-template-columns: 20px minmax(0, 1fr);
+      gap: 10px;
+      color: var(--text);
+      line-height: 1.58;
+    }
+
+    .evidence-list li::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--teal);
+      margin-top: 8px;
+      box-shadow: 0 0 0 5px #e2f2ed;
+      justify-self: center;
+    }
+
+    .next-step {
+      border-radius: 8px;
+      background:
+        linear-gradient(180deg, #f4fbf8 0%, #eef8f4 100%);
+      border: 1px solid #c8e4dc;
+      padding: 14px;
+    }
+
+    .next-step p {
+      margin: 0;
+      color: var(--text);
+    }
+
+    .next-step .warning {
+      margin-top: 10px;
+      color: var(--orange);
+      background: rgba(255, 246, 231, .9);
+      border-radius: 8px;
+      padding: 9px 10px;
+      border: 1px solid #f4d5ad;
+    }
+
+    .empty-state,
+    .loading-state {
+      height: 100%;
+      min-height: 420px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      text-align: center;
+      padding: 28px;
+    }
+
+    .empty-state svg,
+    .loading-state svg {
+      width: 36px;
+      height: 36px;
+      margin-bottom: 10px;
+      color: var(--teal);
+    }
+
+    .loading-state svg {
+      animation: spin 1.2s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .assistant-panel {
+      padding: 10px 14px;
+      display: grid;
+      min-height: 154px;
+      gap: 8px;
+      background:
+        linear-gradient(180deg, #ffffff 0%, #f6fbf9 100%);
+    }
+
+    .assistant-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .assistant-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .assistant-title .spark {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background:
+        linear-gradient(145deg, #e2f4ee 0%, #cde9e0 100%);
+      color: var(--teal-deep);
+      display: grid;
+      place-items: center;
+      border: 1px solid #bfe0d7;
+    }
+
+    .assistant-title h2 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .assistant-title p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .quick-questions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .quick-questions button {
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 8px;
+      color: var(--teal-deep);
+      background: #e4f4ef;
+      border: 1px solid #bfddd5;
+      transition: background .18s var(--ease), transform .18s var(--ease);
+    }
+
+    .quick-questions button:hover {
+      transform: translateY(-1px);
+      background: #d7eee7;
+    }
+
+    .assistant-answer {
+      min-height: 36px;
+      border-radius: 8px;
+      background: #fbfdfc;
+      border: 1px solid #e0ebe7;
+      color: var(--text);
+      padding: 10px 12px;
+    }
+
+    .ask-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+    }
+
+    .ask-row input {
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid #d7e4df;
+      padding: 0 12px;
+      color: var(--ink);
+      background: var(--surface);
+      outline: 0;
+      transition: border-color .18s var(--ease), box-shadow .18s var(--ease);
+    }
+
+    .ask-row input:focus {
+      border-color: #90cac2;
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, .1);
+    }
+
+    .toast {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      min-width: 178px;
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 8px;
+      background: var(--ink);
+      color: #fff;
+      padding: 10px 12px;
+      box-shadow: 0 18px 34px rgba(0, 0, 0, .18);
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: opacity .2s var(--ease), transform .2s var(--ease);
+      z-index: 20;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 980px) {
+      body {
+        overflow: auto;
+      }
+
+      .app-shell {
+        height: auto;
+        min-height: 100vh;
+      }
+
+      .topbar {
+        padding: 0 14px;
+      }
+
+      .top-nav {
+        display: none;
+      }
+
+      .top-actions {
+        min-width: auto;
+      }
+
+      .page {
+        min-width: 0;
+        height: auto;
+        overflow: visible;
+        padding: 14px;
+        min-height: auto;
+      }
+
+      .page-head {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .head-side {
+        width: 100%;
+        overflow: auto;
+        padding-bottom: 2px;
+      }
+
+      .filters {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .workbench {
+        grid-template-columns: 1fr;
+        overflow: visible;
+      }
+
+      .detail-stack {
+        grid-template-rows: auto auto;
+        min-height: auto;
+      }
+
+      .queue-panel {
+        max-height: none;
+      }
+
+      .detail-panel {
+        overflow: visible;
+      }
+
+      .detail-hero,
+      .decision-section {
+        grid-template-columns: 1fr;
+      }
+
+      .detail-facts {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .product-stage {
+        min-height: 150px;
+      }
+    }
+
+    @media (min-width: 981px) and (max-height: 760px) {
+      body {
+        overflow: auto;
+      }
+
+      .app-shell {
+        height: auto;
+        min-height: 100vh;
+      }
+
+      .page {
+        height: auto;
+        min-height: calc(100vh - 56px);
+        overflow: visible;
+      }
+
+      .workbench {
+        min-height: 620px;
+        overflow: visible;
+      }
+
+      .queue-panel {
+        max-height: 620px;
+      }
+
+      .detail-stack {
+        min-height: 620px;
+        grid-template-rows: minmax(420px, 1fr) auto;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .brand-title span,
+      .top-actions .icon-button,
+      .head-side,
+      .user-pill span:not(.avatar) {
+        display: none;
+      }
+
+      .page {
+        gap: 12px;
+      }
+
+      .filters,
+      .detail-facts,
+      .ask-row {
+        grid-template-columns: 1fr;
+      }
+
+      .queue-card {
+        grid-template-columns: 70px minmax(0, 1fr);
+      }
+
+      .thumb {
+        width: 70px;
+        height: 92px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!--
+    THESIS: AI 新品推荐是采购决策台，不是聊天页，也不是算法后台。
+    OWN-WORLD: 浅色采购雷达，白色工作面、青绿主行动、商品缩略图、克制风险色和细线分隔。
+    STORY: 采购先选上海试点范围，再扫推荐队列，点开单品，看原因、画像、价格、风险和试点动作。
+    FIRST VIEWPORT: 顶部筛选，左侧推荐队列，右侧单品决策档案，底部大白话 AI 追问。
+    FORM: 用户已确认 A 新品雷达型，吸收商品发现平台和企业工作台；seed key user-approved-radar-v1。
+    FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+  -->
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand" aria-label="智慧中台">
+        <div class="brand-mark">新</div>
+        <div class="brand-title">
+          <strong>智慧中台</strong>
+          <span>商品 · AI 新品推荐</span>
+        </div>
+      </div>
+
+      <nav class="top-nav" aria-label="业务导航">
+        <button type="button">首页</button>
+        <button type="button">经营</button>
+        <button type="button" class="active">商品</button>
+        <button type="button">门店</button>
+        <button type="button">报表</button>
+      </nav>
+
+      <div class="top-actions">
+        <button class="icon-button" type="button" title="搜索"><i data-lucide="search"></i></button>
+        <button class="icon-button" type="button" title="消息"><i data-lucide="bell"></i></button>
+        <div class="user-pill">
+          <span class="avatar">采</span>
+          <span>华东采购</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="page">
+      <section class="page-head" aria-labelledby="pageTitle">
+        <div class="title-block">
+          <h1 id="pageTitle">AI 新品推荐</h1>
+          <p>帮采购快速判断：哪些新品值得看，为什么，先怎么试。</p>
+        </div>
+        <div class="head-side" aria-label="当前工作状态">
+          <span class="chip good"><i data-lucide="map-pin"></i>上海试点</span>
+        </div>
+      </section>
+
+      <section class="filter-panel" aria-label="筛选条件">
+        <form class="filters" id="filterForm">
+          <label class="field">
+            <span class="filter-label"><i data-lucide="route"></i>运营大区</span>
+            <span class="select-wrap">
+              <select id="region">
+                <option value="全部">全部</option>
+                <option value="华东 1 区">华东 1 区</option>
+                <option value="华东 2 区">华东 2 区</option>
+                <option value="华东 3 区">华东 3 区</option>
+              </select>
+            </span>
+          </label>
+
+          <label class="field">
+            <span class="filter-label"><i data-lucide="building-2"></i>城市 <span class="required">*</span></span>
+            <span class="select-wrap">
+              <select id="city">
+                <option value="上海">上海</option>
+              </select>
+            </span>
+          </label>
+
+          <label class="field">
+            <span class="filter-label"><i data-lucide="boxes"></i>大分类 <span class="required">*</span></span>
+            <span class="select-wrap">
+              <select id="majorCategory">
+                <option value="">请选择</option>
+                <option value="肉禽蛋">肉禽蛋</option>
+                <option value="鲜食">鲜食</option>
+                <option value="水产">水产</option>
+                <option value="蔬菜">蔬菜</option>
+                <option value="水果">水果</option>
+                <option value="粮油调味">粮油调味</option>
+                <option value="预制菜">预制菜</option>
+              </select>
+            </span>
+          </label>
+
+          <label class="field">
+            <span class="filter-label"><i data-lucide="layers-2"></i>中分类 <span class="required">*</span></span>
+            <span class="select-wrap">
+              <select id="middleCategory">
+                <option value="">请选择</option>
+              </select>
+            </span>
+          </label>
+
+          <label class="field">
+            <span class="filter-label"><i data-lucide="tag"></i>小分类</span>
+            <span class="select-wrap">
+              <select id="leafCategory">
+                <option value="">全部小分类</option>
+              </select>
+            </span>
+          </label>
+
+          <button class="btn primary" id="queryBtn" type="submit">
+            <i data-lucide="search"></i>查询
+          </button>
+          <button class="btn" id="resetBtn" type="button">
+            <i data-lucide="refresh-cw"></i>重置
+          </button>
+        </form>
+        <div class="filter-note" id="filterNote" role="status">
+          <i data-lucide="sparkles"></i>
+          <span>已为你按推荐优先级排好，建议从前几条开始看。</span>
+        </div>
+      </section>
+
+      <section class="workbench" aria-label="新品推荐工作台">
+        <aside class="queue-panel">
+          <div class="panel-head">
+            <h2>推荐新品</h2>
+            <span id="queueHint">系统推荐优先</span>
+          </div>
+          <div class="queue-list" id="queueList"></div>
+        </aside>
+
+        <section class="detail-stack">
+          <article class="detail-panel" id="detailPanel" aria-label="推荐详情"></article>
+
+          <section class="assistant-panel" aria-label="AI 追问">
+            <div class="assistant-head">
+              <div class="assistant-title">
+                <span class="spark"><i data-lucide="sparkles"></i></span>
+                <div>
+                  <h2>想继续问这条推荐？</h2>
+                  <p id="assistantContext">我可以帮你把这条推荐讲成人话。</p>
+                </div>
+              </div>
+              <div class="quick-questions" id="quickQuestions"></div>
+            </div>
+            <div class="assistant-answer" id="assistantAnswer">
+              你可以先点一个问题，比如“为什么值得看？”。
+            </div>
+            <form class="ask-row" id="askForm">
+              <input id="askInput" type="text" placeholder="比如：这条适合哪些门店？" />
+              <button class="btn primary" type="submit"><i data-lucide="send"></i>问一下</button>
+            </form>
+          </section>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <i data-lucide="check-circle-2"></i>
+    <span>已记录反馈</span>
+  </div>
+
+  <script>
+    const categoryMap = {
+      "肉禽蛋": {
+        "牛肉制品": ["牛肉半成品", "牛肉丸", "牛排牛柳"],
+        "鸡肉制品": ["调味鸡翅", "鸡肉半成品"],
+        "蛋品": ["功能蛋", "鲜鸡蛋"]
+      },
+      "鲜食": {
+        "快手菜": ["肉菜组合", "蛋菜组合", "下饭菜"],
+        "早餐": ["饼类", "包点"]
+      },
+      "水产": {
+        "虾类": ["虾仁", "调味虾"],
+        "鱼类": ["鱼片", "鱼丸"]
+      },
+      "蔬菜": {
+        "净菜": ["组合净菜", "沙拉菜"],
+        "叶菜": ["时令叶菜"]
+      },
+      "水果": {
+        "浆果": ["蓝莓", "草莓"],
+        "柑橘": ["橙", "柚"]
+      },
+      "粮油调味": {
+        "调味料": ["复合调味", "火锅底料"],
+        "米面": ["米饭制品", "面点"]
+      },
+      "预制菜": {
+        "家常菜": ["肉类预制", "水产预制"],
+        "轻食": ["低脂餐", "沙拉"]
+      }
+    };
+
+    const recommendations = [
+      {
+        id: "rec-001",
+        title: "青椒黑椒牛柳丝 200g",
+        category: "肉禽蛋 / 牛肉制品 / 牛肉半成品",
+        major: "肉禽蛋",
+        middle: "牛肉制品",
+        leaf: "牛肉半成品",
+        tag: "正式推荐",
+        tagClass: "formal",
+        visual: "beef",
+        audience: "年轻家庭",
+        scope: "上海 A 级门店",
+        price: "¥19.9",
+        competitor: "¥18.8-22.9",
+        risk: "包装规格待确认",
+        reason: "快手牛肉菜需求稳定，黑椒口味认知清楚，价格带还有试点空间。",
+        verdict: "可以优先看，但先小范围验证。它的机会在年轻家庭的晚餐快手菜场景，价格和竞对接近，风险主要是包装规格还要补齐。",
+        sections: {
+          why: {
+            title: "为什么值得看",
+            lead: "这条不是因为“听起来好卖”，而是它同时有消费场景、价格空间和清楚的商品形态。",
+            points: ["年轻家庭对快手牛肉菜的需求稳定，晚餐和周末加餐场景比较明确。", "黑椒和青椒都是容易理解的口味组合，采购和门店不用花很多成本解释。", "建议价落在上海同类竞对常见价格带里，先试点不会显得突兀。"],
+            action: "建议先把它作为第一批重点看样品，确认规格、净含量和加工方式。",
+            warning: "不要先承诺大范围上架，包装规格和真实成本确认后再扩大。"
+          },
+          people: {
+            title: "适合谁买",
+            lead: "主要看年轻家庭和工作日晚餐人群，重点不是囤货，而是买回去能快速做一顿。",
+            points: ["更适合两到三人家庭的即烹场景。", "价格不能太高，最好让用户觉得比外卖和熟食更划算。", "商品名要突出快手和口味，不要只写原料。"],
+            action: "门店陈列可以靠近牛肉、净菜或快手菜区域。",
+            warning: "如果规格偏大，会降低工作日晚餐购买意愿。"
+          },
+          price: {
+            title: "价格怎么看",
+            lead: "建议价不需要压到最低，关键是和竞对价格相比有解释空间。",
+            points: ["竞对集中在 ¥18.8-22.9，¥19.9 比较容易被接受。", "如果真实成本上来，优先调规格，不建议直接把价格拉高。", "门店可先观察首周动销，不急着做大促。"],
+            action: "建议用 ¥19.9 做试点价，后续按毛利和动销再调整。",
+            warning: "如果成本确认后毛利空间不足，这条应转为条件推荐。"
+          },
+          risk: {
+            title: "风险是什么",
+            lead: "目前不是硬风险，主要是上市前必须补清楚的商品信息。",
+            points: ["包装规格需要确认，避免前端和门店口径不一致。", "真实成本和加工损耗需要补齐，不要只按估算成本判断。", "图片和样品要一致，避免采购看到的和门店售卖的不是同一个形态。"],
+            action: "先要求补包装规格、样品图和成本测算，再进入试点。",
+            warning: "资料没补齐前，不建议写成正式上架动作。"
+          },
+          pilot: {
+            title: "先怎么试",
+            lead: "这条适合用“小范围、快反馈”的方式试，不适合一开始铺太大。",
+            points: ["优先选择上海 A 级门店，观察快手菜接受度。", "试点周期建议覆盖两个周末，看复购和晚高峰表现。", "反馈重点看动销、损耗、价格接受度和门店陈列难度。"],
+            action: "建议先在上海 A 级门店小范围试点，再看是否扩大到更多门店群。",
+            warning: "如果首批门店反馈烹饪复杂，就要调整商品表达或规格。"
+          }
+        },
+        answers: {
+          why: "可以优先看。它不是单靠一个卖点，而是场景、口味和价格都比较顺：年轻家庭做晚饭想省事，黑椒牛柳又容易理解，¥19.9 也没有明显脱离竞对价格。",
+          risk: "主要风险不是卖不卖得动，而是资料还没补齐。包装规格、真实成本、样品图要先确认，不然采购推进到后面会返工。",
+          price: "不算贵。竞对大多在 ¥18.8-22.9，它放 ¥19.9 比较自然。真正要盯的是成本，如果成本上来，优先调规格，不要硬涨价。",
+          pilot: "先放上海 A 级门店小范围试。看两件事：晚高峰有没有人买，周末会不会复购。跑通后再扩大。"
+        }
+      },
+      {
+        id: "rec-002",
+        title: "香椿鸡蛋饼 180g",
+        category: "鲜食 / 快手菜 / 蛋菜组合",
+        major: "鲜食",
+        middle: "快手菜",
+        leaf: "蛋菜组合",
+        tag: "季节推荐",
+        tagClass: "season",
+        visual: "egg",
+        audience: "品质家庭",
+        scope: "上海社区型门店",
+        price: "¥12.9",
+        competitor: "¥11.9-15.8",
+        risk: "季节窗口短",
+        reason: "香椿季节感强，和鸡蛋搭配认知低门槛，适合短窗口测试。",
+        verdict: "值得在季节窗口里看，但节奏要快。它适合做短周期试点，不适合拖到季节尾部再推。",
+        sections: {
+          why: {
+            title: "为什么值得看",
+            lead: "它的机会来自季节感和熟悉做法，采购不用教育用户。",
+            points: ["香椿自带时令心智，用户更容易接受新品尝鲜。", "鸡蛋饼比纯香椿更容易做成标准化商品。", "价格带和社区门店早餐、加餐场景能接上。"],
+            action: "建议作为季节短打商品看样。",
+            warning: "季节窗口短，过了窗口就不要硬推。"
+          },
+          people: {
+            title: "适合谁买",
+            lead: "更适合品质家庭和时令尝鲜用户。",
+            points: ["用户购买动机偏尝鲜，不是长期囤货。", "社区型门店更容易承接家庭餐桌需求。", "商品表达要突出时令，不要只写鸡蛋饼。"],
+            action: "陈列可跟时令蔬菜或早餐熟食关联。",
+            warning: "年轻单身用户可能不是第一优先人群。"
+          },
+          price: {
+            title: "价格怎么看",
+            lead: "¥12.9 是可试的价格，但要控制原料波动。",
+            points: ["竞对价格跨度较大，说明用户对规格和品质有区分。", "香椿成本波动明显，必须盯住采购价。", "不建议靠低价卖，季节感比价格战更重要。"],
+            action: "用小规格控制价格感知。",
+            warning: "原料成本如果波动太大，要缩短试点周期。"
+          },
+          risk: {
+            title: "风险是什么",
+            lead: "最大风险是时间，不是概念。",
+            points: ["季节窗口短，排期慢会错过销售机会。", "香椿气味有偏好差异，不能默认所有门店都适合。", "冷藏和保质期需要提前确认。"],
+            action: "先确认排期和保质期，再决定试点门店。",
+            warning: "不建议在非季节窗口展示为重点推荐。"
+          },
+          pilot: {
+            title: "先怎么试",
+            lead: "适合短周期、小批量、看反馈。",
+            points: ["选择社区型和家庭消费强的门店。", "试点周期不要太长，重点看首周反馈。", "门店反馈要看口味接受度和售罄速度。"],
+            action: "建议在季节窗口前半段试点。",
+            warning: "错过窗口就转为观察，不要强推。"
+          }
+        },
+        answers: {
+          why: "这条适合看，是因为香椿本身有季节心智，鸡蛋饼又是用户熟悉的吃法。它不是长期大单品，更像季节短打。",
+          risk: "最大风险是季节窗口短。排期慢、样品慢、定价慢，都会让它错过最容易卖的时候。",
+          price: "¥12.9 可以试。竞对在 ¥11.9-15.8，价格不突兀，但香椿成本波动要盯紧。",
+          pilot: "先选社区型门店，小批量试一周。看用户尝鲜意愿和门店售罄速度，别把周期拉太长。"
+        }
+      },
+      {
+        id: "rec-003",
+        title: "紫苏柠檬鸡翅中 250g",
+        category: "肉禽蛋 / 鸡肉制品 / 调味鸡翅",
+        major: "肉禽蛋",
+        middle: "鸡肉制品",
+        leaf: "调味鸡翅",
+        tag: "局部试点",
+        tagClass: "local",
+        visual: "chicken",
+        audience: "年轻白领",
+        scope: "上海高频晚餐门店",
+        price: "¥24.9",
+        competitor: "¥23.8-29.9",
+        risk: "口味接受度待看",
+        reason: "风味差异明显，适合年轻客群，但需要先验证口味接受度。",
+        verdict: "可以试，但只建议局部试。它的差异化够明显，风险也在口味偏好上，适合先找年轻客群更强的门店验证。",
+        sections: {
+          why: {
+            title: "为什么值得看",
+            lead: "它的价值在差异化，不是做一个普通鸡翅中。",
+            points: ["紫苏和柠檬能把鸡翅从常规口味里区分出来。", "年轻白领对新口味接受度更高。", "价格和竞对相比还有可试空间。"],
+            action: "先看样品口味稳定性，再进入局部试点。",
+            warning: "不要直接推给所有门店，口味偏好可能分化。"
+          },
+          people: {
+            title: "适合谁买",
+            lead: "更偏年轻白领和轻烹饪用户。",
+            points: ["适合下班后快速做一盘菜。", "对酸香、清爽风味接受度更高的人群更可能购买。", "家庭老客可能更偏传统奥尔良或黑椒口味。"],
+            action: "优先选择年轻客群更强、晚餐购买更集中的门店。",
+            warning: "不建议把它当全客群通用口味。"
+          },
+          price: {
+            title: "价格怎么看",
+            lead: "价格不是主要阻碍，口味验证更关键。",
+            points: ["竞对在 ¥23.8-29.9，¥24.9 有空间。", "如果样品品质稳定，可以保留一点溢价。", "不要一上来打折，会削弱新品感。"],
+            action: "建议先用 ¥24.9 观察接受度。",
+            warning: "如果损耗高，再考虑规格调整。"
+          },
+          risk: {
+            title: "风险是什么",
+            lead: "风险集中在口味分化和门店解释成本。",
+            points: ["紫苏风味不是所有用户都熟悉。", "门店需要一句话讲清楚口味，不然用户可能犹豫。", "样品颜色、气味和包装图要保持一致。"],
+            action: "试点前准备门店简短卖点和真实成品图。",
+            warning: "口味反馈两极分化时，不要扩大范围。"
+          },
+          pilot: {
+            title: "先怎么试",
+            lead: "先试年轻客群门店，不要铺全城。",
+            points: ["选晚餐高频、年轻客群占比高的门店。", "首批重点看动销和复购，不只看首日尝鲜。", "收集门店对口味解释难度的反馈。"],
+            action: "建议先做局部试点，再决定是否扩大。",
+            warning: "如果门店说不好讲，商品名和包装要先调整。"
+          }
+        },
+        answers: {
+          why: "它值得看是因为差异化明显。普通鸡翅已经很多，紫苏柠檬能让用户觉得新，但也正因为新，所以要先试。",
+          risk: "风险在口味分化。喜欢的人可能很喜欢，不喜欢的人会觉得怪，所以不能一开始铺太大。",
+          price: "¥24.9 不算高，竞对在 ¥23.8-29.9。真正要验证的是用户愿不愿意为这个口味买单。",
+          pilot: "选年轻客群强、晚餐需求强的门店先试。看一周动销和复购，再决定扩不扩大。"
+        }
+      },
+      {
+        id: "rec-004",
+        title: "低脂牛肉丸 220g",
+        category: "肉禽蛋 / 牛肉制品 / 牛肉丸",
+        major: "肉禽蛋",
+        middle: "牛肉制品",
+        leaf: "牛肉丸",
+        tag: "条件推荐",
+        tagClass: "conditional",
+        visual: "ball",
+        audience: "健康控制型",
+        scope: "上海精选门店",
+        price: "¥21.9",
+        competitor: "暂无竞对价",
+        risk: "营养标签待补",
+        reason: "健康方向有机会，但低脂表达需要材料支撑，先补证据再试。",
+        verdict: "方向可以看，但不能直接推进。低脂属于功能表达，必须先补营养标签和检测材料。",
+        sections: {
+          why: {
+            title: "为什么值得看",
+            lead: "它抓住的是健康控制人群，但这类商品最怕卖点没有材料支撑。",
+            points: ["健康控制型用户对低脂、高蛋白方向更敏感。", "牛肉丸是熟悉品类，降低新品理解成本。", "如果材料补齐，适合做精选门店测试。"],
+            action: "先补营养标签和检测材料，再决定是否试点。",
+            warning: "材料没补齐前，不要在页面或包装上强调低脂功效。"
+          },
+          people: {
+            title: "适合谁买",
+            lead: "主要看健康控制型和轻食用户。",
+            points: ["用户关心热量、脂肪和蛋白质。", "适合火锅、空气炸锅和轻食搭配场景。", "商品表达要清楚，不要让用户以为是普通牛肉丸。"],
+            action: "可在轻食、火锅和肉丸区域做不同陈列测试。",
+            warning: "如果营养信息不清楚，目标人群不会信。"
+          },
+          price: {
+            title: "价格怎么看",
+            lead: "当前竞对价缺失，不建议只凭建议价判断。",
+            points: ["¥21.9 看起来可试，但没有竞对价格时，价格判断不完整。", "低脂方向可能有溢价，但必须用材料和品质支撑。", "如果成本偏高，要先看规格能不能调整。"],
+            action: "先补竞对价格，再定试点价。",
+            warning: "没有竞对价时，不要把价格结论写死。"
+          },
+          risk: {
+            title: "风险是什么",
+            lead: "风险集中在低脂表达和证据材料。",
+            points: ["营养标签需要支撑低脂说法。", "检测材料未补齐前，不能当成确定性卖点。", "竞对价格缺失，会影响价格判断。"],
+            action: "先补营养标签、检测材料和竞对价格。",
+            warning: "资料未补齐前，只能作为条件推荐。"
+          },
+          pilot: {
+            title: "先怎么试",
+            lead: "这条要先补材料，再小范围试。",
+            points: ["资料齐全后，选择健康类购买更强的精选门店。", "试点时重点看价格接受度。", "不要同时上太多健康标签类似的商品。"],
+            action: "补齐材料后再进试点池。",
+            warning: "未补材料前不建议发起试点。"
+          }
+        },
+        answers: {
+          why: "方向可以看，因为健康控制人群确实会关注低脂牛肉丸。但它现在不是马上推的状态，要先把低脂这件事证明清楚。",
+          risk: "最大风险是低脂卖点没有材料支撑。营养标签、检测材料、竞对价格都要补，缺了就容易被质疑。",
+          price: "现在不能下结论。建议价是 ¥21.9，但竞对价还缺，所以只能说有机会，不能说价格一定合适。",
+          pilot: "先别急着试点。把营养标签、检测材料和竞对价补齐后，再选健康类购买强的门店小范围试。"
+        }
+      },
+      {
+        id: "rec-005",
+        title: "彩椒虾仁炒饭包 260g",
+        category: "预制菜 / 家常菜 / 水产预制",
+        major: "预制菜",
+        middle: "家常菜",
+        leaf: "水产预制",
+        tag: "探索推荐",
+        tagClass: "explore",
+        visual: "rice",
+        audience: "一人食用户",
+        scope: "上海白领门店",
+        price: "¥16.9",
+        competitor: "¥15.9-19.9",
+        risk: "复购待观察",
+        reason: "一人食和快餐替代场景明确，但复购证据还早。",
+        verdict: "可以作为观察方向。它有场景，但现在证据偏早，适合先看样品和小范围反馈。",
+        sections: {
+          why: {
+            title: "为什么值得看",
+            lead: "机会在一人食和快餐替代，但还没到重点推进程度。",
+            points: ["炒饭包容易理解，做饭门槛低。", "彩椒和虾仁能提升感知价值。", "价格落在常见预制主食价格带里。"],
+            action: "建议先看样品和试吃反馈。",
+            warning: "证据还早，不建议排进正式优先池。"
+          },
+          people: {
+            title: "适合谁买",
+            lead: "更偏一人食、白领和加班晚餐场景。",
+            points: ["用户关心方便、饱腹和价格。", "适合冷冻或冷藏快手主食陈列。", "商品表达要让用户知道一包就是一顿。"],
+            action: "可以在白领门店做陈列测试。",
+            warning: "家庭多人餐不是第一场景。"
+          },
+          price: {
+            title: "价格怎么看",
+            lead: "¥16.9 可以观察，但要看虾仁含量是否支撑感知。",
+            points: ["竞对在 ¥15.9-19.9，价格可进入测试。", "虾仁含量如果太低，用户会觉得不值。", "不要只比炒饭价格，要比一顿饭的替代价值。"],
+            action: "样品确认后再锁定价格。",
+            warning: "虾仁含量和图片不一致会影响信任。"
+          },
+          risk: {
+            title: "风险是什么",
+            lead: "风险在复购和价值感。",
+            points: ["一人食容易首购，复购要看口味和分量。", "虾仁含量如果不足，会拉低价值感。", "冷链和加热方式要清楚。"],
+            action: "先做试吃和门店反馈。",
+            warning: "复购证据不足前，不要当正式推荐。"
+          },
+          pilot: {
+            title: "先怎么试",
+            lead: "先观察，不急着大范围试点。",
+            points: ["选择白领和晚餐需求强的门店。", "重点看复购，不只看首日销量。", "收集用户对分量和虾仁含量的反馈。"],
+            action: "建议先做小样试吃和少量门店观察。",
+            warning: "如果复购低，就保留为探索方向。"
+          }
+        },
+        answers: {
+          why: "它有一人食场景，用户能理解，也能替代一顿快餐。但现在证据还早，所以更适合观察，不适合马上重点推。",
+          risk: "风险在复购和价值感。虾仁看起来好，但含量不够的话，用户会觉得不值。",
+          price: "¥16.9 可以试，竞对在 ¥15.9-19.9。关键不是绝对便宜，而是一包能不能让用户觉得是一顿饭。",
+          pilot: "先选白领门店少量观察。别只看第一天销量，要看用户会不会第二次买。"
+        }
+      }
+    ];
+
+    const tabs = [
+      { key: "why", label: "为什么推荐" },
+      { key: "people", label: "适合谁" },
+      { key: "price", label: "价格竞对" },
+      { key: "risk", label: "风险" },
+      { key: "pilot", label: "怎么试" }
+    ];
+
+    const questionLabels = [
+      { key: "why", label: "为什么值得看？" },
+      { key: "risk", label: "有什么风险？" },
+      { key: "price", label: "竞对价格贵不贵？" },
+      { key: "pilot", label: "先怎么试？" }
+    ];
+
+    const state = {
+      selectedId: "rec-001",
+      tab: "why",
+      visibleIds: recommendations.map(item => item.id),
+      feedback: {}
+    };
+
+    const dom = {
+      major: document.getElementById("majorCategory"),
+      middle: document.getElementById("middleCategory"),
+      leaf: document.getElementById("leafCategory"),
+      filterForm: document.getElementById("filterForm"),
+      resetBtn: document.getElementById("resetBtn"),
+      note: document.getElementById("filterNote"),
+      queueList: document.getElementById("queueList"),
+      detailPanel: document.getElementById("detailPanel"),
+      quickQuestions: document.getElementById("quickQuestions"),
+      assistantAnswer: document.getElementById("assistantAnswer"),
+      assistantContext: document.getElementById("assistantContext"),
+      askForm: document.getElementById("askForm"),
+      askInput: document.getElementById("askInput"),
+      toast: document.getElementById("toast")
+    };
+
+    function renderCategoryOptions() {
+      const major = dom.major.value;
+      dom.middle.innerHTML = '<option value="">请选择</option>';
+      dom.leaf.innerHTML = '<option value="">全部小分类</option>';
+      if (!major || !categoryMap[major]) return;
+      Object.keys(categoryMap[major]).forEach(name => {
+        const option = document.createElement("option");
+        option.value = name;
+        option.textContent = name;
+        dom.middle.appendChild(option);
+      });
+    }
+
+    function renderLeafOptions() {
+      const major = dom.major.value;
+      const middle = dom.middle.value;
+      dom.leaf.innerHTML = '<option value="">全部小分类</option>';
+      if (!major || !middle || !categoryMap[major]?.[middle]) return;
+      categoryMap[major][middle].forEach(name => {
+        const option = document.createElement("option");
+        option.value = name;
+        option.textContent = name;
+        dom.leaf.appendChild(option);
+      });
+    }
+
+    function getSelected() {
+      return recommendations.find(item => item.id === state.selectedId) || recommendations[0];
+    }
+
+    function getVisibleItems() {
+      return state.visibleIds.map(id => recommendations.find(item => item.id === id)).filter(Boolean);
+    }
+
+    function productVisual(item, large = false) {
+      return `
+        <div class="${large ? "product-stage" : "thumb"} ${item.visual}" aria-hidden="true">
+          <div class="pack">
+            <b>${item.title.slice(0, 2)}</b>
+            <small>${item.title.match(/\d+g/)?.[0] || "新品"}</small>
+          </div>
+        </div>
+      `;
+    }
+
+    function tagClass(item) {
+      return `tag ${item.tagClass || ""}`.trim();
+    }
+
+    function renderQueue() {
+      const items = getVisibleItems();
+      if (!items.length) {
+        dom.queueList.innerHTML = `
+          <div class="empty-state">
+            <div>
+              <i data-lucide="search-x"></i>
+              <strong>当前条件下暂无推荐</strong>
+              <p>可以换一个中分类再查。</p>
+            </div>
+          </div>
+        `;
+        createIcons();
+        return;
+      }
+
+      dom.queueList.innerHTML = items.map((item, index) => {
+        const selected = item.id === state.selectedId ? "active" : "";
+        const feedback = state.feedback[item.id];
+        return `
+          <article class="queue-card ${selected}" data-id="${item.id}" tabindex="0" aria-label="查看 ${item.title}">
+            <span class="rank">${index + 1}</span>
+            ${productVisual(item)}
+            <span class="card-main">
+              <span class="card-top">
+                <strong class="card-title">${item.title}</strong>
+                <span class="${tagClass(item)}">${item.tag}</span>
+              </span>
+              <span class="reason">${item.reason}</span>
+              <span class="mini-facts">
+                <span class="mini-fact">适合 <strong>${item.audience}</strong></span>
+                <span class="mini-fact">建议价 <strong>${item.price}</strong></span>
+                <span class="mini-fact risk">风险 ${item.risk}</span>
+              </span>
+            </span>
+            <span class="feedback-row">
+              <button class="feedback-button good ${feedback === "good" ? "selected" : ""}" type="button" data-feedback="good" data-id="${item.id}">
+                <i data-lucide="thumbs-up"></i>有帮助
+              </button>
+              <button class="feedback-button bad ${feedback === "bad" ? "selected" : ""}" type="button" data-feedback="bad" data-id="${item.id}">
+                <i data-lucide="thumbs-down"></i>没帮助
+              </button>
+            </span>
+          </article>
+        `;
+      }).join("");
+
+      dom.queueList.querySelectorAll(".queue-card").forEach(card => {
+        card.addEventListener("click", event => {
+          const feedbackTarget = event.target.closest("[data-feedback]");
+          if (feedbackTarget) {
+            event.preventDefault();
+            event.stopPropagation();
+            setFeedback(feedbackTarget.dataset.id, feedbackTarget.dataset.feedback);
+            return;
+          }
+          state.selectedId = card.dataset.id;
+          state.tab = "why";
+          renderAll();
+          track("ai_selection_detail_open", { recommendation_result_id: state.selectedId });
+        });
+        card.addEventListener("keydown", event => {
+          if (event.target.closest("[data-feedback]")) return;
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
+          state.selectedId = card.dataset.id;
+          state.tab = "why";
+          renderAll();
+          track("ai_selection_detail_open", { recommendation_result_id: state.selectedId });
+        });
+      });
+      createIcons();
+    }
+
+    function renderDetail() {
+      const item = getSelected();
+      const section = item.sections[state.tab] || item.sections.why;
+      dom.assistantContext.textContent = `正在看：${item.title}`;
+
+      dom.detailPanel.innerHTML = `
+        <div class="detail-hero">
+          ${productVisual(item, true)}
+          <div class="detail-copy">
+            <div class="detail-meta">
+              <span class="${tagClass(item)}">${item.tag}</span>
+              <span>${item.category}</span>
+            </div>
+            <h2>${item.title}</h2>
+            <p class="verdict">${item.verdict}</p>
+            <div class="detail-facts">
+              <div class="fact-cell"><span>适合人群</span><strong>${item.audience}</strong></div>
+              <div class="fact-cell"><span>建议范围</span><strong>${item.scope}</strong></div>
+              <div class="fact-cell"><span>建议价</span><strong>${item.price}</strong></div>
+              <div class="fact-cell"><span>竞对价格</span><strong>${item.competitor}</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-tabs" role="tablist" aria-label="推荐详情分类">
+          ${tabs.map(tab => `
+            <button class="section-tab ${state.tab === tab.key ? "active" : ""}" type="button" data-tab="${tab.key}" role="tab" aria-selected="${state.tab === tab.key}">
+              ${tab.label}
+            </button>
+          `).join("")}
+        </div>
+
+        <section class="decision-section">
+          <div class="section-copy">
+            <h3>${section.title}</h3>
+            <p class="section-lead">${section.lead}</p>
+            <ul class="evidence-list">
+              ${section.points.map(point => `<li>${point}</li>`).join("")}
+            </ul>
+          </div>
+          <aside class="next-step">
+            <h3>下一步</h3>
+            <p>${section.action}</p>
+            <p class="warning">${section.warning}</p>
+          </aside>
+        </section>
+      `;
+
+      dom.detailPanel.querySelectorAll(".section-tab").forEach(button => {
+        button.addEventListener("click", () => {
+          state.tab = button.dataset.tab;
+          renderDetail();
+          track("ai_selection_detail_tab_click", { recommendation_result_id: state.selectedId, tab: state.tab });
+        });
+      });
+      createIcons();
+    }
+
+    function renderAssistant() {
+      const item = getSelected();
+      dom.quickQuestions.innerHTML = questionLabels.map(question => `
+        <button type="button" data-question="${question.key}">${question.label}</button>
+      `).join("");
+      dom.quickQuestions.querySelectorAll("button").forEach(button => {
+        button.addEventListener("click", () => {
+          const key = button.dataset.question;
+          dom.assistantAnswer.textContent = item.answers[key];
+          track("ai_selection_ai_quick_question", { recommendation_result_id: item.id, question: key });
+        });
+      });
+    }
+
+    function setFeedback(id, value) {
+      state.feedback[id] = value;
+      showToast(value === "good" ? "已记录：有帮助" : "已记录：没帮助");
+      renderQueue();
+      track(value === "good" ? "ai_selection_feedback_good_click" : "ai_selection_feedback_bad_click", {
+        recommendation_result_id: id
+      });
+    }
+
+    function showToast(text) {
+      dom.toast.querySelector("span").textContent = text;
+      dom.toast.classList.add("show");
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => dom.toast.classList.remove("show"), 1600);
+      createIcons();
+    }
+
+    function renderAll() {
+      renderQueue();
+      renderDetail();
+      renderAssistant();
+    }
+
+    function showLoading() {
+      dom.queueList.innerHTML = `
+        <div class="loading-state">
+          <div>
+            <i data-lucide="loader-circle"></i>
+            <strong>正在整理推荐新品</strong>
+            <p>马上给你排好。</p>
+          </div>
+        </div>
+      `;
+      dom.detailPanel.innerHTML = `
+        <div class="loading-state">
+          <div>
+            <i data-lucide="loader-circle"></i>
+            <strong>正在打开单品档案</strong>
+            <p>先把最值得看的放到右侧。</p>
+          </div>
+        </div>
+      `;
+      createIcons();
+    }
+
+    function handleQuery(event) {
+      event.preventDefault();
+      const major = dom.major.value;
+      const middle = dom.middle.value;
+      const leaf = dom.leaf.value;
+      if (!major || !middle) {
+        dom.note.classList.add("error");
+        dom.note.innerHTML = '<i data-lucide="circle-alert"></i><span>先选大分类和中分类，再查询。</span>';
+        createIcons();
+        return;
+      }
+
+      dom.note.classList.remove("error");
+      dom.note.innerHTML = '<i data-lucide="sparkles"></i><span>正在按你的条件整理推荐。</span>';
+      showLoading();
+
+      window.setTimeout(() => {
+        const matched = recommendations.filter(item => {
+          const majorMatch = item.major === major;
+          const middleMatch = item.middle === middle;
+          const leafMatch = !leaf || item.leaf === leaf;
+          return majorMatch && middleMatch && leafMatch;
+        });
+        state.visibleIds = matched.length ? matched.map(item => item.id) : [];
+        state.selectedId = state.visibleIds[0] || recommendations[0].id;
+        state.tab = "why";
+        dom.note.innerHTML = matched.length
+          ? '<i data-lucide="sparkles"></i><span>已按推荐优先级排好，建议从第一条开始看。</span>'
+          : '<i data-lucide="search-x"></i><span>当前条件下暂无推荐，可以换一个中分类再查。</span>';
+        renderAll();
+        track("ai_selection_query_click", { major, middle, leaf });
+      }, 420);
+    }
+
+    function handleReset() {
+      document.getElementById("region").value = "全部";
+      document.getElementById("city").value = "上海";
+      dom.major.value = "";
+      renderCategoryOptions();
+      state.visibleIds = [];
+      dom.note.classList.remove("error");
+      dom.note.innerHTML = '<i data-lucide="sparkles"></i><span>选择大分类和中分类后查询。</span>';
+      dom.queueList.innerHTML = `
+        <div class="empty-state">
+          <div>
+            <i data-lucide="list-filter"></i>
+            <strong>先选择一个新品范围</strong>
+            <p>选好大分类和中分类后，我会把推荐新品排好。</p>
+          </div>
+        </div>
+      `;
+      dom.detailPanel.innerHTML = `
+        <div class="empty-state">
+          <div>
+            <i data-lucide="panel-right"></i>
+            <strong>点开推荐后看详情</strong>
+            <p>这里会展示推荐理由、适合人群、价格、风险和试点建议。</p>
+          </div>
+        </div>
+      `;
+      dom.quickQuestions.innerHTML = "";
+      dom.assistantAnswer.textContent = "查到推荐后，可以继续问这条推荐有没有帮助，或者哪里还要补材料。";
+      createIcons();
+      track("ai_selection_reset_click", {});
+    }
+
+    function handleAsk(event) {
+      event.preventDefault();
+      const item = getSelected();
+      const text = dom.askInput.value.trim();
+      if (!text) {
+        dom.assistantAnswer.textContent = "你可以直接问：这条适合哪些门店，或者风险要先补什么。";
+        return;
+      }
+      if (text.includes("门店")) {
+        dom.assistantAnswer.textContent = item.sections.pilot.action + " 先别铺太大，试点反馈好再扩大。";
+      } else if (text.includes("风险") || text.includes("缺")) {
+        dom.assistantAnswer.textContent = item.answers.risk;
+      } else if (text.includes("价格") || text.includes("贵")) {
+        dom.assistantAnswer.textContent = item.answers.price;
+      } else {
+        dom.assistantAnswer.textContent = item.answers.why;
+      }
+      dom.askInput.value = "";
+      track("ai_selection_ai_custom_question", { recommendation_result_id: item.id, text });
+    }
+
+    function createIcons() {
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    function track(eventName, payload) {
+      window.demoEvents = window.demoEvents || [];
+      window.demoEvents.push({
+        eventName,
+        payload,
+        eventTime: new Date().toISOString()
+      });
+    }
+
+    dom.major.addEventListener("change", () => {
+      renderCategoryOptions();
+      dom.note.classList.remove("error");
+    });
+    dom.middle.addEventListener("change", renderLeafOptions);
+    dom.filterForm.addEventListener("submit", handleQuery);
+    dom.resetBtn.addEventListener("click", handleReset);
+    dom.askForm.addEventListener("submit", handleAsk);
+
+    dom.major.value = "肉禽蛋";
+    renderCategoryOptions();
+    dom.middle.value = "牛肉制品";
+    renderLeafOptions();
+    dom.leaf.value = "";
+    renderAll();
+    track("ai_selection_page_view", {});
+    createIcons();
+  </script>
+</body>
+</html>
