@@ -6,6 +6,8 @@
 
 来源：用户已确认 V1 价格点规则。
 
+V1 推荐计算范围为 6 个大类：蔬菜、水果、肉禽蛋、冷藏加工、预制菜、水产。猪肉类在商品基础表中是独立大类，不进入推荐价格点计算；水产 kg 计价使用 0.98，盒装使用 0.90。
+
 ## 1. 表规则
 
 表粒度：
@@ -34,8 +36,8 @@ price_rule_version + category_level + category_code + unit + effective_start_dat
 | 价格规则版本 | `price_rule_version` | varchar(64) | 必须 | 项目配置 | 例如 `PRICE_POINT_2026_V1` |
 | 品类层级 | `category_level` | varchar(32) | 必须 | 配置维护 | `CATEGORY_LEVEL1`、`CATEGORY_LEVEL2`、`CATEGORY_LEVEL3` |
 | 品类编码 | `category_code` | varchar(64) | 建议 | `dim_sku` 映射 | 品类编码；暂无编码时可先按品类名称映射 |
-| 品类名称 | `category_name` | varchar(128) | 必须 | 用户确认 | 蔬菜、水果、猪肉、肉禽蛋、冷藏加工、预制菜 |
-| 计价单位 | `unit` | varchar(32) | 必须 | 用户确认 | kg、份、个、份/个等 |
+| 品类名称 | `category_name` | varchar(128) | 必须 | 用户确认 | V1 推荐计算范围内已配置价格尾数的品类，例如蔬菜、水果、肉禽蛋、冷藏加工、预制菜、水产 |
+| 计价单位 | `unit` | varchar(32) | 必须 | 用户确认 | kg、份、个、盒、份/个等 |
 | 价格尾数 | `price_tail` | decimal(8,2) | 必须 | 用户确认 | 例如 0.98、0.90 |
 | 价格点步长 | `price_step_amt` | decimal(8,2) | 必须 | 用户确认 | V1 默认 1.00，表示每 1 元一个价格点 |
 | 价格上下限来源 | `price_bound_source` | varchar(64) | 必须 | 用户确认 | V1 固定为 `CONSUMER_PRICE_BAND` |
@@ -51,11 +53,17 @@ price_rule_version + category_level + category_code + unit + effective_start_dat
 
 ## 3. 示例数据
 
+当前已确认的 V1 价格尾数规则覆盖全部 6 个推荐计算大类；水产按计价方式区分，kg 计价使用 0.98，盒装使用 0.90。
+
 | `price_rule_version` | `category_name` | `unit` | `price_tail` | `price_step_amt` | `price_bound_source` | `is_active` |
 |---|---|---|---:|---:|---|---:|
 | `PRICE_POINT_2026_V1` | 蔬菜 | kg | 0.98 | 1.00 | `CONSUMER_PRICE_BAND` | 1 |
 | `PRICE_POINT_2026_V1` | 水果 | kg | 0.98 | 1.00 | `CONSUMER_PRICE_BAND` | 1 |
+| `PRICE_POINT_2026_V1` | 肉禽蛋 | kg | 0.90 | 1.00 | `CONSUMER_PRICE_BAND` | 1 |
+| `PRICE_POINT_2026_V1` | 冷藏加工 | 份/个 | 0.90 | 1.00 | `CONSUMER_PRICE_BAND` | 1 |
 | `PRICE_POINT_2026_V1` | 预制菜 | 份/个 | 0.90 | 1.00 | `CONSUMER_PRICE_BAND` | 1 |
+| `PRICE_POINT_2026_V1` | 水产 | kg | 0.98 | 1.00 | `CONSUMER_PRICE_BAND` | 1 |
+| `PRICE_POINT_2026_V1` | 水产 | 盒 | 0.90 | 1.00 | `CONSUMER_PRICE_BAND` | 1 |
 
 ## 4. 价格点生成规则
 
@@ -74,7 +82,8 @@ price_band_lower / price_band_upper 来自算法 05 的消费者核心价格带�
 1. price_tail 必须大于等于 0 且小于 1。
 2. price_step_amt 必须大于 0，V1 固定为 1.00。
 3. 同一版本、同一品类、同一单位只能有一条当前有效规则。
-4. 如果商品单位与规则单位无法匹配，算法 05 必须输出价格点规则缺失状态，不能自行猜尾数。
+4. 如果推荐计算范围内品类没有当前有效价格点规则，算法 05 必须输出价格点规则缺失状态，不能自行套用其他品类尾数。
+5. 如果商品单位与规则单位无法匹配，算法 05 必须输出价格点规则缺失状态，不能自行猜尾数。
 ```
 
 ## 6. 状态字段取值约束
