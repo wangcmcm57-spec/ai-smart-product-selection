@@ -214,7 +214,7 @@ category_level_model_version
 consumer_contribution_model_version
 category_mapping_version
 sku_attribute_version
-sku_performance_algorithm_version
+sku_performance_model_version
 ```
 
 算法 01、02、03 任一正式版本或范围版本变化时，算法 04 必须全量重算。
@@ -257,38 +257,39 @@ orderable_sellable_flag
 
 | 中文字段名 | 英文字段名 | Doris 候选字段 | 是否必须 | 中文注释 |
 |---|---|---|---|---|
-| 订单商品明细ID | order_item_id | order_item_id | 必须 | 商品行唯一键 |
-| 小票ID | ticket_id | order_id | 必须 | 已确认公司级唯一，可作为 `ticket_key` |
-| 门店编码 | store_id | store_id | 必须 | 与门店和算法 02 对齐 |
-| 会员ID | customer_id | customer_id | 必须 | 与算法 01 会员画像对齐 |
-| 销售SKU编码 | sku_id | article_id | 必须 | 与商品基础表交易商品编码对齐 |
-| 营业日期 | business_date | business_date | 必须 | 交易营业日期 |
-| 销售时间 | sale_time | inc_time | 必须 | 判断 19:00 复购和 19:30 自然动销 |
-| 商品行实付金额 | paid_sales_amt | usual_amt | 必须 | 目标画像 SKU 销售额 |
-| 商品行优惠金额 | discount_amt | discount_amt | 条件必须 | V1 促销/折扣代理 |
-| 销售标准量 | sales_standard_qty | weight | 必须 | 算法统一使用 `sales_standard_qty = weight`；计量类型和单位由商品基础表解释，字段事实详见 Doris 字段字典 |
-| 是否时段促销 | is_hour_promotion | is_hour_promotion | 可选 | 折扣解释 |
-| 小时优惠金额 | hour_discount_amt | hour_discount_amt | 可选 | 不是商品行时段折扣金额，不直接按行求和 |
-| 订单状态 | order_status | order_status | 必须 | 有效交易过滤，V1 保留 `os.completed` |
-| 是否退货 | is_return | is_return | 必须 | 有效交易过滤，V1 保留 `0` |
-| 退款类型 | refund_type | refund_type | 条件必须 | 退款/冲销过滤辅助字段，按 Doris 字段字典和开发清洗口径执行 |
-| 业务来源 | business_source | business_source | 可选 | 测试交易或特殊来源过滤辅助字段 |
+| 订单商品明细ID | `order_item_id` | `order_item_id` | 必须 | 商品行唯一键 |
+| 小票ID | `order_id` | `order_id` | 必须 | 已确认公司级唯一，可作为 `ticket_key` |
+| 门店编码 | `store_id` | `store_id` | 必须 | 与门店和算法 02 对齐 |
+| 会员ID | `customer_id` | `customer_id` | 必须 | 与算法 01 会员画像对齐 |
+| 销售SKU编码 | `sku_id` | `article_id` | 必须 | 与商品基础表交易商品编码对齐 |
+| 营业日期 | `business_date` | `business_date` | 必须 | 交易营业日期 |
+| 销售时间 | `sale_time` | `inc_time` | 必须 | 判断 19:00 复购和 19:30 自然动销 |
+| 商品行实付金额 | `line_transaction_amt` | `usual_amt` | 必须 | 目标画像 SKU 销售额 |
+| 商品行优惠金额 | `discount_amt` | `discount_amt` | 条件必须 | V1 促销/折扣代理 |
+| 销售标准量 | `sales_standard_qty` | `weight` | 必须 | 算法统一使用 `sales_standard_qty = weight`；计量类型和单位由商品基础表解释，字段事实详见 Doris 字段字典 |
+| 是否时段促销 | `is_hour_promotion` | `is_hour_promotion` | 可选 | 折扣解释 |
+| 小时优惠金额 | `hour_discount_amt` | `hour_discount_amt` | 可选 | 不是商品行时段折扣金额，不直接按行求和 |
+| 订单状态 | `order_status` | `order_status` | 必须 | 有效交易过滤，V1 保留 `os.completed` |
+| 是否退货 | `is_return` | `is_return` | 必须 | 有效交易过滤，V1 保留 `0` |
+| 退款类型 | `refund_type` | `refund_type` | 条件必须 | 退款/冲销过滤辅助字段，按 Doris 字段字典和开发清洗口径执行 |
+| 业务来源 | `business_source` | `business_source` | 可选 | 测试交易或特殊来源过滤辅助字段 |
 
 ### 5.3 商品基础表字段
 
 | 中文字段名 | 英文字段名 | 是否必须 | 中文注释 |
 |---|---|---|---|
-| 交易商品编码 | sku_id | 必须 | 与 Doris `article_id` 对齐 |
-| 商品名称 | sku_name | 必须 | SKU 展示名称 |
-| SPU编码 | spu_id | 可选 | 标准商品层聚合 |
-| 大类编码 | large_category_code | 条件必须 | 大类计算 |
-| 大类名称 | large_category_name | 条件必须 | 大类计算 |
-| 中类编码 | middle_category_code | 条件必须 | 中类计算 |
-| 中类名称 | middle_category_name | 条件必须 | 中类计算 |
-| 小类编码 | small_category_code | 条件必须 | 小类计算 |
-| 小类名称 | small_category_name | 条件必须 | 小类计算 |
-| 单位 | source_unit | 必须 | 计量标准化 |
-| 单位重量 | unit_weight | 条件必须 | 商品基础表已有单位重量；定量包装、件转重量时使用 |
+| 交易商品编码 | `sku_id` | 必须 | 与 Doris `article_id` 对齐 |
+| 商品编码 | `product_id` | 可选 | 商品主数据编码；如和交易商品编码一致可重复保留 |
+| 商品名称 | `sku_name` | 必须 | SKU 展示名称 |
+| SPU编码 | `spu_id` | 可选 | 标准商品层聚合 |
+| 大类编码 | `category_level1_code` | 条件必须 | 大类计算 |
+| 大类名称 | `category_level1_name` | 条件必须 | 大类计算 |
+| 中类编码 | `category_level2_code` | 条件必须 | 中类计算 |
+| 中类名称 | `category_level2_name` | 条件必须 | 中类计算 |
+| 小类编码 | `category_level3_code` | 条件必须 | 小类计算 |
+| 小类名称 | `category_level3_name` | 条件必须 | 小类计算 |
+| 销售单位 | `sale_unit` | 必须 | 计量标准化 |
+| 单位重量 | `unit_weight_kg` | 条件必须 | 商品基础表已有单位重量；定量包装、件转重量时使用 |
 | 净含量 | net_content | 条件必须 | 可由商品基础表规格解析；用于定量包装解释 |
 | 主材料 | main_ingredient | 可选 | 商品属性输出，缺失不阻断经营表现 |
 | 商品形态 | product_form | 可选 | 商品属性输出，缺失不阻断经营表现 |
@@ -297,8 +298,8 @@ orderable_sellable_flag
 | 加工方式 | processing_method | 可选 | 商品属性输出，缺失不阻断经营表现 |
 | 烹饪方式 | cooking_method | 可选 | 商品属性输出，缺失不阻断经营表现 |
 | 包装类型 | package_type | 可选 | 商品属性输出，缺失不阻断经营表现 |
-| 存储温层 | storage_temperature | 可选 | 商品属性输出，缺失不阻断经营表现 |
-| 品牌 | brand | 可选 | 商品属性输出，缺失不阻断经营表现 |
+| 存储温层 | `temperature_layer` | 可选 | 商品属性输出，缺失不阻断经营表现 |
+| 品牌 | `brand_name` | 可选 | 商品属性输出，缺失不阻断经营表现 |
 
 ### 5.4 毛利损耗表字段
 
@@ -307,38 +308,38 @@ orderable_sellable_flag
 | 营业日期 | business_date | 必须 | 日期 |
 | 门店编码 | store_id | 必须 | 门店 |
 | 交易商品编码 | sku_id | 必须 | 销售 SKU |
-| 销售额 | sku_total_sales_amt | 必须 | 日门店 SKU 总销售额 |
-| 销售数量 | daily_sku_sales_qty | 条件必须 | 计件商品总量校验 |
-| 销售重量 | daily_sku_sales_weight | 条件必须 | 称重商品总量校验 |
-| 门店进货数量 | actual_received_qty | 条件必须 | 实际验收数量，按商品原经营单位统计；计件商品售罄率分母优先使用 |
-| 门店进货重量 | actual_received_weight | 条件必须 | 实际验收数量换算后的重量口径，建议单位 kg；称重商品售罄率分母优先使用 |
-| 门店进货金额 | actual_received_amt | 可选 | 到货金额解释 |
-| 门店订购数量（订购单位） | order_qty_original | 可选 | 按订购单位统计的原始订购数量，用于订购覆盖、订购满足率和对账；计件商品订购量优先使用 |
-| 门店订购数量（重量口径） | order_weight_kg | 可选 | 由订购单位换算成重量后的订购数量，建议单位 kg；称重商品订购量分析优先使用 |
-| 门店订购额 | order_amt | 可选 | 订购覆盖 |
-| 全链路毛利额 | sku_total_margin_amt | 必须 | SKU 整体毛利优先口径 |
-| 全链路毛利率 | sku_total_margin_rate | 可选 | SKU 整体毛利率 |
-| 门店毛利额 | store_margin_amt | 可选 | 门店口径解释 |
-| 总折扣额 | total_discount_amt | 条件必须 | V1 折扣代理汇总 |
-| 促销折扣额 | promotion_discount_amt | 可选 | 若可到 SKU 日粒度，优先用于非促销判断 |
-| 时段折扣额 | hour_discount_amt_summary | 可选 | 若可到 SKU 日粒度，折扣阶梯解释 |
+| 销售额 | `sales_amt` | 必须 | 日门店 SKU 总销售额 |
+| 销售数量 | `sales_qty` | 条件必须 | 计件商品总量校验 |
+| 销售重量 | `sales_weight_kg` | 条件必须 | 称重商品总量校验 |
+| 门店进货数量 | `receipt_qty` | 条件必须 | 实际验收数量，按商品原经营单位统计；计件商品售罄率分母优先使用 |
+| 门店进货重量 | `receipt_weight_kg` | 条件必须 | 实际验收数量换算后的重量口径，建议单位 kg；称重商品售罄率分母优先使用 |
+| 门店进货金额 | `receipt_amt` | 可选 | 到货金额解释 |
+| 门店订购数量（订购单位） | `order_qty` | 可选 | 按订购单位统计的原始订购数量，用于订购覆盖、订购满足率和对账；计件商品订购量优先使用 |
+| 门店订购数量（重量口径） | `order_weight_kg` | 可选 | 由订购单位换算成重量后的订购数量，建议单位 kg；称重商品订购量分析优先使用 |
+| 门店订购额 | `order_amt` | 可选 | 订购覆盖 |
+| 全链路毛利额 | `full_link_margin_amt` | 必须 | SKU 整体毛利优先口径 |
+| 全链路毛利率 | `full_link_margin_rate` | 可选 | SKU 整体毛利率 |
+| 门店毛利额 | `store_margin_amt` | 可选 | 门店口径解释 |
+| 总折扣额 | `discount_amt` | 条件必须 | V1 折扣代理汇总 |
+| 促销折扣额 | `promotion_discount_amt` | 可选 | 若可到 SKU 日粒度，优先用于非促销判断 |
+| 时段折扣额 | `time_period_discount_amt` | 可选 | 若可到 SKU 日粒度，折扣阶梯解释 |
 
 ### 5.5 门店 SKU 可订可售表字段
 
 | 中文字段名 | 英文字段名 | 是否必须 | 中文注释 |
 |---|---|---|---|
-| 日期 | business_date | 必须 | 状态日期 |
-| 门店编码 | store_id | 必须 | 门店 |
-| 销售商品编码 | sku_id | 必须 | 销售 SKU |
-| 订购商品编码 | order_sku_id | 必须 | 订购 SKU，可能与销售 SKU 不一致 |
-| 是否可售 | is_sellable | 必须 | 1 可售，0 不可售 |
-| 是否可订 | is_orderable | 必须 | 1 可订，0 不可订 |
-| 数据更新时间 | updated_at | 必须 | 快照更新时间 |
+| 日期 | `business_date` | 必须 | 状态日期 |
+| 门店编码 | `store_id` | 必须 | 门店 |
+| 销售商品编码 | `sku_id` | 必须 | 销售 SKU |
+| 订购商品编码 | `order_sku_id` | 必须 | 订购 SKU，可能与销售 SKU 不一致 |
+| 是否可售 | `is_saleable` | 必须 | 1 可售，0 不可售 |
+| 是否可订 | `is_orderable` | 必须 | 1 可订，0 不可订 |
+| 数据更新时间 | `data_update_time` | 必须 | 快照更新时间 |
 
 `orderable_sellable_flag` 可按以下规则生成：
 
 ```text
-is_sellable = 1 AND is_orderable = 1 -> orderable_sellable_flag = 1
+is_saleable = 1 AND is_orderable = 1 -> orderable_sellable_flag = 1
 否则 -> orderable_sellable_flag = 0
 ```
 
@@ -346,16 +347,18 @@ is_sellable = 1 AND is_orderable = 1 -> orderable_sellable_flag = 1
 
 | 中文字段名 | 英文字段名 | 是否必须 | 中文注释 |
 |---|---|---|---|
-| 日期 | business_date | 必须 | 日期 |
-| 门店编码 | store_id | 必须 | 门店 |
-| 销售商品编码 | sku_id | 必须 | 销售 SKU |
-| 验收商品编码 | receipt_sku_id | 必须 | 验收/进货 SKU |
-| 出库到店成本含税 | arrival_cost_tax_included | 条件必须 | 成本备选口径 |
-| 出库到店金额含税 | arrival_amt_tax_included | 可选 | 到店金额解释 |
-| 销售原价 | original_sales_price | 可选 | 折扣率和价格解释 |
-| 商品平均售价 | avg_paid_price | 可选 | 成交均价 |
-| 19点前平均售价 | pre19_avg_paid_price | 可选 | 价格解释 |
-| 19点后售价 | after19_price | 可选 | 折扣阶梯解释 |
+| 日期 | `business_date` | 必须 | 日期 |
+| 门店编码 | `store_id` | 必须 | 门店 |
+| 仓编码 | `warehouse_id` | 必须 | 门店对应供货仓编码；按数据合同必填，先用于仓商品日成本校验 |
+| 仓名称 | `warehouse_name` | 可选 | 门店对应供货仓名称，展示和对账使用 |
+| 销售商品编码 | `sku_id` | 必须 | 销售 SKU |
+| 验收商品编码 | `receipt_sku_id` | 必须 | 验收/进货 SKU |
+| 出库到店成本含税 | `outbound_arrival_cost_tax_included` | 条件必须 | 成本备选口径 |
+| 出库到店金额含税 | `outbound_arrival_amt_tax_included` | 可选 | 到店金额解释 |
+| 销售原价 | `original_sale_price` | 可选 | 折扣率和价格解释 |
+| 商品平均售价 | `avg_sale_price` | 可选 | 成交均价 |
+| 19点前平均售价 | `pre19_avg_sale_price` | 可选 | 价格解释 |
+| 19点后售价 | `post19_sale_price` | 可选 | 折扣阶梯解释 |
 
 ---
 
@@ -430,7 +433,7 @@ ticket_key = order_id
 合并字段：
 
 ```text
-paid_sales_amt = SUM(usual_amt)
+line_transaction_amt = SUM(usual_amt)
 discount_amt = SUM(discount_amt)
 sales_standard_qty = SUM(weight)
 sale_time = MIN(inc_time)
@@ -499,7 +502,7 @@ result_status = UPSTREAM_RECONCILIATION_ERROR
 
 ```text
 sku_sales_amt
-= SUM(目标画像购买该 SKU 的 paid_sales_amt)
+= SUM(目标画像购买该 SKU 的 line_transaction_amt)
 
 sku_sales_qty
 = SUM(目标画像购买该 SKU 的 sales_standard_qty)
@@ -653,7 +656,7 @@ orderable_scope = STORE_SKU_ORDERABLE
 
 ```text
 measurement_type
-source_unit
+sale_unit
 standard_unit
 conversion_factor
 measurement_mapping_status
@@ -675,7 +678,7 @@ L、ml、毫升、升 -> VOLUME
 sales_standard_qty = weight
 ```
 
-`weight` 的字段事实和样例验证统一维护在 Doris 字段字典中。本算法卡只定义使用规则：读取有效交易中的 `weight`，再关联商品基础表取得 `source_unit`、`measurement_type`、`standard_unit` 和必要的换算关系。
+`weight` 的字段事实和样例验证统一维护在 Doris 字段字典中。本算法卡只定义使用规则：读取有效交易中的 `weight`，再关联商品基础表取得 `sale_unit`、`unit_weight_kg`，由本算法生成 `measurement_type`、`standard_unit` 和必要的换算关系。
 
 ### 11.2 混合计量
 
@@ -1073,7 +1076,7 @@ cost_allocation_status = COST_NOT_ALLOCATED
 cost_source = ARRIVAL_COST_TAX_INCLUDED
 ```
 
-使用门店商品日价格表 `出库到店成本含税` 聚合到日期 + 门店 + 销售 SKU。
+使用门店商品日价格表 `出库到店成本含税` 时，先按 `warehouse_id + store_id + sku_id + business_date` 校验仓商品日成本口径，再聚合到日期 + 门店 + 销售 SKU。
 
 ### 16.4 正式锚点毛利底线
 
@@ -1109,8 +1112,8 @@ processing_method：加工方式
 cooking_method：烹饪方式
 net_content：净含量
 package_type：包装方式
-storage_temperature：储存温层
-brand：品牌
+temperature_layer：温层
+brand_name：品牌
 ```
 
 ### 17.2 来源优先级
@@ -1613,6 +1616,8 @@ leave_one_month_anchor_rate
 
 ### 29.1 前置表：`mart_sku_repurchase_7d_pre19`
 
+一行代表：一个周期、一个范围、一个门店群、一个消费者画像和一个 SKU 的 7 天 19 点前复购结果。
+
 主键：
 
 ```text
@@ -1635,21 +1640,21 @@ repurchase_model_version
 | 复购口径版本 | `repurchase_model_version` | varchar(64) | 必须 | 算法 04 参数 | 7 天 19 点前复购计算版本 |
 | 数据周期开始日期 | `performance_start_date` | date | 必须 | 调度参数 | 统计周期开始日期 |
 | 数据周期结束日期 | `performance_end_date` | date | 必须 | 调度参数 | 统计周期结束日期 |
-| 范围版本 | `scope_version` | varchar(64) | 必须 | 城市算法区域映射表 | 城市算法区域版本 |
-| 范围类型 | `scope_type` | varchar(32) | 必须 | 城市算法区域映射表 | `CITY` / `CITY_CLUSTER` |
-| 范围编码 | `scope_id` | varchar(64) | 必须 | 城市算法区域映射表 | 城市或城市群编码 |
-| 范围名称 | `scope_name` | varchar(128) | 必须 | 城市算法区域映射表 | 城市或城市群名称 |
-| 品类颗粒度 | `category_granularity` | varchar(32) | 必须 | 商品基础表 | 大类 / 中类 / 小类 |
-| 品类编码 | `category_code` | varchar(64) | 必须 | 商品基础表 | 当前计算品类编码 |
-| 品类名称 | `category_name` | varchar(128) | 必须 | 商品基础表 | 当前计算品类名称 |
-| 门店群类型 | `store_group_type` | varchar(32) | 必须 | 算法 02 | `FINAL_LEVEL` / `ALL_RATED` |
+| 范围版本 | `scope_version` | varchar(64) | 必须 | `dim_city_algorithm_region` 数据快照 / 调度参数 | 城市算法区域版本 |
+| 范围类型 | `scope_type` | varchar(32) | 必须 | `dim_city_algorithm_region` + 本算法范围映射 | `CITY` / `CITY_CLUSTER` |
+| 范围编码 | `scope_id` | varchar(64) | 必须 | `dim_city_algorithm_region.algorithm_region_code` / 本算法范围映射 | 城市或城市群编码 |
+| 范围名称 | `scope_name` | varchar(128) | 必须 | `dim_city_algorithm_region.algorithm_region_name` / 本算法范围映射 | 城市或城市群名称 |
+| 品类颗粒度 | `category_granularity` | varchar(32) | 必须 | `dim_sku` + 本算法品类颗粒度映射 | 大类 / 中类 / 小类 |
+| 品类编码 | `category_code` | varchar(64) | 必须 | `dim_sku.category_level1_code/category_level2_code/category_level3_code` + 本算法品类颗粒度映射 | 当前计算品类编码 |
+| 品类名称 | `category_name` | varchar(128) | 必须 | `dim_sku.category_level1_name/category_level2_name/category_level3_name` + 本算法品类颗粒度映射 | 当前计算品类名称 |
+| 门店群类型 | `store_group_type` | varchar(32) | 必须 | `mart_store_category_level.final_level` + 本算法第 3.1 节范围分组 | `FINAL_LEVEL` / `ALL_RATED` |
 | 门店品类等级 | `final_level` | varchar(32) | 必须 | 算法 02 `mart_store_category_level` | A/B/C/D 或 ALL_RATED |
 | 消费者画像 | `final_profile` | varchar(128) | 必须 | 算法 01 `dim_customer_profile` | 算法 01 最终画像 |
 | 会员画像版本 | `profile_model_version` | varchar(64) | 必须 | 算法 01 `dim_customer_profile` | 本次锁定会员画像版本 |
 | 门店品类等级版本 | `category_level_model_version` | varchar(64) | 必须 | 算法 02 `mart_store_category_level` | 本次锁定门店品类等级版本 |
 | 消费者贡献版本 | `consumer_contribution_model_version` | varchar(64) | 必须 | 算法 03 `mart_store_group_consumer_contribution` | 本次锁定消费者贡献版本 |
-| 商品分类版本 | `category_mapping_version` | varchar(64) | 必须 | 商品基础表 | 商品分类口径版本 |
-| SKU 编码 | `sku_id` | varchar(64) | 必须 | Doris `article_id` / 商品基础表 | 销售 SKU |
+| 商品分类版本 | `category_mapping_version` | varchar(64) | 必须 | `dim_sku` 数据快照 / 调度参数 | 商品分类口径版本 |
+| SKU 编码 | `sku_id` | varchar(64) | 必须 | `data_agent.dws_member_order_item_detail_df_all_new.article_id` / `dim_sku.sku_id` | 销售 SKU |
 | 7 天复购会员数 | `repeat_buyer_cnt_7d_pre19` | bigint | 必须 | Doris 小票计算 | 首次购买后第 1-7 个自然日且 19:00 前再次购买该 SKU 的会员数 |
 | 7 天可观察首购会员数 | `eligible_first_buyer_cnt_7d` | bigint | 必须 | Doris 小票计算 | 首次购买后具备完整 7 天观察窗口的会员数 |
 | 7 天 19 点前复购率 | `repurchase_rate_7d_pre19` | decimal(18,8) | 必须 | 本表计算 | `repeat_buyer_cnt_7d_pre19 / eligible_first_buyer_cnt_7d` |
@@ -1657,6 +1662,8 @@ repurchase_model_version
 | 计算时间 | `calculated_at` | datetime | 必须 | 系统生成 | 结果写入时间 |
 
 ### 29.2 SKU 表现明细：`mart_target_profile_sku_performance`
+
+一行代表：一个周期、一个范围、一个门店群、一个消费者画像和一个销售 SKU 的表现结果。
 
 主键：
 
@@ -1682,56 +1689,56 @@ sku_performance_model_version
 | SKU 表现模型版本 | `sku_performance_model_version` | varchar(64) | 必须 | 算法 04 参数 | 算法 04 本次计算版本 |
 | 数据周期开始日期 | `performance_start_date` | date | 必须 | 调度参数 | 最近 3 个完整自然月开始日期 |
 | 数据周期结束日期 | `performance_end_date` | date | 必须 | 调度参数 | 最近 3 个完整自然月结束日期 |
-| 范围版本 | `scope_version` | varchar(64) | 必须 | 城市算法区域映射表 | 城市算法区域版本 |
-| 范围类型 | `scope_type` | varchar(32) | 必须 | 城市算法区域映射表 | `CITY` / `CITY_CLUSTER` |
-| 范围编码 | `scope_id` | varchar(64) | 必须 | 城市算法区域映射表 | 城市或城市群编码 |
-| 范围名称 | `scope_name` | varchar(128) | 必须 | 城市算法区域映射表 | 城市或城市群名称 |
-| 品类颗粒度 | `category_granularity` | varchar(32) | 必须 | 商品基础表 | 大类 / 中类 / 小类 |
-| 大类编码 | `large_category_code` | varchar(64) | 建议 | 商品基础表 | 商品大类编码 |
-| 大类名称 | `large_category_name` | varchar(128) | 建议 | 商品基础表 | 商品大类名称 |
-| 中类编码 | `middle_category_code` | varchar(64) | 建议 | 商品基础表 | 商品中类编码 |
-| 中类名称 | `middle_category_name` | varchar(128) | 建议 | 商品基础表 | 商品中类名称 |
-| 小类编码 | `small_category_code` | varchar(64) | 必须 | 商品基础表 | 商品小类编码 |
-| 小类名称 | `small_category_name` | varchar(128) | 必须 | 商品基础表 | 商品小类名称 |
-| 品类编码 | `category_code` | varchar(64) | 必须 | 商品基础表 | 与 `category_granularity` 对应的当前计算品类编码 |
-| 品类名称 | `category_name` | varchar(128) | 必须 | 商品基础表 | 与 `category_granularity` 对应的当前计算品类名称 |
-| 门店群类型 | `store_group_type` | varchar(32) | 必须 | 算法 02 | `FINAL_LEVEL` / `ALL_RATED` |
+| 范围版本 | `scope_version` | varchar(64) | 必须 | `dim_city_algorithm_region` 数据快照 / 调度参数 | 城市算法区域版本 |
+| 范围类型 | `scope_type` | varchar(32) | 必须 | `dim_city_algorithm_region` + 本算法范围映射 | `CITY` / `CITY_CLUSTER` |
+| 范围编码 | `scope_id` | varchar(64) | 必须 | `dim_city_algorithm_region.algorithm_region_code` / 本算法范围映射 | 城市或城市群编码 |
+| 范围名称 | `scope_name` | varchar(128) | 必须 | `dim_city_algorithm_region.algorithm_region_name` / 本算法范围映射 | 城市或城市群名称 |
+| 品类颗粒度 | `category_granularity` | varchar(32) | 必须 | `dim_sku` + 本算法品类颗粒度映射 | 大类 / 中类 / 小类 |
+| 大类编码 | `category_level1_code` | varchar(64) | 建议 | `dim_sku.category_level1_code` | 商品大类编码 |
+| 大类名称 | `category_level1_name` | varchar(128) | 建议 | `dim_sku.category_level1_name` | 商品大类名称 |
+| 中类编码 | `category_level2_code` | varchar(64) | 建议 | `dim_sku.category_level2_code` | 商品中类编码 |
+| 中类名称 | `category_level2_name` | varchar(128) | 建议 | `dim_sku.category_level2_name` | 商品中类名称 |
+| 小类编码 | `category_level3_code` | varchar(64) | 必须 | `dim_sku.category_level3_code` | 商品小类编码 |
+| 小类名称 | `category_level3_name` | varchar(128) | 必须 | `dim_sku.category_level3_name` | 商品小类名称 |
+| 品类编码 | `category_code` | varchar(64) | 必须 | `dim_sku.category_level1_code/category_level2_code/category_level3_code` + 本算法品类颗粒度映射 | 与 `category_granularity` 对应的当前计算品类编码 |
+| 品类名称 | `category_name` | varchar(128) | 必须 | `dim_sku.category_level1_name/category_level2_name/category_level3_name` + 本算法品类颗粒度映射 | 与 `category_granularity` 对应的当前计算品类名称 |
+| 门店群类型 | `store_group_type` | varchar(32) | 必须 | `mart_store_category_level.final_level` + 本算法第 3.1 节范围分组 | `FINAL_LEVEL` / `ALL_RATED` |
 | 门店品类等级 | `final_level` | varchar(32) | 必须 | 算法 02 `mart_store_category_level` | 当前门店群等级 |
-| 门店数 | `store_cnt` | bigint | 必须 | 算法 02 / Doris 聚合 | 当前范围内进入计算的门店数 |
+| 门店数 | `store_cnt` | bigint | 必须 | `mart_store_category_level.store_id` + 本算法范围内 Doris 聚合 | 当前范围内进入计算的门店数 |
 | 消费者画像 | `final_profile` | varchar(128) | 必须 | 算法 01 `dim_customer_profile` | 目标消费者画像 |
 | 是否主力画像 | `is_main_profile` | tinyint | 必须 | 算法 03 `mart_store_group_consumer_contribution` | `1` 是正式主力画像，`0` 不是 |
 | 是否相对主力候选 | `is_relative_main_candidate` | tinyint | 必须 | 算法 03 `mart_store_group_consumer_contribution` | `1` 是相对主力候选，`0` 不是 |
 | 会员画像版本 | `profile_model_version` | varchar(64) | 必须 | 算法 01 `dim_customer_profile` | 本次锁定会员画像版本 |
 | 门店品类等级版本 | `category_level_model_version` | varchar(64) | 必须 | 算法 02 `mart_store_category_level` | 本次锁定门店品类等级版本 |
 | 消费者贡献版本 | `consumer_contribution_model_version` | varchar(64) | 必须 | 算法 03 `mart_store_group_consumer_contribution` | 本次锁定消费者贡献版本 |
-| 商品分类版本 | `category_mapping_version` | varchar(64) | 必须 | 商品基础表 | 商品基础表分类口径版本 |
-| 商品属性版本 | `sku_attribute_version` | varchar(64) | 必须 | 商品基础表/属性加工规则 | V1 为商品基础表和名称解析口径版本 |
-| 在售快照日期 | `listing_snapshot_date` | date | 必须 | 门店 SKU 可订可售表 | 当前可订可售快照日期 |
+| 商品分类版本 | `category_mapping_version` | varchar(64) | 必须 | `dim_sku` 数据快照 / 调度参数 | 商品基础表分类口径版本 |
+| 商品属性版本 | `sku_attribute_version` | varchar(64) | 必须 | `dim_sku` 数据快照 / 本算法第 17 章属性加工规则 | V1 为商品基础表和名称解析口径版本 |
+| 在售快照日期 | `listing_snapshot_date` | date | 必须 | `mart_store_sku_daily_sale_order_status.business_date` | 当前可订可售快照日期 |
 | 有效交易过滤方式 | `valid_transaction_filter_method` | varchar(64) | 必须 | 本算法 | 见第 29.6 节状态约束 |
 
 商品、在售和计量字段：
 
 | 中文字段名 | 英文字段名 | 类型建议 | 是否必须 | 字段来源 | 中文注释 |
 |---|---|---|---|---|---|
-| SKU 编码 | `sku_id` | varchar(64) | 必须 | Doris `article_id` / 商品基础表 | 销售 SKU |
-| 商品编码 | `product_code` | varchar(64) | 必须 | 商品基础表 | 商品主数据编码 |
-| SKU 名称 | `sku_name` | varchar(256) | 必须 | 商品基础表 | 商品展示名称 |
-| SPU 编码 | `spu_id` | varchar(64) | 建议 | 商品基础表 | 商品基础表现有 SPU 编码 |
-| SPU 名称 | `spu_name` | varchar(256) | 建议 | 商品基础表 | 商品基础表现有 SPU 名称 |
-| 标准商品主键 | `standard_product_key` | varchar(128) | 必须 | 商品基础表/本算法 | SPU 有效时取 `spu_id`，否则取 `sku_id` |
+| SKU 编码 | `sku_id` | varchar(64) | 必须 | `data_agent.dws_member_order_item_detail_df_all_new.article_id` / `dim_sku.sku_id` | 销售 SKU |
+| 商品编码 | `product_id` | varchar(64) | 必须 | `dim_sku.product_id` | 商品主数据编码 |
+| SKU 名称 | `sku_name` | varchar(256) | 必须 | `dim_sku.sku_name` | 商品展示名称 |
+| SPU 编码 | `spu_id` | varchar(64) | 建议 | `dim_sku.spu_id` | 商品基础表现有 SPU 编码 |
+| SPU 名称 | `spu_name` | varchar(256) | 建议 | `dim_sku.spu_name` | 商品基础表现有 SPU 名称 |
+| 标准商品主键 | `standard_product_key` | varchar(128) | 必须 | `dim_sku.spu_id` / `dim_sku.sku_id` + 本算法第 17.4 节标准商品归并 | SPU 有效时取 `spu_id`，否则取 `sku_id` |
 | 标准商品模式 | `standard_product_mode` | varchar(64) | 必须 | 本算法 | 见第 29.6 节状态约束 |
-| 是否可订可售 | `orderable_sellable_flag` | tinyint | 必须 | 门店 SKU 可订可售表 | 当前快照是否可订且可售 |
-| 在售状态 | `listing_status` | varchar(64) | 必须 | 门店 SKU 可订可售表 | 见第 29.6 节状态约束 |
-| 计量类型 | `measurement_type` | varchar(32) | 必须 | 商品基础表单位/规格解析 | `WEIGHT` / `QUANTITY` / `PIECE_COUNT` / `VOLUME` / `UNKNOWN` |
-| 来源单位 | `source_unit` | varchar(32) | 必须 | 商品基础表 | 商品基础表单位 |
-| 标准单位 | `standard_unit` | varchar(32) | 必须 | 商品基础表/本算法 | 算法计算使用的标准单位 |
-| 单位换算系数 | `conversion_factor` | decimal(18,8) | 条件必须 | 商品基础表单位重量 | 从来源单位换算到标准单位的系数 |
+| 是否可订可售 | `orderable_sellable_flag` | tinyint | 必须 | `mart_store_sku_daily_sale_order_status.is_orderable` + `mart_store_sku_daily_sale_order_status.is_saleable` | 当前快照是否可订且可售 |
+| 在售状态 | `listing_status` | varchar(64) | 必须 | `mart_store_sku_daily_sale_order_status.is_saleable` / 本算法第 10.1 节 | 见第 29.6 节状态约束 |
+| 计量类型 | `measurement_type` | varchar(32) | 必须 | `dim_sku.sale_unit` / `dim_sku.specification` / 本算法第 11.1 节 | `WEIGHT` / `QUANTITY` / `PIECE_COUNT` / `VOLUME` / `UNKNOWN` |
+| 销售单位 | `sale_unit` | varchar(32) | 必须 | `dim_sku.sale_unit` | 商品基础表单位 |
+| 标准单位 | `standard_unit` | varchar(32) | 必须 | `dim_sku.sale_unit` / 本算法第 11.1 节标准单位映射 | 算法计算使用的标准单位 |
+| 单位换算系数 | `conversion_factor` | decimal(18,8) | 条件必须 | `dim_sku.unit_weight_kg` / 本算法第 11.1 节单位换算 | 从销售单位换算到标准单位的系数 |
 | 计量映射状态 | `measurement_mapping_status` | varchar(64) | 必须 | 本算法 | 见第 29.6 节状态约束 |
-| 订购范围口径 | `orderable_scope` | varchar(64) | 必须 | 门店 SKU 可订可售表/本算法 | 见第 29.6 节状态约束 |
-| 订购门店数 | `ordered_store_cnt` | bigint | 必须 | 毛利损耗表/可订可售表 | 周期内实际订购或收货过该 SKU 的门店数 |
-| 允许订购门店数 | `eligible_orderable_store_cnt` | bigint | 必须 | 门店 SKU 可订可售表 | 当前门店群内允许订购该 SKU 的有效门店数 |
+| 订购范围口径 | `orderable_scope` | varchar(64) | 必须 | `mart_store_sku_daily_sale_order_status` / 本算法第 10 章 | 见第 29.6 节状态约束 |
+| 订购门店数 | `ordered_store_cnt` | bigint | 必须 | `mart_sku_margin_loss.receipt_qty/receipt_weight_kg` / `mart_store_sku_daily_sale_order_status.is_orderable` | 周期内实际订购或收货过该 SKU 的门店数 |
+| 允许订购门店数 | `eligible_orderable_store_cnt` | bigint | 必须 | `mart_store_sku_daily_sale_order_status.is_orderable` | 当前门店群内允许订购该 SKU 的有效门店数 |
 | 门店订购率 | `store_order_rate` | decimal(18,8) | 必须 | 本算法 | 订购门店数 / 允许订购该 SKU 的有效门店数 |
-| 允许订购有效门店日数 | `eligible_orderable_store_day_cnt` | bigint | 必须 | 门店 SKU 可订可售表 | 当前门店群内允许订购该 SKU 的有效门店营业日数 |
+| 允许订购有效门店日数 | `eligible_orderable_store_day_cnt` | bigint | 必须 | `mart_store_sku_daily_sale_order_status.is_orderable` + `business_date` | 当前门店群内允许订购该 SKU 的有效门店营业日数 |
 | 门店订购日率 | `ordered_store_day_rate` | decimal(18,8) | 必须 | 本算法 | 有实际收货的门店日数 / 允许订购的有效门店营业日数 |
 
 行为、偏好和复购字段：
@@ -1749,7 +1756,7 @@ sku_performance_model_version
 | SKU 会员渗透率 95% 上界 | `sku_buyer_penetration_upper_95` | decimal(18,8) | 必须 | Jeffreys 区间 | 目标画像会员渗透率 95% 区间上界 |
 | 目标画像渗透率 | `target_penetration` | decimal(18,8) | 必须 | 本算法 | 目标画像购买该 SKU 的会员渗透率 |
 | 参考画像渗透率 | `reference_penetration` | decimal(18,8) | 必须 | 本算法 | 非目标画像购买该 SKU 的会员渗透率 |
-| 偏好参考组状态 | `preference_reference_status` | varchar(64) | 必须 | 算法 03/本算法 | 见第 29.6 节状态约束 |
+| 偏好参考组状态 | `preference_reference_status` | varchar(64) | 必须 | `mart_store_group_consumer_contribution` + 本算法第 12.4 节对照组判断 | 见第 29.6 节状态约束 |
 | 原始偏好指数 | `preference_index_raw` | decimal(18,8) | 必须 | 本算法 | 目标画像渗透率 / 参考画像渗透率 |
 | 平滑偏好指数 | `smoothed_preference_index` | decimal(18,8) | 必须 | Jeffreys 平滑 | 小样本校正后的偏好指数 |
 | 偏好指数 95% 下界 | `preference_lower_95` | decimal(18,8) | 必须 | Jeffreys 区间 | 正式评分使用下界 |
@@ -1764,26 +1771,26 @@ sku_performance_model_version
 
 | 中文字段名 | 英文字段名 | 类型建议 | 是否必须 | 字段来源 | 中文注释 |
 |---|---|---|---|---|---|
-| 有效门店 SKU 日数 | `available_store_day_cnt` | bigint | 必须 | 毛利损耗表/可订可售表 | 周期内有实际收货条件的门店 SKU 日数 |
+| 有效门店 SKU 日数 | `available_store_day_cnt` | bigint | 必须 | `mart_sku_margin_loss` / `mart_store_sku_daily_sale_order_status` | 周期内有实际收货条件的门店 SKU 日数 |
 | 每有效门店 SKU 日销售额 | `sales_per_available_store_day` | decimal(18,8) | 必须 | 本算法 | 目标画像销售额 / 有效门店 SKU 日数 |
 | 每有效门店 SKU 日购买会员数 | `buyers_per_available_store_day` | decimal(18,8) | 必须 | 本算法 | 目标画像购买会员数 / 有效门店 SKU 日数 |
-| 实际收货标准量 | `actual_received_standard_qty` | decimal(18,6) | 必须 | 毛利损耗表 + 商品基础表 | 称重商品取门店进货重量；普通计件和枚数型商品取门店进货数量；体积商品可稳定换算时按标准体积口径换算 |
-| 19:30 前销售标准量 | `pre1930_sales_standard_qty` | decimal(18,6) | 必须 | Doris `weight` | 有效 SKU 日 19:30 前销售标准量 |
-| 非促销有效门店 SKU 日数 | `non_promo_available_store_day_cnt` | bigint | 必须 | Doris + 毛利损耗表 | 19:30 前 `discount_amt = 0` 的有效门店 SKU 日数 |
-| 非促销实际收货标准量 | `non_promo_actual_received_standard_qty` | decimal(18,6) | 必须 | Doris + 毛利损耗表 | 非促销有效 SKU 日实际收货标准量 |
-| 非促销 19:30 前销售标准量 | `non_promo_pre1930_sales_standard_qty` | decimal(18,6) | 必须 | Doris `weight` | 非促销有效 SKU 日 19:30 前销售标准量 |
-| 19:30 前售罄率 | `pre1930_sell_through_rate` | decimal(18,8) | 必须 | Doris + 毛利损耗表 | 19:30 前销售标准量 / 实际收货标准量 |
-| 非促销 19:30 前售罄率 | `non_promo_pre1930_sell_through_rate` | decimal(18,8) | 必须 | Doris + 毛利损耗表 | 剔除 `discount_amt > 0` 代理促销后的 19:30 前售罄率 |
-| 每有效门店 SKU 日 19:30 前销售量 | `pre1930_sales_volume_per_available_store_day` | decimal(18,8) | 必须 | Doris `weight` | 19:30 前销售标准量 / 有效门店 SKU 日数 |
+| 实际到货标准量 | `actual_arrival_standard_qty` | decimal(18,6) | 必须 | `mart_sku_margin_loss.receipt_qty` / `mart_sku_margin_loss.receipt_weight_kg` / `dim_sku.sale_unit` | 称重商品取门店进货重量；普通计件和枚数型商品取门店进货数量；体积商品可稳定换算时按标准体积口径换算 |
+| 19:30 前销售标准量 | `pre1930_sales_standard_qty` | decimal(18,6) | 必须 | `data_agent.dws_member_order_item_detail_df_all_new.weight` | 有效 SKU 日 19:30 前销售标准量 |
+| 非促销有效门店 SKU 日数 | `non_promo_available_store_day_cnt` | bigint | 必须 | `data_agent.dws_member_order_item_detail_df_all_new.discount_amt` + `mart_sku_margin_loss` | 19:30 前 `discount_amt = 0` 的有效门店 SKU 日数 |
+| 非促销实际到货标准量 | `non_promo_actual_arrival_standard_qty` | decimal(18,6) | 必须 | `data_agent.dws_member_order_item_detail_df_all_new` / `mart_sku_margin_loss` / 本算法 | 非促销有效 SKU 日实际到货标准量 |
+| 非促销 19:30 前销售标准量 | `non_promo_pre1930_sales_standard_qty` | decimal(18,6) | 必须 | `data_agent.dws_member_order_item_detail_df_all_new.weight` | 非促销有效 SKU 日 19:30 前销售标准量 |
+| 19:30 前售罄率 | `pre1930_sell_through_rate` | decimal(18,8) | 必须 | `data_agent.dws_member_order_item_detail_df_all_new.weight` + `mart_sku_margin_loss.receipt_qty/receipt_weight_kg` | 19:30 前销售标准量 / 实际收货标准量 |
+| 非促销 19:30 前售罄率 | `non_promo_pre1930_sell_through_rate` | decimal(18,8) | 必须 | `data_agent.dws_member_order_item_detail_df_all_new.weight` + `mart_sku_margin_loss.receipt_qty/receipt_weight_kg` | 剔除 `discount_amt > 0` 代理促销后的 19:30 前售罄率 |
+| 每有效门店 SKU 日 19:30 前销售量 | `pre1930_sales_volume_per_available_store_day` | decimal(18,8) | 必须 | `data_agent.dws_member_order_item_detail_df_all_new.weight` | 19:30 前销售标准量 / 有效门店 SKU 日数 |
 | 目标画像 19:30 前吸收率 | `target_profile_pre1930_absorption_rate` | decimal(18,8) | 必须 | 本算法 | 目标画像 19:30 前销售标准量 / 门店群该 SKU 19:30 前总销售标准量 |
 | 折扣阶梯 JSON | `discount_ladder_json` | json/string | 建议 | Doris 小票 | 19:30 后每半小时销售量、增量售罄率和实际折扣率 |
 | 目标画像 SKU 销售额 | `target_profile_sku_sales_amt` | decimal(18,6) | 必须 | Doris 小票 | 目标画像该 SKU 销售额 |
 | 目标画像 SKU 成本额 | `target_profile_sku_cost_amt` | decimal(18,6) | 必须 | 毛利损耗表 + 本算法 | 按标准量单位成本分摊到目标画像的 SKU 成本金额 |
 | 目标画像 SKU 毛利额 | `target_profile_sku_margin_amt` | decimal(18,6) | 必须 | 本算法 | `target_profile_sku_sales_amt - target_profile_sku_cost_amt` |
 | 目标画像 SKU 毛利率 | `target_profile_sku_margin_rate` | decimal(18,8) | 必须 | 本算法 | `target_profile_sku_margin_amt / target_profile_sku_sales_amt` |
-| SKU 总销售额 | `sku_total_sales_amt` | decimal(18,6) | 必须 | 毛利损耗表 | 该 SKU 在比较组内全量销售额 |
-| SKU 总成本额 | `sku_total_cost_amt` | decimal(18,6) | 必须 | 毛利损耗表 + 本算法 | `sku_total_sales_amt - sku_total_margin_amt` |
-| SKU 总毛利额 | `sku_total_margin_amt` | decimal(18,6) | 必须 | 毛利损耗表全链路毛利额 | 该 SKU 在比较组内全链路毛利额 |
+| SKU 总销售额 | `sku_total_sales_amt` | decimal(18,6) | 必须 | `mart_sku_margin_loss.sales_amt` | 该 SKU 在比较组内全量销售额 |
+| SKU 总成本额 | `sku_total_cost_amt` | decimal(18,6) | 必须 | `mart_sku_margin_loss.sales_amt` + `mart_sku_margin_loss.full_link_margin_amt` + 本算法第 16 章 | `sku_total_sales_amt - sku_total_margin_amt` |
+| SKU 总毛利额 | `sku_total_margin_amt` | decimal(18,6) | 必须 | `mart_sku_margin_loss.full_link_margin_amt` | 该 SKU 在比较组内全链路毛利额 |
 | SKU 总毛利率 | `sku_total_margin_rate` | decimal(18,8) | 必须 | 本算法 | `sku_total_margin_amt / sku_total_sales_amt` |
 | 成本来源 | `cost_source` | varchar(64) | 必须 | 本算法 | 见第 29.6 节状态约束 |
 | 成本分摊方法 | `cost_allocation_method` | varchar(64) | 必须 | 本算法 | V1 默认 `UNIT_COST_BY_STANDARD_QTY` |
@@ -1818,10 +1825,10 @@ sku_performance_model_version
 |---|---|---|---|---|---|
 | Top1 门店销售占比 | `top1_store_sales_share` | decimal(18,8) | 必须 | 本算法 | 最大单店销售额 / 该 SKU 总销售额 |
 | 门店销售 HHI | `store_sales_hhi` | decimal(18,8) | 必须 | 本算法 | 门店销售集中度 |
-| 留一门店锚点稳定率 | `leave_one_store_anchor_rate` | decimal(18,8) | 必须 | 稳定性验证 | 删除单店后仍为锚点的比例 |
-| 门店稳定性状态 | `store_stability_status` | varchar(64) | 必须 | 稳定性验证 | 见第 29.6 节状态约束 |
-| 留一月锚点稳定率 | `leave_one_month_anchor_rate` | decimal(18,8) | 必须 | 稳定性验证 | 删除单月后仍为锚点的比例 |
-| 时间稳定性状态 | `time_stability_status` | varchar(64) | 必须 | 稳定性验证 | 见第 29.6 节状态约束 |
+| 留一门店锚点稳定率 | `leave_one_store_anchor_rate` | decimal(18,8) | 必须 | 本算法第 25.2 节留一门店验证 | 删除单店后仍为锚点的比例 |
+| 门店稳定性状态 | `store_stability_status` | varchar(64) | 必须 | 本算法第 25.2 节留一门店验证 | 见第 29.6 节状态约束 |
+| 留一月锚点稳定率 | `leave_one_month_anchor_rate` | decimal(18,8) | 必须 | 本算法第 26 章时间稳定性验证 | 删除单月后仍为锚点的比例 |
+| 时间稳定性状态 | `time_stability_status` | varchar(64) | 必须 | 本算法第 26 章时间稳定性验证 | 见第 29.6 节状态约束 |
 | 主材料 | `main_ingredient` | varchar(128) | 建议 | 商品基础表/商品名称解析 | 商品主材料 |
 | 商品形态 | `product_form` | varchar(128) | 建议 | 商品基础表/商品名称解析 | 商品形态 |
 | 配料 | `ingredient` | varchar(512) | 建议 | 商品基础表/商品名称解析 | 关键配料 |
@@ -1830,8 +1837,8 @@ sku_performance_model_version
 | 烹饪方式 | `cooking_method` | varchar(128) | 建议 | 商品基础表/商品名称解析 | 烹饪方式 |
 | 净含量 | `net_content` | decimal(18,6) | 建议 | 商品基础表规格解析 | 商品净含量 |
 | 包装类型 | `package_type` | varchar(128) | 建议 | 商品基础表/商品名称解析 | 包装形态 |
-| 存储温层 | `storage_temperature` | varchar(64) | 建议 | 商品基础表 | 冷藏、冷冻、常温等 |
-| 品牌 | `brand` | varchar(128) | 建议 | 商品基础表 | 商品品牌 |
+| 温层 | `temperature_layer` | varchar(64) | 建议 | `dim_sku.temperature_layer` | 冷藏、冷冻、常温等 |
+| 品牌 | `brand_name` | varchar(128) | 建议 | `dim_sku.brand_name` | 商品品牌 |
 | 属性来源 JSON | `attribute_source_json` | json/string | 必须 | 商品基础表/属性加工规则 | 每个属性的来源 |
 | 属性置信度 JSON | `attribute_confidence_json` | json/string | 必须 | 属性加工规则 | 每个属性识别的置信度 |
 | 结果状态 | `result_status` | varchar(64) | 必须 | 本算法 | 见第 29.6 节状态约束 |
@@ -1840,10 +1847,12 @@ sku_performance_model_version
 | 自然动销状态 | `natural_sales_status` | varchar(64) | 必须 | 本算法 | 见第 29.6 节状态约束 |
 | 订购覆盖状态 | `order_coverage_status` | varchar(64) | 必须 | 本算法 | 见第 29.6 节状态约束 |
 | 属性状态 | `attribute_status` | varchar(64) | 必须 | 本算法 | 见第 29.6 节状态约束 |
-| 数据质量标记 JSON | `data_quality_flags` | json/string | 建议 | 质量校验 | 数据缺失、异常、降级标记集合 |
+| 数据质量标记 JSON | `data_quality_flags` | json/string | 建议 | 本算法第 32 章数据质量验收 | 数据缺失、异常、降级标记集合 |
 | 计算时间 | `calculated_at` | datetime | 必须 | 系统生成 | 结果写入时间 |
 
 ### 29.3 标准商品表现：`mart_target_profile_product_performance`
+
+一行代表：一个周期、一个范围、一个门店群、一个消费者画像和一个标准商品的表现结果。
 
 主键：
 
@@ -1880,10 +1889,10 @@ sku_performance_model_version
 | 门店品类等级 | `final_level` | varchar(32) | 必须 | 主表继承 | 当前门店群等级 |
 | 消费者画像 | `final_profile` | varchar(128) | 必须 | 主表继承 | 目标消费者画像 |
 | 标准商品主键 | `standard_product_key` | varchar(128) | 必须 | 主表聚合 | SPU 有效时取 `spu_id`，否则取 `sku_id` |
-| 标准商品名称 | `standard_product_name` | varchar(256) | 必须 | 商品基础表/主表聚合 | SPU 名称或代表 SKU 名称 |
+| 标准商品名称 | `standard_product_name` | varchar(256) | 必须 | `dim_sku.spu_name` / `dim_sku.sku_name` + 主表聚合 | SPU 名称或代表 SKU 名称 |
 | 标准商品模式 | `standard_product_mode` | varchar(64) | 必须 | 主表继承 | `SPU_MAPPED` / `SKU_ONLY` |
-| SPU 编码 | `spu_id` | varchar(64) | 建议 | 商品基础表 | 商品基础表 SPU 编码 |
-| SPU 名称 | `spu_name` | varchar(256) | 建议 | 商品基础表 | 商品基础表 SPU 名称 |
+| SPU 编码 | `spu_id` | varchar(64) | 建议 | `dim_sku.spu_id` | 商品基础表 SPU 编码 |
+| SPU 名称 | `spu_name` | varchar(256) | 建议 | `dim_sku.spu_name` | 商品基础表 SPU 名称 |
 | 代表 SKU 编码 | `representative_sku_id` | varchar(64) | 必须 | 主表聚合 | 展示和追溯使用的代表 SKU |
 | 成员 SKU 列表 JSON | `member_sku_list_json` | json/string | 必须 | 主表聚合 | 汇总到同一标准商品下的 SKU 列表 |
 | 成员 SKU 数 | `member_sku_cnt` | bigint | 必须 | 主表聚合 | 标准商品下 SKU 数 |
@@ -1902,6 +1911,8 @@ sku_performance_model_version
 | 计算时间 | `calculated_at` | datetime | 必须 | 系统生成 | 结果写入时间 |
 
 ### 29.4 锚点汇总：`mart_target_profile_anchor_summary`
+
+一行代表：一个周期、一个范围、一个门店群和一个消费者画像下的锚点汇总结果。
 
 主键：
 
@@ -1924,16 +1935,16 @@ sku_performance_model_version
 | SKU 表现模型版本 | `sku_performance_model_version` | varchar(64) | 必须 | 算法 04 参数 | 算法 04 本次计算版本 |
 | 数据周期开始日期 | `performance_start_date` | date | 必须 | 调度参数 | 统计周期开始日期 |
 | 数据周期结束日期 | `performance_end_date` | date | 必须 | 调度参数 | 统计周期结束日期 |
-| 范围版本 | `scope_version` | varchar(64) | 必须 | 城市算法区域映射表 | 城市算法区域版本 |
-| 范围类型 | `scope_type` | varchar(32) | 必须 | 城市算法区域映射表 | `CITY` / `CITY_CLUSTER` |
-| 范围编码 | `scope_id` | varchar(64) | 必须 | 城市算法区域映射表 | 城市或城市群编码 |
-| 范围名称 | `scope_name` | varchar(128) | 必须 | 城市算法区域映射表 | 城市或城市群名称 |
-| 品类颗粒度 | `category_granularity` | varchar(32) | 必须 | 商品基础表 | 大类 / 中类 / 小类 |
-| 品类编码 | `category_code` | varchar(64) | 必须 | 商品基础表 | 当前计算品类编码 |
-| 品类名称 | `category_name` | varchar(128) | 必须 | 商品基础表 | 当前计算品类名称 |
-| 门店群类型 | `store_group_type` | varchar(32) | 必须 | 算法 02 | `FINAL_LEVEL` / `ALL_RATED` |
-| 门店品类等级 | `final_level` | varchar(32) | 必须 | 算法 02 | 当前门店群等级 |
-| 消费者画像 | `final_profile` | varchar(128) | 必须 | 算法 01/03 | 当前消费者画像 |
+| 范围版本 | `scope_version` | varchar(64) | 必须 | `dim_city_algorithm_region` 数据快照 / 调度参数 | 城市算法区域版本 |
+| 范围类型 | `scope_type` | varchar(32) | 必须 | `dim_city_algorithm_region` + 本算法范围映射 | `CITY` / `CITY_CLUSTER` |
+| 范围编码 | `scope_id` | varchar(64) | 必须 | `dim_city_algorithm_region.algorithm_region_code` / 本算法范围映射 | 城市或城市群编码 |
+| 范围名称 | `scope_name` | varchar(128) | 必须 | `dim_city_algorithm_region.algorithm_region_name` / 本算法范围映射 | 城市或城市群名称 |
+| 品类颗粒度 | `category_granularity` | varchar(32) | 必须 | `dim_sku` + 本算法品类颗粒度映射 | 大类 / 中类 / 小类 |
+| 品类编码 | `category_code` | varchar(64) | 必须 | `dim_sku.category_level1_code/category_level2_code/category_level3_code` + 本算法品类颗粒度映射 | 当前计算品类编码 |
+| 品类名称 | `category_name` | varchar(128) | 必须 | `dim_sku.category_level1_name/category_level2_name/category_level3_name` + 本算法品类颗粒度映射 | 当前计算品类名称 |
+| 门店群类型 | `store_group_type` | varchar(32) | 必须 | `mart_store_category_level.final_level` + 本算法第 3.1 节范围分组 | `FINAL_LEVEL` / `ALL_RATED` |
+| 门店品类等级 | `final_level` | varchar(32) | 必须 | `mart_store_category_level.final_level` | 当前门店群等级 |
+| 消费者画像 | `final_profile` | varchar(128) | 必须 | `dim_customer_profile.final_profile` / `mart_store_group_consumer_contribution.final_profile` | 当前消费者画像 |
 | 当前锚点 SKU JSON | `active_anchor_skus_json` | json/string | 必须 | 主表筛选 | 当前可订可售且通过正式准入的锚点 SKU |
 | 历史锚点 SKU JSON | `historical_anchor_skus_json` | json/string | 必须 | 主表筛选 | 历史表现好但当前不可订不可售的 SKU |
 | 低订购高表现 SKU JSON | `low_order_high_performance_skus_json` | json/string | 必须 | 主表筛选 | 订购覆盖低但表现高的机会 SKU |
@@ -1947,6 +1958,8 @@ sku_performance_model_version
 | 计算时间 | `calculated_at` | datetime | 必须 | 系统生成 | 结果写入时间 |
 
 ### 29.5 参数表：`mart_target_profile_sku_performance_params`
+
+一行代表：一个参数版本、一个参数作用范围和一个参数的复算配置。
 
 主键：
 
@@ -1978,6 +1991,29 @@ sku_performance_model_version
 
 | 状态字段 | 中文字段名 | 允许取值 | 中文含义 | 触发条件 |
 |---|---|---|---|---|
+| `scope_type` | 范围类型 | `CITY` | 单城市 | 当前结果按单个城市计算 |
+| `scope_type` | 范围类型 | `CITY_CLUSTER` | 城市群 | 当前结果按城市算法区域或城市群计算 |
+| `category_granularity` | 品类颗粒度 | `LARGE` | 大类 | 当前结果按商品一级分类聚合 |
+| `category_granularity` | 品类颗粒度 | `MIDDLE` | 中类 | 当前结果按商品二级分类聚合 |
+| `category_granularity` | 品类颗粒度 | `SMALL` | 小类 | 当前结果按商品三级分类聚合 |
+| `store_group_type` | 门店群类型 | `FINAL_LEVEL` | 分等级门店群 | 按算法 02 输出的门店品类等级分组 |
+| `store_group_type` | 门店群类型 | `ALL_RATED` | 全部有等级门店 | 当前品类下所有已评级门店合并计算 |
+| `final_level` | 门店等级 | `A` | A 级门店 | 算法 02 输出的 A 级门店群 |
+| `final_level` | 门店等级 | `B` | B 级门店 | 算法 02 输出的 B 级门店群 |
+| `final_level` | 门店等级 | `C` | C 级门店 | 算法 02 输出的 C 级门店群 |
+| `final_level` | 门店等级 | `D` | D 级门店 | 算法 02 输出的 D 级门店群 |
+| `final_level` | 门店等级 | `ALL_RATED` | 全部已评级门店 | `store_group_type = ALL_RATED` 时使用 |
+| `is_main_profile` | 是否主力画像 | `1` | 主力画像 | 算法 03 判断该画像为当前门店群主力消费者画像 |
+| `is_main_profile` | 是否主力画像 | `0` | 非主力画像 | 算法 03 判断该画像不是当前门店群主力消费者画像 |
+| `is_relative_main_candidate` | 是否相对主力候选 | `1` | 相对主力候选 | 算法 03 在 `NO_OBVIOUS_MAIN` 场景下标记最高贡献候选 |
+| `is_relative_main_candidate` | 是否相对主力候选 | `0` | 非相对主力候选 | 不属于相对主力候选 |
+| `measurement_type` | 计量类型 | `WEIGHT` | 重量计价 | 商品销售单位可稳定换算为重量口径 |
+| `measurement_type` | 计量类型 | `QUANTITY` | 非重量数量计价 | 商品按件、份、盒、包、袋、瓶、个、只等数量单位计价 |
+| `measurement_type` | 计量类型 | `PIECE_COUNT` | 枚数计价 | 商品按枚数计价，例如蛋品 |
+| `measurement_type` | 计量类型 | `VOLUME` | 容量计价 | 商品按 L、ml 等容量单位计价 |
+| `measurement_type` | 计量类型 | `UNKNOWN` | 未知计量类型 | 商品销售单位无法被 V1 单位规则识别 |
+| `is_formal_anchor` | 是否正式锚点 | `1` | 正式锚点 | SKU 或标准商品满足正式锚点准入 |
+| `is_formal_anchor` | 是否正式锚点 | `0` | 非正式锚点 | SKU 或标准商品未满足正式锚点准入 |
 | `repurchase_calc_status` | 复购计算状态 | `OK` | 复购计算成功 | 分母大于 0 且观察窗口完整 |
 | `repurchase_calc_status` | 复购计算状态 | `DENOMINATOR_ZERO` | 复购分母为 0 | 可观察首购会员数为 0 |
 | `repurchase_calc_status` | 复购计算状态 | `INSUFFICIENT_WINDOW` | 观察窗口不足 | 周期尾部无法观察完整 T+1 到 T+7 |
