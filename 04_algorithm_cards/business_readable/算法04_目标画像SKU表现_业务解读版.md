@@ -1,6 +1,6 @@
 # 算法04_目标画像 SKU 表现_业务解读版
 
-更新时间：2026-08-03
+更新时间：2026-09-20
 
 业务原始依据：`算法卡_04_目标画像SKU表现_业务提供最新原始版_20260731.md`
 
@@ -33,7 +33,7 @@
 
 ## 2. 最终会输出什么
 
-算法 04 正式输出 4 类结果表，V1 额外补 1 张前置复购表。
+算法 04 正式输出 4 类结果表，V1 额外补 1 张前置复购过程表，并保留 1 张运行审计表。
 
 | 表 | 一行代表什么 | 用途 |
 |---|---|---|
@@ -42,6 +42,7 @@
 | `mart_target_profile_product_performance` | 一个标准商品的汇总表现 | V1 使用商品基础表现有 SPU 汇总；SPU 缺失时按 `SKU_ONLY` |
 | `mart_target_profile_anchor_summary` | 一个门店群消费者画像下的锚点汇总 | 给后续购物篮、新品候选和机会评分读取 |
 | `mart_target_profile_sku_performance_params` | 一个模型版本下的参数、权重、断点和口径 | 用于复算、验收和追溯 |
+| `process_algo04_run_audit` | 一个运行批次、范围处理单元和审计事件 | 记录上游缺失、字段缺失、重复键、对账失败和正式写入闸门；不作为业务结果 |
 
 一条 SKU 表现明细可以理解为：
 
@@ -68,6 +69,10 @@ SKU = 黑椒牛柳丝 200g，
 商品属性
 风险状态
 ```
+
+当前数据库核查已确认：算法 02 的 `mart_store_category_level` 和算法 03 的 `mart_store_group_consumer_contribution` 正式物理结果表尚未找到。因此本次可以完成规则和接口修复，但在这两张表交付前，算法 04 不能正式跑数或发布锚点结果；任务只写运行审计，不自行重算上游。
+
+接口字段说明：算法 03 正式周期字段叫 `contribution_start_date` / `contribution_end_date`。算法 04 内部为了区分自身表现周期，使用 `consumer_contribution_start_date` / `consumer_contribution_end_date` 作为别名，开发必须按上游字段显式映射，不能把别名当成算法 03 的物理列。
 
 ## 3. 它在 AI 选品链路中的位置
 
@@ -111,6 +116,15 @@ AI 商品机会推荐表
 算法 04 不在前端查询时生成新品候选。
 ```
 
+运行闸门和写入边界：
+
+```text
+上游 01/02/03 正式版本、周期、范围和唯一性未通过：只写 process_algo04_run_audit，不写复购过程表和正式结果。
+上游通过但某范围没有目标画像消费：可以写锚点汇总状态摘要，不伪造 SKU 明细。
+有消费但没有合法 SKU：可以写状态摘要和审计，不伪造 SKU 行或标准商品行。
+有合法 SKU 但核心字段缺失：保留可诊断字段，写 DATA_INCOMPLETE/NULL，不把缺失改成 0，也不进入正式锚点。
+```
+
 ## 4. 一期用哪些底层数据
 
 | 数据 | 用来做什么 |
@@ -123,6 +137,7 @@ AI 商品机会推荐表
 | 毛利损耗表 | 取得日门店 SKU 销售额、销售数量、销售重量、全链路毛利额等经营指标 |
 | 门店商品每日可订可售表 | 判断当前是否可订、可售，以及 0 销售日是否仍有经营条件 |
 | 门店商品日价格表 | 在成本口径需要备选时读取出库到店成本含税 |
+| 商品状态表 `dim_product_status` | 只做季节/停售等解释；V1 不作为评分必需输入，不编造停售原因 |
 | 城市算法区域映射表 | 统一算法范围，避免跨未配置区域比较 |
 
 业务原文要求读取现有 7 天 19 点前复购正式结果。当前指标平台不能稳定下钻到 SKU 维度，所以 V1 先按同一业务口径产出：
@@ -132,6 +147,8 @@ mart_sku_repurchase_7d_pre19
 ```
 
 这不是改业务逻辑，而是补齐业务原文要求的数据输入。
+
+当前正式小票源固定为 `data_agent.dws_member_order_item_detail_df_all_new`。该表是重复键表，开发必须按 `order_item_id + update_time` 去重；同键字段冲突时阻断发布，不能直接假设物理唯一。
 
 ## 5. 数据周期和范围怎么理解
 
@@ -159,6 +176,8 @@ performance_end_date   = 2026-06-30
 目标消费者画像
 ```
 
+当前在售判断还要锁定两件事：`listing_snapshot_date`（本次读取的可订可售快照日期）和 `listing_scope_rule_version`（范围级在售聚合规则版本，例如 V1 提案 `ANY_ACTIVE_STORE_V1`）。规则版本一旦变化，历史结果必须全量重算，不能覆盖复用。
+
 禁止因为样本不足自动扩大到其他城市、大区或其他品类。
 
 ## 6. 核心业务对象怎么定义
@@ -181,13 +200,22 @@ performance_end_date   = 2026-06-30
 
 ## 7. 先过滤和对账什么
 
-先过滤无效交易：
+先把有效事实拆成两层，避免把“目标画像会员行为”误当成“全量商品经营”：
+
+```text
+valid_all_txn：全量有效正向销售，用于 SKU 总销售、自然动销、折扣阶梯、覆盖诊断和经营表对账。
+valid_profiled_member_txn：在全量有效交易上保留 is_customer = 1、有效会员过滤和 final_profile 关联，用于目标画像销售、偏好、复购和目标画像毛利。
+```
+
+两层都先过滤无效交易：
 
 ```text
 退货、取消、冲销、测试交易
 非正向销售
-门店、商品、会员、日期无法关联的记录
+门店、商品、日期无法关联的记录
 ```
+
+画像会员层还必须满足：`is_customer = 1`、`customer_id` 非空、能关联锁定版本的 `dim_customer_profile`，并继承算法 01/03 的会员过滤规则；同一会员同一天有效小票数超过 5 时剔除该会员当日全部交易。
 
 同一小票里同一个 SKU 出现多行时，先在小票内合并，再计算小票数、购买人数和复购，避免同一张小票被误当作多次购买。
 
@@ -202,6 +230,8 @@ performance_end_date   = 2026-06-30
 ```
 
 对不上时不能发布正式锚点结论。
+
+还要分别对账：全量有效交易销售额与毛利损耗表日门店 SKU 销售额对账；画像会员销售额与算法 03 对应画像销售额对账。任一层失败，只阻断受影响的经营字段或画像得分，并写入运行审计，不能靠缩小样本或平均值“对平”。
 
 ## 8. 两个时间点不能混用
 
@@ -271,7 +301,25 @@ Jeffreys 95% 下界
 是否可订 = 1
 ```
 
+这张表是一行“日期 + 门店 + SKU”，而算法结果是一行“门店群 + SKU”。因此开发不能把某一门店的状态直接当成整个门店群的状态。先形成算法 02 同一范围、周期、品类的 `SUCCESS` 候选门店集合：`FINAL_LEVEL` 按算法 02 的 `final_level = A/B/C/D` 取对应门店，`ALL_RATED` 取该品类下所有 A/B/C/D 的 `SUCCESS` 门店并集；`store_group_type` 是算法 03/04 本地派生字段，不是算法 02 的物理输入列。再与锁定快照的 `dim_store` 一一关联，只有 `is_open = 1` 的当前营业门店进入有效门店集合；`NOT_CALCULABLE` 不进入候选。候选门店缺失、重复、版本/周期冲突或 `is_open` 无法判断时，不能把异常门店静默删掉，必须写覆盖审计并把状态置 `NULL`。
+
+在这个集合完整、状态快照一致且没有冲突时，V1 暂按“范围内至少一个有效门店可订且可售，就把该 SKU 标为 ACTIVE”。如果所有有效门店都已覆盖且都不可订或不可售，才标为 `INACTIVE`。覆盖不足、没有有效状态行、快照日期不一致或主键冲突时，状态写 `NULL` 并进入运行审计，不进入正式锚点。这个“任一门店”规则仍需要业务确认；如果业务要求全部有效门店都可订可售，必须在开发前改成“全部门店”口径并更换规则版本。
+
 有效在售 SKU 日还需要有实际进货或实际收货条件。
+
+订购率必须使用真实订购数量计算：
+
+```text
+称重商品：用 order_weight_kg > 0 判断真实订购
+计件/枚数/可稳定换算的其他商品：用 order_qty > 0 判断真实订购
+ordered_store_cnt = 按商品计量类型选取真实订购字段后的去重门店数
+store_order_rate = ordered_store_cnt / 允许订购该 SKU 的有效门店数
+ordered_store_day_rate = 真实订购数量大于 0 的门店日数 / 允许订购的有效门店营业日数
+```
+
+`receipt_qty`、`receipt_weight_kg` 只能表示实际收货，不能冒充订购。若物理源没有该商品计量类型对应的真实订购字段，订购门店数和订购率写 `NULL`，状态写 `DATA_INSUFFICIENT`，仍可保留其他表现诊断。
+
+如果没有门店级可订清单，只有在开发交付了带来源、快照日期和范围版本的“全局可订范围”事实时，才可以把分母回退为门店群全部有效门店，并标记 `orderable_scope = GROUP_ALL_STORES` 和 `ORDERABLE_SCOPE_DEGRADED`。这个回退只解决分母范围，不能补造真实订购分子；当前 V1 门店级可订可售表缺失时不得自动回退，必须保留 `NULL + DATA_INSUFFICIENT` 并写运行审计。
 
 订购率不进入综合得分，它是独立解释维度。
 
@@ -316,7 +364,7 @@ sales_standard_qty = weight
 measurement_mapping_status = UNKNOWN
 ```
 
-销售额、会员渗透率、偏好、复购和毛利仍可计算。只有当 `weight` 缺失、`weight <= 0` 或计量类型无法识别时，依赖标准销售量的售罄率、销售深度和目标画像成本才需要标记异常。
+`weight > 0` 但单位无法识别时，销售额、会员数、偏好和复购仍可保留，依赖标准销售量的售罄率、销售深度、标准化价格和目标画像成本写 NULL/异常状态；`weight` 缺失或非正的交易不进入正式有效销售事实，不能用 0 补齐。
 
 ## 13. 目标画像相对偏好怎么算
 
@@ -337,7 +385,7 @@ measurement_mapping_status = UNKNOWN
 如果比较范围里只有一个消费者画像：
 
 ```text
-preference_reference_status = SINGLE_PROFILE
+preference_reference_status = NO_REFERENCE_PROFILE
 偏好维度不参与 CRITIC
 其他维度照常计算
 ```
@@ -380,6 +428,15 @@ preference_reference_status = SINGLE_PROFILE
 目标画像 19:30 前吸收贡献
 ```
 
+吸收率的分母必须是该 SKU 的实际收货标准量：
+
+```text
+target_profile_pre1930_absorption_rate
+= 目标画像 19:30 前销售标准量 / 该 SKU 实际收货标准量
+```
+
+门店群总销售标准量可以单独展示，但不能替换这个分母。
+
 其中 `19:30 前售罄率` 看全部有效 SKU 日，`非促销 19:30 前售罄率` 只看 19:30 前没有折扣代理的有效 SKU 日，两者不能混成一个指标。
 
 如果出现：
@@ -409,6 +466,8 @@ natural_sales_status = NO_NATURAL_SALES_WINDOW
 20:30-21:00 销售量 / 增量售罄率 / 实际折扣率
 ```
 
+正式字段使用 JSON 数组；每个半小时对象至少包含 `band_start`、`band_end`、`sales_standard_qty`、`incremental_sell_through_rate`、`cumulative_sell_through_rate_at_band_end` 和 `actual_discount_rate`。没有数据写 `[]`。
+
 它解释的是：
 
 ```text
@@ -427,7 +486,7 @@ natural_sales_status = NO_NATURAL_SALES_WINDOW
 
 商品成本应按同一商品的单位成本计算。
 
-所以当前文档里的 V1 计算方式，就是对业务公式的落地实现：业务定义“毛利额 = 销售额 - 成本金额”，我们用日门店 SKU 单位成本去计算目标画像成本金额。
+因此，V1 计算方式是对业务公式的落地实现：业务定义“毛利额 = 销售额 - 成本金额”，V1 使用日门店 SKU 单位成本计算目标画像成本金额。
 
 举例：
 
@@ -515,15 +574,42 @@ standard_product_mode = SKU_ONLY
 
 也就是第一期不新增独立换码或替代关系；有商品基础表 SPU 就按 SPU 汇总，没有 SPU 就按销售 SKU 计算，不自动把名称相似商品合并。
 
+标准商品层不是把 SKU 分数简单相加，而是重新计算：
+
+```text
+SKU 层保留原始交易、门店、会员和状态证据；
+有有效 spu_id 时，先聚合到标准商品层，并在该层重新去重小票/会员、汇总销售额、标准量、收货量和成本；
+CRITIC、综合分、Jenks/BIC 和正式锚点准入优先在标准商品层重算；
+SKU 行通过 standard_product_key 关联标准商品结论，继续保留 sku_id 供追溯；
+spu_id 缺失或冲突时使用 SKU_ONLY，不按名称相似合并。
+```
+
+标准商品的在售状态也要重新聚合，不能直接拿代表 SKU 顶上去：成员 SKU 使用同一在售快照和规则版本；先检查成员状态和有效门店覆盖是否完整，任一成员为 `NULL` 或覆盖不足时标准商品状态写 `NULL`；校验通过后，任一成员 `ACTIVE` 才是标准商品 `ACTIVE`，全部成员 `INACTIVE` 才是标准商品 `INACTIVE`。`NULL` 不能被改写成历史锚点。
+
+锚点汇总只保留一个 canonical 商品实体，不能把同一商品的 SKU 行和标准商品行相加：
+
+```text
+有有效 spu_id（SPU_MAPPED）：只用标准商品表现表的一行作为锚点实体；代表 SKU 和成员 SKU 只用于追溯。
+没有稳定 spu_id（SKU_ONLY）：只用 SKU 表的一行作为锚点实体，standard_product_key 等于 sku_id。
+active/historical/relative 等锚点 JSON 和正式/历史锚点数量都按 standard_product_key 去重，并保留 representative_sku_id、source_layer；`source_layer` 只允许 `PRODUCT`（标准商品层）或 `SKU`（SKU 层），SKU 级诊断证据放入 evidence_sku_ids，不重复计数。
+```
+
+标准商品成员覆盖/快照冲突统一写 `DATA_INSUFFICIENT`；成员主键冲突同时写 `DUPLICATE_KEY`。这类状态只能保留诊断，不能进入正式锚点 JSON 或数量。
+
 ## 19. 价格指标和算法 05 边界
 
 算法 04 可以输出当前 SKU 的价格描述：
 
 ```text
-实付均价
-标准化单价
-促销前后价格
+original_price：销售原价
+target_profile_avg_paid_price：目标画像平均实付价
+reference_profile_avg_paid_price：参考画像平均实付价
+standardized_paid_price：按标准单位换算的实付价
+before_after_promotion_price：促销前后价格对象；`price_source` 只允许 `PRICE_TABLE_ORIGINAL_DORIS_USUAL_AMT_PER_WEIGHT`（原价来自价格表，成交价来自有效 Doris 交易的 `usual_amt / weight`）
+actual_discount_rate：实际折扣率
 ```
+
+价格缺失时，促销前后价格对象整体写 `NULL` 并标记 `PRICE_SOURCE_MISSING`；不能把 `avg_sale_price` 偷换成原价，也不能把价格字段缺失补成 0。以上价格字段只做解释，不进入算法 04 综合得分。
 
 但价格带机会判断属于算法 05。
 
@@ -622,8 +708,10 @@ SKU 整体毛利为正
 
 ```text
 贡献周期内有真实销售且表现较好
-但当前不可订不可售
+且当前状态已确认是不可订或不可售
 ```
+
+如果当前状态缺失或冲突，不能把它当成历史锚点；只能保留为状态未知的诊断记录。
 
 历史锚点可以保留消费者和购物篮证据，但进入新品或复开发前，必须再看停售原因、订购表现和相似商品表现。
 
@@ -675,6 +763,8 @@ DATA_INCOMPLETE
 PRODUCT_MASTER_CONFLICT
 SELL_THROUGH_DATA_ERROR
 UPSTREAM_VERSION_ERROR
+UPSTREAM_RESULT_MISSING
+NOT_CALCULABLE
 UPSTREAM_RECONCILIATION_ERROR
 ```
 
@@ -692,6 +782,14 @@ store_stability_status
 time_stability_status
 ```
 
+上游闸门单独保存：
+
+```text
+upstream_gate_status = PASS / UPSTREAM_RESULT_MISSING / UPSTREAM_VERSION_ERROR
+```
+
+不能把上游缺失伪装成 `SUCCESS`，也不能把不存在的 SKU 明细补成 0 行。
+
 不要把这些状态硬拼成一个大标签，否则后续很难解释和维护。
 
 ## 27. 开发实际要怎么做
@@ -700,15 +798,15 @@ time_stability_status
 
 ```text
 1. 锁定算法 01、02、03 的正式版本。
-2. 按范围、品类、门店群和目标画像筛选有效小票。
-3. 先产出 SKU 维度 7 天 19 点前复购表。
-4. 聚合 SKU 基础销售、会员、小票、标准销售量。
-5. 关联可订可售、进货、毛利、商品属性。
-6. 计算偏好、复购、自然动销、毛利和统计证据。
-7. 做稳健标准化和两级 CRITIC 动态权重。
-8. 用 Jenks+BIC 找高表现组。
-9. 做正式锚点准入、当前/历史锚点和稳定性验证。
-10. 写入 SKU 表现、标准商品表现、锚点汇总和参数表。
+2. 校验上游正式表存在、状态可用、主键唯一和周期一致；失败只写 process_algo04_run_audit。
+3. 按 order_item_id/update_time 去重小票，拆分 valid_all_txn 与 valid_profiled_member_txn。
+4. 先产出 SKU 维度 7 天 19 点前复购表。
+5. 聚合 SKU 基础销售、会员、小票、标准销售量，并关联可订可售、进货、毛利、价格和商品属性。
+6. 先保留 SKU 证据；有有效 SPU 时在标准商品层重新去重、聚合和评分，SPU 缺失时使用 SKU_ONLY。
+7. 计算偏好、复购、自然动销、毛利、价格解释和统计证据。
+8. 做稳健标准化、两级 CRITIC、Jenks+BIC、正式锚点准入和稳定性验证。
+9. 按写入边界写入 SKU 表现、标准商品表现、锚点汇总和参数表；无合法 SKU 不伪造明细。
+10. 前端只读取离线结果；运行审计保留本次版本、字段缺失和阻断原因。
 ```
 
 开发可以有临时表和过程表，但正式结果按第 2 节的输出表交付。
@@ -723,18 +821,30 @@ time_stability_status
 3. 小样本高复购有没有被 Jeffreys 校正。
 4. 19:30 前自然动销是否成立。
 5. 毛利为正的判断是否符合商品成本口径。
-6. 当前不可订不可售的 SKU 是否被放到历史锚点，而不是当前锚点。
+6. 当前不可订或不可售的 canonical 商品实体是否被放到历史锚点，而不是当前锚点。
 7. 时间敏感或门店集中的锚点解释是否合理。
+8. 标准商品层是否重新去重会员/小票并重算评分；锚点汇总是否只按 canonical 商品实体输出，未把 SKU 与 SPU 双计数。
+9. 目标画像吸收率是否使用“目标画像 19:30 前销售标准量 / 实际收货标准量”。
+10. 订购率是否按商品计量类型使用真实 `order_qty` 或 `order_weight_kg`；适用字段缺失时是否写 `DATA_INSUFFICIENT`。
+11. 价格字段、版本血缘、状态枚举和 JSON 结构是否能按字段合同复算。
 ```
 
-## 29. 现在还需要确认什么
+## 29. 开发交付验收项
 
-这里只保留真正会影响落地的事项。
+以下是开发交付时逐项验收的物理接口和实现；业务公式、粒度和评分规则已冻结，不在此处重复列为确认项：
 
-| 确认项 | 需要谁确认 | 为什么重要 |
+| 验收项 | 通过标准 | 不通过时 |
 |---|---|---|
-| `weight` 字段抽样验收 | 数据开发 / 需求评审 | 验收 `sales_standard_qty = weight` 与商品基础表单位是否匹配 |
-| `weight` 异常处理 | 数据开发 / 需求评审 | 默认按单位成本乘数量；个别 `weight` 缺失或异常时已接受销售额占比分摊兜底，并必须打标 |
+| `dim_customer_profile` | 按冻结字段和唯一性稳定产出，版本/周期/过滤规则可追溯 | 阻断画像会员计算并写运行审计 |
+| `mart_store_category_level` | 正式提供 `SUCCESS` / `NOT_CALCULABLE` 行，按合同主键唯一 | 无 `SUCCESS` 门店不写正式锚点 |
+| `mart_store_group_consumer_contribution` | 版本、周期、门店群、画像粒度唯一，状态可消费 | 不自行重算主力画像，写 `UPSTREAM_RESULT_MISSING` |
+| `weight` 与计量单位 | 抽样证明 `sales_standard_qty = weight` 可由 `dim_sku.sale_unit/specification` 解释 | 数量类字段写 `NULL`/`UNKNOWN`，不跨单位比较 |
+| 小票去重和会员过滤 | `order_item_id/update_time` 去重，`is_customer=1` 和 `member_filter_rule_version` 可追溯 | 阻断受影响正式结果 |
+| 可订可售字段 | `is_saleable=1 AND is_orderable=1` 才为门店 SKU ACTIVE；有效门店集合按算法 02 `SUCCESS` ∩ `dim_store.is_open=1` 形成，状态表覆盖完整且主键唯一；范围级聚合规则和 `listing_scope_rule_version` 必须锁定 | 不用销量或收货代理；聚合规则未确认或覆盖不完整时不发布正式锚点 |
+| 真实订购字段 | 按商品计量类型适用的 `order_qty` 或 `order_weight_kg` 可用并能计算订购覆盖 | 订购率写 `NULL`，状态 `DATA_INSUFFICIENT` |
+| 价格/成本字段 | 原价、目标/参考实付价、标准化单价、促销前后价、实际折扣率和含税成本来源可追溯 | 缺失写 `NULL` + 质量标记，不偷换字段 |
+| 标准商品层 | 有效 SPU 先重算标准商品层去重和评分，SKU 层保留追溯 | 冲突时 `SKU_ONLY` 或 `PRODUCT_MASTER_CONFLICT` |
+| JSON、状态和版本血缘 | JSON 键名/类型、`quality_metrics_json.reconciliation_status`（`PASS`/`FAILED`/`NOT_CALCULABLE`）、状态枚举、`listing_scope_rule_version` 和其他版本字段与开发卡完全一致；`data_quality_flags` 无问题写 `[]` | 不允许发布字段含义未闭环的结果 |
 
 已确认不再作为阻断项：
 
@@ -742,6 +852,7 @@ time_stability_status
 1. 毛利损耗表可以按数量字段合同交付。
 2. 商品属性缺失不阻断算法 04，先标记 ATTRIBUTE_INCOMPLETE。
 3. V1 接受 discount_amt > 0 代理促销、SKU_ONLY、前置复购表 mart_sku_repurchase_7d_pre19。
+4. 数据合同已经明确表粒度和主键；本节只验收开发是否按合同稳定产出，不再重复向业务确认。
 ```
 
 ## 30. 不要做什么
