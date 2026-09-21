@@ -37,6 +37,7 @@ scope_version = 'SCOPE_' + SHA256(canonical_scope_rows)[0:16]
 | 中文字段名 | 英文字段名 | 类型建议 | 是否必须 | 字段来源 | 中文注释 |
 |---|---|---|---|---|---|
 | 范围版本 | `scope_version` | varchar(64) | 必须 | 规范化映射行 SHA-256 | 本批次不可变的范围版本 |
+| 范围版本生成依据 | `scope_version_source` | varchar(32) | 必须 | 快照发布流程 | 固定为 `MAPPING_CANONICAL_SHA256`，用于证明范围版本由规范化映射行生成 |
 | 范围类型 | `scope_type` | varchar(32) | 必须 | 按 `scope_version + scope_id` 的城市数判定 | 一个城市为 `CITY`，两个及以上城市为 `CITY_CLUSTER` |
 | 范围编码 | `scope_id` | varchar(64) | 必须 | `dim_city_algorithm_region.algorithm_region_code` | 正式算法区域编码，不取城市名 |
 | 范围名称 | `scope_name` | varchar(128) | 必须 | `dim_city_algorithm_region.algorithm_region_name` | 正式算法区域名称 |
@@ -53,6 +54,7 @@ scope_version = 'SCOPE_' + SHA256(canonical_scope_rows)[0:16]
 |---|---|---|---|---|
 | `scope_type` | 范围类型 | `CITY` | 单城市范围 | 同一 `scope_version + scope_id` 只包含一个不同城市 |
 | `scope_type` | 范围类型 | `CITY_CLUSTER` | 城市群范围 | 同一 `scope_version + scope_id` 包含两个或以上不同城市 |
+| `scope_version_source` | 范围版本生成依据 | `MAPPING_CANONICAL_SHA256` | 规范化映射行哈希 | 不允许手工填写或改成运行时间 |
 | `snapshot_status` | 快照状态 | `PUBLISHED` | 可供算法读取 | 语义字段完整、唯一性通过且原子发布成功 |
 | `snapshot_status` | 快照状态 | `RETIRED` | 已退役但保留历史 | 新范围版本替代，历史结果仍可重跑读取 |
 
