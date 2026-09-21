@@ -55,6 +55,7 @@
 | [命名合规词规则表](dim_naming_compliance_term_rule_命名合规词规则表.md) | `dim_naming_compliance_term_rule` | 必做 | 生鲜与食品商品命名合规词库 |
 | [分类命名合规规则表](dim_category_naming_compliance_rule_分类命名合规规则表.md) | `dim_category_naming_compliance_rule` | 必做 | 生鲜与食品商品命名合规词库 |
 | [法规依据表](dim_regulation_reference_法规依据表.md) | `dim_regulation_reference` | 必做 | 生鲜与食品商品命名合规词库 |
+| [会员筛选规则版本表](dim_member_filter_rule_version_会员筛选规则版本表.md) | `dim_member_filter_rule_version` | 必做（算法 01、02 共用） | 代码/SQL 规则注册 |
 
 ## 3. V1 复核辅助表
 
