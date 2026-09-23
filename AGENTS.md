@@ -125,6 +125,82 @@ archive/business_confirmations/pending_items/
 archive/business_confirmations/delivery_checks/
 ```
 
+## 统一算法批次版本硬规则
+
+算法 01～算法 10 及以后新增算法统一使用一个业务批次字段：
+
+```text
+algorithm_batch_version（统一算法批次版本）
+```
+
+版本格式固定为：
+
+```text
+algorithm_batch_version = 'BATCH_' + DATE_FORMAT(calculation_end_date, 'yyyyMM')
+
+示例：
+calculation_end_date = 2026-08-31
+algorithm_batch_version = BATCH_202608
+```
+
+`calculation_end_date` 必须是本批次统一数据截止月份的最后一天。各算法可以使用不同长度的回看窗口，但同一批次的结束月份必须一致。
+
+统一版本规则：
+
+```text
+1. 一批数据只能对应一个 algorithm_batch_version。
+2. 算法 01～算法 10、城市算法区域映射快照及本批次正式参数共用同一个 algorithm_batch_version。
+3. 同一完整月数据窗口重跑时，沿用原 algorithm_batch_version，不升号、不增加后缀。
+4. 只有进入下一个完整自然月数据窗口时，才生成新的 algorithm_batch_version。
+5. 每次实际运行使用 run_id、calculated_at、updated_at、rerun_reason 等运行审计字段区分，不得据此生成新的业务版本。
+6. 规则、参数或区域映射调整默认从下一完整月批次生效；重跑历史批次必须读取该批次原先锁定的规则、参数和区域映射快照。
+```
+
+所有算法的正式结果表都必须包含 `algorithm_batch_version`。以下表只要在算法卡中定义为正式落库或下游可读取，也必须包含该字段：
+
+```text
+正式结果表
+正式参数表
+解释表
+汇总表
+候选结果表
+范围/区域映射快照表
+下游正式读取的审计或明细表
+```
+
+`algorithm_batch_version` 必须进入正式表主键或唯一键，并作为算法 01～算法 10 上下游关联、整批发布、整批替换、历史重跑和结果追溯的统一批次键。
+
+算法卡不得再定义或使用独立的算法结果业务版本号，包括但不限于：
+
+```text
+profile_model_version
+model_version
+scope_version
+rule_version
+parameter_version
+price_version
+算法自有的 *_version
+V1_202608 / V2_202609 这类带批次序号的版本值
+batch_seq
+```
+
+上述旧字段如果只是上游规则资产、外部模型文件或源系统记录本身的版本信息，可以作为来源追溯属性读取，但不得：
+
+```text
+1. 作为本项目算法正式结果的业务版本。
+2. 替代 algorithm_batch_version。
+3. 与 algorithm_batch_version 一起组成多套并行业务版本体系。
+4. 作为算法 01～算法 10 下游关联正式结果的主版本键。
+```
+
+当前正式格式只允许：
+
+```text
+BATCH_YYYYMM
+```
+
+不得继续生成 `V{batch_seq}_{YYYYMM}`、`V_YYYYMM`、`profile_YYYYMM` 或算法独立前缀版本。当前已存在的算法卡在后续逐张修复时，必须删除独立结果版本字段，将所有正式输出表、主键、公式、样例、发布规则、重跑规则和上下游关联统一改为 `algorithm_batch_version = BATCH_YYYYMM`。
+
 ## 业务解读版要求
 
 业务解读版必须按用户认可的 01、02、04 文档风格写：
@@ -284,6 +360,9 @@ archive/business_confirmations/delivery_checks/
 6. 输出字段中出现的所有状态字段，必须在同一算法卡的状态字段取值约束中逐值解释。
 7. 正文公式、输出字段、状态枚举里同一个英文取值必须完全一致。
 8. 若业务原文提到未来增强字段，但 V1 不接入，不要把它列成 V1 输入字段或正式输出字段；只在必要的边界说明中写“V1 不作为输入/不阻断”。
+9. 每张正式结果表、正式参数表、解释表、汇总表和下游正式读取表都必须包含 `algorithm_batch_version`，并进入主键或唯一键。
+10. 算法卡不得保留独立的 `profile_model_version / model_version / scope_version / rule_version / parameter_version / price_version / batch_seq` 作为算法结果版本。
+11. 所有版本公式、示例、发布和重跑规则必须统一使用 `BATCH_YYYYMM`；同窗口重跑沿用原值，只用 `run_id` 等字段区分实际运行。
 ```
 
 每次修完后必须跑一次文本扫描，至少覆盖：
@@ -300,6 +379,16 @@ archive/business_confirmations/delivery_checks/
 状态枚举表
 采购手动输入候选
 可比商品组字典
+profile_model_version
+model_version
+scope_version
+rule_version
+parameter_version
+price_version
+batch_seq
+V1_YYYYMM / V2_YYYYMM
+V_YYYYMM
+profile_YYYYMM
 ```
 
 扫描命中不一定都是错误，但必须逐条判断，不能忽略。
@@ -365,6 +454,9 @@ data_agent.dws_member_order_item_detail_df_all_new
 14. 回答用户问题和写正式文档必须分开。
     业务解读版和开发版算法卡里不能出现“你刚刚问”“回答你的问题”“之前没讲清楚”“这个放这里不合适”等对话口吻。
     对用户的解释只在对话里说；正式文档只保留稳定规则、流程、字段、状态、验收和待确认项。
+
+15. 所有算法正式结果统一使用 `algorithm_batch_version = BATCH_YYYYMM`。
+    不允许算法卡保留独立模型版本、范围版本、规则版本、参数版本或批次序号作为结果业务版本。上游资产自身的版本只可作为追溯属性，不得形成第二套算法结果版本体系。
 ```
 
 典型前置规则资产包括但不限于：
