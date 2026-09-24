@@ -1,6 +1,6 @@
 # 算法04_目标画像 SKU 表现_业务解读版
 
-更新时间：2026-09-20
+更新时间：2026-09-24
 
 业务原始依据：`算法卡_04_目标画像SKU表现_业务提供最新原始版_20260731.md`
 
@@ -839,7 +839,7 @@ upstream_gate_status = PASS / UPSTREAM_RESULT_MISSING / UPSTREAM_VERSION_ERROR
 | `mart_store_category_level` | 正式提供 `SUCCESS` / `NOT_CALCULABLE` 行，按合同主键唯一 | 无 `SUCCESS` 门店不写正式锚点 |
 | `mart_store_group_consumer_contribution` | 版本、周期、门店群、画像粒度唯一，状态可消费 | 不自行重算主力画像，写 `UPSTREAM_RESULT_MISSING` |
 | `weight` 与计量单位 | 抽样证明 `sales_standard_qty = weight` 可由 `dim_sku.sale_unit/specification` 解释 | 数量类字段写 `NULL`/`UNKNOWN`，不跨单位比较 |
-| 小票去重和会员过滤 | `order_item_id/update_time` 去重，`is_customer=1` 和 `member_filter_rule_version` 可追溯 | 阻断受影响正式结果 |
+| 小票去重和会员过滤 | 按 `order_item_id（订单商品明细ID）/update_time（更新时间）` 去重，`is_customer（是否会员）=1`，并调用算法 01～04 共用的固定会员过滤公共实现 | 阻断受影响正式结果 |
 | 可订可售字段 | `is_saleable=1 AND is_orderable=1` 才为门店 SKU ACTIVE；有效门店集合按算法 02 `SUCCESS` ∩ `dim_store.is_open=1` 形成，状态表覆盖完整且主键唯一；范围级聚合规则和 `listing_scope_rule_version` 必须锁定 | 不用销量或收货代理；聚合规则未确认或覆盖不完整时不发布正式锚点 |
 | 真实订购字段 | 按商品计量类型适用的 `order_qty` 或 `order_weight_kg` 可用并能计算订购覆盖 | 订购率写 `NULL`，状态 `DATA_INSUFFICIENT` |
 | 价格/成本字段 | 原价、目标/参考实付价、标准化单价、促销前后价、实际折扣率和含税成本来源可追溯 | 缺失写 `NULL` + 质量标记，不偷换字段 |

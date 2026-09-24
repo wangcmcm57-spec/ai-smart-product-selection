@@ -1,6 +1,6 @@
 # 算法卡_04_目标画像 SKU 表现算法
 
-更新时间：2026-09-20
+更新时间：2026-09-24
 
 业务原始依据：`算法卡_04_目标画像SKU表现_业务提供最新原始版_20260731.md`
 
@@ -79,7 +79,7 @@
 
 | 上游结果 | 可消费状态 | 不可消费状态/处理 | 版本和周期闸门 |
 |---|---|---|---|
-| `dim_customer_profile` | 锁定版本内 `customer_id + final_profile` 唯一且非空 | 缺失、重复或画像周期与本算法周期不一致：阻断本次运行 | 校验 `profile_model_version`、`member_filter_rule_version`、`calculation_start_date/end_date` |
+| `dim_customer_profile` | 锁定版本内 `customer_id + final_profile` 唯一且非空 | 缺失、重复或画像周期与本算法周期不一致：阻断本次运行 | 校验 `profile_model_version`、`calculation_start_date/end_date`；会员交易直接继承算法 01 固定过滤条件 |
 | `mart_store_category_level` | 只使用 `result_status = SUCCESS` 的门店品类行 | `NOT_CALCULABLE` 门店不得进入门店群；没有任何 `SUCCESS` 门店时阻断该组 | 校验 `category_level_model_version`、`level_start_date/end_date`、`scope_version` |
 | `mart_store_group_consumer_contribution` | 使用 `SUCCESS`、`SINGLE_PROFILE`、`NO_OBVIOUS_MAIN` 的有效画像明细 | `NO_RATED_STORE`、`NO_MEMBER_CONSUMPTION`、版本/关联阻断状态不得当作目标画像输入 | 校验 `consumer_contribution_model_version`、贡献周期、范围和 `final_profile` 唯一 |
 
@@ -250,7 +250,6 @@ performance_end_date   = 2026-06-30
 
 ```text
 profile_model_version
-member_filter_rule_version
 category_level_model_version
 category_level_start_date
 category_level_end_date
@@ -496,7 +495,7 @@ customer_id 非空且不以“6”开头
 customer_id 能关联本次锁定的 profile_model_version，且 final_profile 非空
 ```
 
-`refund_type`、`business_source` 等字段只在已确认枚举后增加精确过滤；未确认的枚举不能被开发自行扩大为删除条件，必须写入运行审计和规则版本。
+`refund_type（退款类型）`、`business_source（业务来源）`等字段只在已确认枚举后增加精确过滤；未确认的枚举不能被开发自行扩大为删除条件。过滤条件调整必须记录在本批次运行审计和代码发布记录中，并从下一个 `algorithm_batch_version（统一算法批次版本）`生效。
 
 过滤方式字段：
 
@@ -505,7 +504,7 @@ valid_transaction_filter_method = SOURCE_TABLE_CLEANED
 或 RULE_FILTERED
 ```
 
-`member_filter_rule_version` 必须与算法 01/03 使用的规则版本一致，并写入所有正式结果和运行审计。会员画像、偏好、复购和目标画像毛利只能使用 `valid_profiled_member_txn`；全量 SKU 销售、19:30 前自然动销和折扣阶梯不得误用该集合。
+算法 04 的会员画像、偏好、复购和目标画像毛利必须直接继承算法 01 固定的有效会员过滤条件，并调用与算法 01、02、03 相同的公共实现；不建立或传递独立会员过滤版本字段。上述会员指标只能使用 `valid_profiled_member_txn（已贴标有效会员交易集）`；全量 SKU 销售、19:30 前自然动销和折扣阶梯不得误用该集合。
 
 ### 6.2 商品映射
 
@@ -1898,7 +1897,6 @@ repurchase_model_version
 | 门店品类等级 | `final_level` | varchar(32) | 必须 | 算法 02 `mart_store_category_level` | A/B/C/D 或 ALL_RATED |
 | 消费者画像 | `final_profile` | varchar(128) | 必须 | 算法 01 `dim_customer_profile` | 算法 01 最终画像 |
 | 会员画像版本 | `profile_model_version` | varchar(64) | 必须 | 算法 01 `dim_customer_profile` | 本次锁定会员画像版本 |
-| 会员过滤规则版本 | `member_filter_rule_version` | varchar(64) | 必须 | 算法 01/03 正式结果 | 本次运行继承的有效会员过滤规则版本 |
 | 门店品类等级版本 | `category_level_model_version` | varchar(64) | 必须 | 算法 02 `mart_store_category_level` | 本次锁定门店品类等级版本 |
 | 门店品类等级开始日期 | `category_level_start_date` | date | 必须 | 算法 02 `mart_store_category_level` | 算法 02 结果周期开始日期 |
 | 门店品类等级结束日期 | `category_level_end_date` | date | 必须 | 算法 02 `mart_store_category_level` | 算法 02 结果周期结束日期 |
@@ -1971,7 +1969,6 @@ sku_performance_model_version
 | 商品属性版本 | `sku_attribute_version` | varchar(64) | 必须 | `dim_sku` 数据快照 / 本算法第 17 章属性加工规则 | V1 为商品基础表和名称解析口径版本 |
 | 在售快照日期 | `listing_snapshot_date` | date | 必须 | `mart_store_sku_daily_sale_order_status.business_date` | 当前可订可售快照日期 |
 | 在售范围聚合规则版本 | `listing_scope_rule_version` | varchar(64) | 必须 | 调度参数 + 本算法第 10.1.1 节有效门店集合 | 例如 `ANY_ACTIVE_STORE_V1`；用于追溯任一/全部有效门店规则 |
-| 会员过滤规则版本 | `member_filter_rule_version` | varchar(64) | 必须 | 算法 01/03 正式结果 | 本次运行继承的有效会员过滤规则版本 |
 | 门店品类等级开始日期 | `category_level_start_date` | date | 必须 | 算法 02 `mart_store_category_level` | 算法 02 结果周期开始日期 |
 | 门店品类等级结束日期 | `category_level_end_date` | date | 必须 | 算法 02 `mart_store_category_level` | 算法 02 结果周期结束日期 |
 | 消费者贡献开始日期 | `consumer_contribution_start_date` | date | 必须 | `mart_store_group_consumer_contribution.contribution_start_date`（本卡别名） | 算法 03 结果周期开始日期 |
@@ -2180,7 +2177,6 @@ sku_performance_model_version
 | 门店群类型 | `store_group_type` | varchar(32) | 必须 | `mart_target_profile_sku_performance.store_group_type` + 本算法第 29.3 节标准商品层聚合 | `FINAL_LEVEL` / `ALL_RATED` |
 | 门店品类等级 | `final_level` | varchar(32) | 必须 | `mart_target_profile_sku_performance.final_level` + 本算法第 29.3 节标准商品层聚合 | 当前门店群等级 |
 | 消费者画像 | `final_profile` | varchar(128) | 必须 | `mart_target_profile_sku_performance.final_profile` + 本算法第 29.3 节标准商品层聚合 | 目标消费者画像 |
-| 会员过滤规则版本 | `member_filter_rule_version` | varchar(64) | 必须 | `mart_target_profile_sku_performance.member_filter_rule_version` + 本算法第 29.3 节标准商品层聚合 | 有效会员过滤规则版本 |
 | 门店品类等级开始日期 | `category_level_start_date` | date | 必须 | `mart_target_profile_sku_performance.category_level_start_date` + 本算法第 29.3 节标准商品层聚合 | 算法 02 结果周期开始日期 |
 | 门店品类等级结束日期 | `category_level_end_date` | date | 必须 | `mart_target_profile_sku_performance.category_level_end_date` + 本算法第 29.3 节标准商品层聚合 | 算法 02 结果周期结束日期 |
 | 消费者贡献开始日期 | `consumer_contribution_start_date` | date | 必须 | `mart_target_profile_sku_performance.consumer_contribution_start_date` + 本算法第 29.3 节标准商品层聚合 | 算法 03 结果周期开始日期 |
@@ -2290,7 +2286,6 @@ sku_performance_model_version
 | 门店群类型 | `store_group_type` | varchar(32) | 必须 | `mart_store_category_level.final_level` + 本算法第 3.1 节范围分组 | `FINAL_LEVEL` / `ALL_RATED` |
 | 门店品类等级 | `final_level` | varchar(32) | 必须 | `mart_store_category_level.final_level` | 当前门店群等级 |
 | 消费者画像 | `final_profile` | varchar(128) | 必须 | `dim_customer_profile.final_profile` / `mart_store_group_consumer_contribution.final_profile` | 当前消费者画像 |
-| 会员过滤规则版本 | `member_filter_rule_version` | varchar(64) | 必须 | `dim_customer_profile` / `mart_store_group_consumer_contribution` | 有效会员过滤规则版本 |
 | 门店品类等级开始日期 | `category_level_start_date` | date | 必须 | `mart_store_category_level` | 算法 02 结果周期开始日期 |
 | 门店品类等级结束日期 | `category_level_end_date` | date | 必须 | `mart_store_category_level` | 算法 02 结果周期结束日期 |
 | 消费者贡献开始日期 | `consumer_contribution_start_date` | date | 必须 | `mart_store_group_consumer_contribution.contribution_start_date`（本卡别名） | 算法 03 结果周期开始日期 |
@@ -2331,7 +2326,6 @@ sku_performance_model_version
 | SKU 表现模型版本 | `sku_performance_model_version` | varchar(64) | 必须 | 算法 04 参数 | 算法 04 本次计算版本 |
 | 参数作用范围键 | `parameter_scope_key` | varchar(256) | 必须 | 本算法第 29.5 节参数作用范围生成 | 范围、品类、门店群、画像等组成的参数作用范围 |
 | 会员画像版本 | `profile_model_version` | varchar(64) | 必须 | 算法 01 `dim_customer_profile` | 参数对应的会员画像版本 |
-| 会员过滤规则版本 | `member_filter_rule_version` | varchar(64) | 必须 | 算法 01/03 正式结果 | 参数对应的会员过滤规则版本 |
 | 门店品类等级版本 | `category_level_model_version` | varchar(64) | 必须 | 算法 02 `mart_store_category_level` | 参数对应的门店等级版本 |
 | 门店品类等级开始日期 | `category_level_start_date` | date | 必须 | 算法 02 正式结果 | 参数对应的算法 02 周期开始 |
 | 门店品类等级结束日期 | `category_level_end_date` | date | 必须 | 算法 02 正式结果 | 参数对应的算法 02 周期结束 |

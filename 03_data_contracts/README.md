@@ -86,7 +86,6 @@
 | 表合同 | 目标表建议名 | 是否 V1 必做 | 说明 |
 | --- | --- | --- | --- |
 | [规则配置表总说明](rule_tables/README.md) |  | 必读 | 说明 Excel 到规则表的沉淀方式、版本规则和哪些内容不进入生产算法 |
-| [会员筛选规则版本表](rule_tables/dim_member_filter_rule_version_会员筛选规则版本表.md) | `dim_member_filter_rule_version` | 算法 01/02 共用 | 注册不可变的会员过滤规则实现版本 |
 | [业务后续标准 Excel 提供清单](rule_tables/业务后续标准Excel提供清单.md) |  | 必读 | 说明后续业务需要按哪些标准 sheet 提供规则数据 |
 | [公司毛利目标配置表](rule_tables/dim_company_margin_target_config_公司毛利目标配置表.md) | `dim_company_margin_target_config` | 必做 | 算法 05 使用的公司毛利底线、目标毛利配置 |
 | [价格点规则配置表](rule_tables/dim_price_point_rule_config_价格点规则配置表.md) | `dim_price_point_rule_config` | 必做 | 算法 05 使用的价格尾数、1 元价格点和价格带约束 |
