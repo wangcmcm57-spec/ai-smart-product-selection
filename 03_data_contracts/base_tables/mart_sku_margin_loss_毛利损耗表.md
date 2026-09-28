@@ -56,9 +56,9 @@
 | 促销折扣率 | `promotion_discount_rate` | decimal(18,8) | 建议 | `data_db.dwd_date_shop_sku.promotion_discount_rate` | 促销折扣率，0 到 1 小数 |
 | 会员折扣额 | `member_discount_amt` | decimal(18,6) | 条件必须 | 开发补充门店+SKU+日粒度字段 | 会员权益影响分析使用 |
 | 会员折扣率 | `member_discount_rate` | decimal(18,8) | 条件必须 | 开发补充门店+SKU+日粒度字段 | 会员折扣率，0 到 1 小数 |
-| 时段折扣额 | `time_period_discount_amt` | decimal(18,6) | 建议 | `data_db.dwd_date_shop_sku.hour_discount_amt` | 晚间折扣依赖分析使用 |
+| 时段折扣额 | `time_period_discount_amt` | decimal(18,6) | 条件必须 | `data_db.dwd_date_shop_sku.hour_discount_amt` | 算法 02 促销健康适用时必须；是总折扣额中满足时段促销的部分，缺失时促销维度降级 |
 | 时段折扣率 | `time_period_discount_rate` | decimal(18,8) | 建议 | `data_db.dwd_date_shop_sku.hour_discount_rate` | 时段折扣率，0 到 1 小数 |
-| 门店损耗金额 | `loss_amt` | decimal(18,6) | 建议 | `data_db.dwd_date_shop_sku.lost_amt` | 损耗风险分析使用 |
+| 门店损耗金额 | `loss_amt` | decimal(18,6) | 条件必须 | `data_db.dwd_date_shop_sku.lost_amt` | 损耗健康和风险线适用时必须；成本口径，缺失时损耗维度降级 |
 | 损耗率 | `loss_rate` | decimal(18,8) | 建议 | `data_db.dwd_date_shop_sku.lost_rate` | 损耗率，0 到 1 小数 |
 | 平均售价 | `avg_sale_price` | decimal(18,6) | 建议 | `sales_amt / sales_qty` 或源表成交均价 | 价格带分析使用 |
 | 19 点前平均售价 | `pre19_avg_sale_price` | decimal(18,6) | 建议 | `pre19_sales_amt / pre19_sales_qty` 或源表时段均价 | 19 点前价格接受度 |

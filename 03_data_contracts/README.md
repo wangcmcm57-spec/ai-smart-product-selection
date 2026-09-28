@@ -46,7 +46,7 @@
 | [毛利损耗表](base_tables/mart_sku_margin_loss_毛利损耗表.md) | `mart_sku_margin_loss` | 必做 | 提供门店商品销售、客数、毛利、折扣、损耗等经营指标 |
 | [门店商品日价格表](base_tables/mart_store_sku_daily_price_门店商品日价格表.md) | `mart_store_sku_daily_price` | 必做 | 提供采购价、出库价、到店价、销售原价、成交均价、19点前后价格等 |
 | [城市算法区域映射表](base_tables/dim_city_algorithm_region_城市算法区域映射表.md) | `dim_city_algorithm_region` | 必做 | 提供城市到算法区域的映射，用于会员画像和区域参数计算 |
-| [算法范围快照表](base_tables/dim_algorithm_scope_snapshot_算法范围快照表.md) | `dim_algorithm_scope_snapshot` | 算法 01/02 共用 | 保存正式运行锁定的 `scope_version`，同版本重跑复用原快照 |
+| [统一算法批次城市区域映射快照表](base_tables/dim_algorithm_batch_city_region_snapshot_统一算法批次城市区域映射快照表.md) | `dim_algorithm_batch_city_region_snapshot` | 算法 01～10 共用 | 按 `algorithm_batch_version（统一算法批次版本）`保存城市区域事实，同批次重跑复用原快照 |
 | [门店商品每日可订可售表](base_tables/mart_store_sku_daily_sale_order_status_门店商品每日可订可售表.md) | `mart_store_sku_daily_sale_order_status` | 必做 | 判断商品在门店是否可售、是否可订，避免算法误判“没销量”的原因 |
 | [商品状态表](base_tables/dim_product_status_商品状态表.md) | `dim_product_status` | 必做 | 从 SAP POP 平台按区域、商品名称、商品编码、商品状态提供全年品、试卖品、季节品、淘汰品和备选品；其中 `S` 行额外提供计划上架开始日期和结束日期 |
 

@@ -27,7 +27,7 @@
 | [毛利损耗表](mart_sku_margin_loss_毛利损耗表.md) | `mart_sku_margin_loss` | 数据开发 | 门店编码 + 交易商品编码 |
 | [门店商品日价格表](mart_store_sku_daily_price_门店商品日价格表.md) | `mart_store_sku_daily_price` | 数据开发 | 门店编码 + 销售商品编码 |
 | [城市算法区域映射表](dim_city_algorithm_region_城市算法区域映射表.md) | `dim_city_algorithm_region` | 业务确认 + 数据开发维护 | 城市 |
-| [算法范围快照表](dim_algorithm_scope_snapshot_算法范围快照表.md) | `dim_algorithm_scope_snapshot` | 算法调度系统自动生成 | `scope_version + city` |
+| [统一算法批次城市区域映射快照表](dim_algorithm_batch_city_region_snapshot_统一算法批次城市区域映射快照表.md) | `dim_algorithm_batch_city_region_snapshot` | 全链路调度系统自动生成 | `algorithm_batch_version + city` |
 | [门店商品每日可订可售表](mart_store_sku_daily_sale_order_status_门店商品每日可订可售表.md) | `mart_store_sku_daily_sale_order_status` | 数据开发 | 日期 + 门店编码 + 销售商品编码 |
 | [商品状态表](dim_product_status_商品状态表.md) | `dim_product_status` | 数据开发，来源 SAP POP 平台 | 区域 + 交易商品编码 |
 
