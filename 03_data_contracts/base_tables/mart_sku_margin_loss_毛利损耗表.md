@@ -30,6 +30,7 @@
 | 结算单位 | `settlement_unit` | varchar(32) | 必须 | `dim_sku.sale_unit` 或经营指标来源 | 判断数量字段是计件口径还是重量口径 |
 | 销售额 | `sales_amt` | decimal(18,6) | 必须 | `data_db.dwd_date_shop_sku.sale_amt` | 门店品类等级核心指标 |
 | 销售数量 | `sales_qty` | decimal(18,6) | 必须 | `data_db.dwd_date_shop_sku.sale_qty` | 计件商品销售数量 |
+| 销售成本 | `sale_cost_amt` | decimal(18,6) | 必须 | 毛利损耗表上游加工链路 | 门店用于销售商品的进货成本；有库存时，进货成本会被平均；已确认 `sale_cost_amt（销售成本金额） = receipt_amt（门店进货金额） - loss_amt（门店损耗金额）`；按营业日期 + 门店 + 销售商品唯一粒度交付 |
 | 销售重量 | `sales_weight_kg` | decimal(18,6) | 条件必须 | 开发补充门店+SKU+日粒度字段 | 称重商品销售重量，建议单位 kg |
 | 原价销售额 | `original_sales_amt` | decimal(18,6) | 条件必须 | 开发补充门店+SKU+日粒度字段 | 判断自然动销和折扣依赖 |
 | 19 点前销售额 | `pre19_sales_amt` | decimal(18,6) | 必须 | `data_db.dwd_date_shop_sku.bf19_sale_amt` | 19 点前时段销售额 |
@@ -92,4 +93,5 @@
 3. 称重商品必须优先使用重量字段；重量字段缺失时，不得用件数直接替代重量。
 4. 计件商品必须优先使用数量字段；数量字段缺失时，不得用重量直接替代件数。
 5. 当前 Doris 只覆盖当日动销 SKU 时，如算法需要覆盖零销售但可售/可订 SKU，必须结合 `mart_store_sku_daily_sale_order_status` 补齐。
+6. `sale_cost_amt（销售成本金额）`必须按本表主键唯一交付，不能把门店日总销售成本重复关联到多个商品。上游交付和对账必须满足 `sale_cost_amt = receipt_amt - loss_amt`；因此 `sale_cost_amt`已减去 `loss_amt（门店损耗金额）`，算法 02 可按“销售成本金额 + 损耗金额”复算损耗成本率分母。算法 02 只读取上游已交付字段，不在算法内重新分摊或反推 `sale_cost_amt`。
 ```

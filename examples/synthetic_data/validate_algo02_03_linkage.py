@@ -21,6 +21,10 @@ CITY_SNAPSHOT = (
     "03_data_contracts/base_tables/"
     "dim_algorithm_batch_city_region_snapshot_统一算法批次城市区域映射快照表.md"
 )
+MARGIN_LOSS_CONTRACT = (
+    "03_data_contracts/base_tables/"
+    "mart_sku_margin_loss_毛利损耗表.md"
+)
 D = Decimal
 
 
@@ -148,7 +152,7 @@ def bootstrap_fields(status, completed):
     raise ValueError("fixture supports boundary states only")
 
 
-def deterministic_draw(members, count, seed=20260723):
+def deterministic_draw(members, count, seed):
     rng = random.Random(seed)
     ordered = sorted(members, key=lambda item: item.encode("utf-8"))
     return [ordered[rng.randrange(len(ordered))] for _ in range(count)]
@@ -160,6 +164,18 @@ def publication(rows):
         and all(flag == 1 and published_at for flag, published_at in rows)
         and len({published_at for flag, published_at in rows}) == 1
     )
+
+
+def loss_cost_rate(sale_cost_amt, loss_amt):
+    """算法 02 当前 V1 的销售成本降级口径。"""
+    if sale_cost_amt is None or loss_amt is None:
+        return None
+    sale_cost_amt = D(sale_cost_amt)
+    loss_amt = D(loss_amt)
+    denominator = sale_cost_amt + loss_amt
+    if loss_amt < 0 or denominator <= 0:
+        return None
+    return loss_amt / denominator
 
 
 class SyntheticRules(unittest.TestCase):
@@ -279,10 +295,11 @@ class SyntheticRules(unittest.TestCase):
             (0, D(1), D(1), D(1), D(0)),
         )
 
-    def test_reproducible_bootstrap_uses_fixed_seed_and_sorted_members(self):
-        first = deterministic_draw(["m2", "m1"], 100)
-        second = deterministic_draw(["m1", "m2"], 100)
+    def test_reproducible_bootstrap_uses_same_derived_seed_and_sorted_members(self):
+        first = deterministic_draw(["m2", "m1"], 100, 314159)
+        second = deterministic_draw(["m1", "m2"], 100, 314159)
         self.assertEqual(first, second)
+        self.assertNotEqual(first, deterministic_draw(["m1", "m2"], 100, 271828))
 
     def test_algorithm_01_publication_rows_all_agree(self):
         self.assertTrue(publication([(1, "t"), (1, "t")]))
@@ -290,11 +307,26 @@ class SyntheticRules(unittest.TestCase):
         for rows in invalid:
             self.assertFalse(publication(rows))
 
+    def test_sale_cost_loss_rate_normal(self):
+        self.assertEqual(loss_cost_rate("60", "5"), D(5) / D(65))
+
+    def test_sale_cost_loss_rate_zero_loss(self):
+        self.assertEqual(loss_cost_rate("60", "0"), D(0))
+
+    def test_sale_cost_loss_rate_missing_cost_is_null(self):
+        self.assertIsNone(loss_cost_rate(None, "5"))
+
+    def test_sale_cost_loss_rate_nonpositive_denominator_is_null(self):
+        self.assertIsNone(loss_cost_rate("0", "0"))
+
+    def test_sale_cost_loss_rate_negative_loss_is_null(self):
+        self.assertIsNone(loss_cost_rate("60", "-1"))
+
 
 class DocumentContracts(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        paths = (D2, D3, B2, B3, CITY_SNAPSHOT)
+        paths = (D2, D3, B2, B3, CITY_SNAPSHOT, MARGIN_LOSS_CONTRACT)
         cls.texts = {path: (ROOT / path).read_text() for path in paths}
         cls.d2 = cls.texts[D2]
         cls.d3 = cls.texts[D3]
@@ -395,11 +427,41 @@ class DocumentContracts(unittest.TestCase):
         ):
             self.assertRegex(self.d2, rf"(?m)^\| [^|]+ \| `{field}` \|", field)
 
+    def test_sale_cost_degradation_contract_is_closed(self):
+        margin_loss = self.texts[MARGIN_LOSS_CONTRACT]
+        self.assertRegex(
+            margin_loss,
+            r"(?m)^\| 销售成本 \| `sale_cost_amt` \| decimal\(18,6\) \| 必须 \|",
+        )
+        self.assertIn(
+            "sale_cost_amt（销售成本金额） = receipt_amt（门店进货金额） - loss_amt（门店损耗金额）",
+            margin_loss,
+        )
+        self.assertIn("sale_cost_amt = receipt_amt - loss_amt", self.d2)
+        self.assertIn("sale_cost_amt = receipt_amt - loss_amt", self.texts[B2])
+        self.assertIn(
+            "SUM(loss_amt) / (SUM(sale_cost_amt) + SUM(loss_amt))",
+            self.d2,
+        )
+        self.assertIn("loss_cost_rule_degraded_flag = 1", self.d2)
+        self.assertIn("MISSING_ARRIVAL_AMOUNT", self.d2)
+
+    def test_current_v1_does_not_fabricate_severe_loss_line(self):
+        for token in (
+            "当前 V1 不生成严重损耗候选",
+            "severe_loss_flag = NULL",
+            "loss_level_cap = NULL",
+            "loss_param_status = MISSING_AUTO_PARAM",
+        ):
+            self.assertIn(token, self.d2)
+        self.assertIn("不能用 `sale_cost_amt` 冒充含税到店金额训练严重损耗风险线", self.d2)
+
     def test_output_fields_use_six_column_contract(self):
         outputs = (
             self.d2.split("## 14. 输出表结构", 1)[1],
             self.d3.split("## 15. 输出字段", 1)[1],
             self.texts[CITY_SNAPSHOT].split("## 5. 完整字段合同", 1)[1],
+            self.texts[MARGIN_LOSS_CONTRACT].split("## 1. 字段清单", 1)[1],
         )
         header = "| 中文字段名 | 英文字段名 | 类型建议 | 是否必须 | 字段来源 | 中文注释 |"
         for content in outputs:
@@ -428,6 +490,7 @@ class DocumentContracts(unittest.TestCase):
             "algo03_detail": self.d3.split("## 15. 输出字段", 1)[1].split("## 16.", 1)[0],
             "algo03_summary": self.d3.split("## 16. 输出字段", 1)[1].split("### 16.1", 1)[0],
             "city_snapshot": self.texts[CITY_SNAPSHOT].split("## 5. 完整字段合同", 1)[1].split("## 6.", 1)[0],
+            "margin_loss_contract": self.texts[MARGIN_LOSS_CONTRACT].split("## 1. 字段清单", 1)[1].split("## 2.", 1)[0],
         }
         for name, content in sections.items():
             fields = re.findall(r"^\| [^|]+ \| `([a-z0-9_]+)` \|", content, re.M)
@@ -488,10 +551,16 @@ class DocumentContracts(unittest.TestCase):
                         f"{path}: {line}",
                     )
 
-    def test_algorithm_03_fixed_bootstrap_seed(self):
+    def test_algorithm_03_seed_is_derived_per_business_key(self):
         self.assertIn("bootstrap_random_seed（Bootstrap 随机种子）", self.d3)
-        self.assertIn("20260723", self.d3)
-        self.assertIn("不再按范围、品类或门店等级派生第二个种子", self.d3)
+        self.assertIn("seed(algorithm_batch_version（统一算法批次版本）", self.d3)
+        self.assertIn("不同门店群不得因为共享一个全局固定种子", self.d3)
+
+    def test_development_interface_names_are_frozen(self):
+        self.assertIn("dim_date_calendar（日期日历表）", self.d2)
+        self.assertNotIn("date_calendar_runtime", self.d2)
+        for content in (self.d3, self.texts[B3]):
+            self.assertIn("algorithm_02_release_id（算法02发布记录ID）", content)
 
     def test_algorithm_03_business_json_outputs_preserved(self):
         for field in (
