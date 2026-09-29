@@ -6,7 +6,7 @@
 dim_algorithm_batch_city_region_snapshot
 ```
 
-该表在新统一算法批次初始化时，将 `dim_city_algorithm_region（城市算法区域映射表）`当时有效的城市映射固化下来，供算法 01～10 在同一批次内共同读取。它保存的是会改变业务比较范围的历史事实，不是每个算法各自维护的配置快照。
+该表在新统一算法批次初始化时，将 `dim_city_algorithm_region（城市算法区域映射表）`当时有效的城市、算法区域和参数回退范围映射固化下来，供算法 01～10 在同一批次内共同读取。它保存的是会改变业务比较范围及参数回退范围的历史事实，不是每个算法各自维护的配置快照。
 
 ## 2. 一行代表什么
 
@@ -14,6 +14,7 @@ dim_algorithm_batch_city_region_snapshot
 一个 algorithm_batch_version（统一算法批次版本）
 + 一个 city（城市）
 + 该城市在本批次锁定的算法区域
++ 该算法区域在本批次锁定的参数回退范围
 ```
 
 ## 3. 主键或唯一键
@@ -45,6 +46,9 @@ AND (
 3. 原始映射后续新增、失效或回填结束日期，只影响下一完整月批次，不改写历史快照。
 4. 同一批次同一算法区域只有一个城市时，`scope_type（范围类型）=CITY（单城市）`；有两个及以上城市时为 `CITY_CLUSTER（城市群）`。
 5. 本表不生成 `scope_version（范围版本）`、哈希摘要或第二套版本号。
+6. `parameter_fallback_scope_code（参数回退范围编码）`和名称直接复制源映射表，不允许根据本批实际出现的数据、城市名称或门店管理大区推断。
+
+`scope_type（范围类型）`只描述算法区域由一个城市还是多个城市组成，不表示华东、华北或华南，不能替代参数回退范围字段。
 
 ## 5. 完整字段合同
 
@@ -55,6 +59,8 @@ AND (
 | 城市 | `city` | varchar(64) | 必须 | `dim_city_algorithm_region.city` | 对齐 `dim_store.city_name`；进入主键 |
 | 算法区域编码 | `algorithm_region_code` | varchar(64) | 必须 | `dim_city_algorithm_region.algorithm_region_code` | 下游统一作为 `scope_id（算法区域编码）` |
 | 算法区域名称 | `algorithm_region_name` | varchar(128) | 必须 | `dim_city_algorithm_region.algorithm_region_name` | 下游统一作为 `scope_name（算法区域名称）` |
+| 参数回退范围编码 | `parameter_fallback_scope_code` | varchar(64) | 必须 | `dim_city_algorithm_region.parameter_fallback_scope_code` | 本批次锁定的参数回退范围编码；华东一期为 `EAST_CHINA_ALL` |
+| 参数回退范围名称 | `parameter_fallback_scope_name` | varchar(128) | 必须 | `dim_city_algorithm_region.parameter_fallback_scope_name` | 本批次锁定的参数回退范围名称；华东一期为 `华东整体` |
 | 范围类型 | `scope_type` | varchar(32) | 必须 | 本表第 4 节 | `CITY（单城市）` / `CITY_CLUSTER（城市群）` |
 | 映射记录生效开始日期 | `mapping_effective_start_date` | date | 必须 | `dim_city_algorithm_region.effective_start_date` | 仅作源映射血缘，不构成第二套版本 |
 | 映射记录生效结束日期 | `mapping_effective_end_date` | date | 条件必须 | `dim_city_algorithm_region.effective_end_date` | 原始记录无结束日期时为空；后续回填不得改写本快照 |
@@ -73,6 +79,8 @@ AND (
 |---|---|
 | 城市未命中有效映射 | 阻断新批次初始化，记录缺失城市，不生成不完整快照 |
 | 城市同时命中多条有效映射 | 阻断新批次初始化，记录冲突记录，不选择任意一条 |
+| 参数回退范围编码或名称为空 | 阻断批次初始化；不得用当前全部数据、城市名称或管理大区补值 |
+| 同一算法区域对应多个参数回退范围 | 阻断批次初始化，记录冲突的算法区域和城市 |
 | 同一批次重复初始化 | 校验已有快照后直接复用，不覆盖、不重新读取当前映射 |
 | 映射结束日期为空 | 合法，`mapping_effective_end_date（映射记录生效结束日期）`写 `NULL` |
 | 历史批次重跑 | 读取历史批次原快照；禁止读取当前 `is_active=1（当前有效）`记录重建 |
@@ -88,6 +96,8 @@ AND (
 4. 所有参与计算门店的城市必须 100% 命中快照。
 5. 同批次同一 algorithm_region_code 的 scope_type 必须一致。
 6. 同批次同一 algorithm_region_code 只能对应一个 algorithm_region_name。
-7. 同批次重跑前后快照行数和业务字段必须完全一致。
-8. 新批次映射变化不得改写历史批次。
+7. 同批次同一 algorithm_region_code 只能对应一个 parameter_fallback_scope_code 和一个 parameter_fallback_scope_name。
+8. 华东一期所有快照行的 parameter_fallback_scope_code 必须为 EAST_CHINA_ALL，名称必须为华东整体。
+9. 同批次重跑前后快照行数和业务字段必须完全一致。
+10. 新批次映射变化不得改写历史批次。
 ```
