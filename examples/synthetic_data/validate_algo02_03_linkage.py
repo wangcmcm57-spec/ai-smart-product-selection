@@ -162,6 +162,19 @@ def publication(rows):
     )
 
 
+def algorithm_03_output_boundary(has_legal_group, valid_member_cnt):
+    """返回算法 03 边界场景应产生的正式结果行数。"""
+    if not has_legal_group:
+        return {"detail_rows": 0, "summary_rows": 0, "result_status": None}
+    if valid_member_cnt == 0:
+        return {
+            "detail_rows": 0,
+            "summary_rows": 1,
+            "result_status": "NOT_CALCULABLE",
+        }
+    return {"detail_rows": 1, "summary_rows": 1, "result_status": "CALCULABLE"}
+
+
 def loss_cost_rate(sale_cost_amt, loss_amt):
     """算法 02 当前 V1 的销售成本降级口径。"""
     if sale_cost_amt is None or loss_amt is None:
@@ -289,6 +302,28 @@ class SyntheticRules(unittest.TestCase):
         for rows in invalid:
             self.assertFalse(publication(rows))
 
+    def test_algorithm_03_no_legal_group_has_no_formal_rows(self):
+        self.assertEqual(
+            algorithm_03_output_boundary(False, 0),
+            {"detail_rows": 0, "summary_rows": 0, "result_status": None},
+        )
+
+    def test_algorithm_03_known_group_without_members_keeps_summary(self):
+        self.assertEqual(
+            algorithm_03_output_boundary(True, 0),
+            {
+                "detail_rows": 0,
+                "summary_rows": 1,
+                "result_status": "NOT_CALCULABLE",
+            },
+        )
+
+    def test_algorithm_03_calculable_group_has_detail_and_summary(self):
+        self.assertEqual(
+            algorithm_03_output_boundary(True, 1),
+            {"detail_rows": 1, "summary_rows": 1, "result_status": "CALCULABLE"},
+        )
+
     def test_sale_cost_loss_rate_normal(self):
         self.assertEqual(loss_cost_rate("60", "5"), D(5) / D(65))
 
@@ -387,6 +422,50 @@ class DocumentContracts(unittest.TestCase):
         ):
             self.assertIn(table, self.d3)
         self.assertIn("不新增算法 03 独立运行参数表", self.d3)
+
+    def test_algorithm_03_self_validation_and_atomic_publication(self):
+        required_developer_tokens = (
+            "算法 03 自行验收",
+            "应产出门店群清单",
+            "应产出门店群清单与暂存汇总双向差异 = 0",
+            "整批不写入、不追加、不覆盖两张正式结果表",
+            "两张正式结果表必须对同一 `algorithm_batch_version（统一算法批次版本）`整体可见或整体不可见",
+            "平台调度标记算法 03 同批次成功",
+            "触发算法 04 等下游任务",
+        )
+        for token in required_developer_tokens:
+            self.assertIn(token, self.d3, token)
+
+        required_business_tokens = (
+            "算法 03 自行检查",
+            "预期门店群清单与临时汇总",
+            "原子发布贡献明细表和门店群汇总表",
+            "业务复核不作为算法 03 运行、发布或触发下游前的人工审批条件",
+        )
+        for token in required_business_tokens:
+            self.assertIn(token, self.texts[B3], token)
+
+    def test_algorithm_03_not_calculable_output_boundary(self):
+        for content in (self.d3, self.texts[B3]):
+            self.assertIn("NOT_CALCULABLE", content)
+            self.assertIn("NO_MEMBER_CONSUMPTION", content)
+            self.assertRegex(content, r"明细[^\n]*0 行|贡献明细[^\n]*不写")
+            self.assertRegex(content, r"汇总[^\n]*1 行")
+
+        detail_contract = self.d3.split("## 15. 输出字段", 1)[1].split("## 16.", 1)[0]
+        for field in ("sse_by_k_json", "bic_by_k_json"):
+            row = re.search(rf"(?m)^\| [^|]+ \| `{field}` \|.*$", detail_contract)
+            self.assertIsNotNone(row, field)
+            self.assertNotIn("NOT_CALCULABLE", row.group(0), field)
+        self.assertIn("不得用明细 JSON 的 `NOT_CALCULABLE", self.d3)
+
+    def test_algorithm_03_summary_does_not_require_a_detail_row(self):
+        summary_contract = self.d3.split(
+            "## 16. 输出字段：`mart_store_group_consumer_summary`", 1
+        )[1].split("### 16.1", 1)[0]
+        self.assertIn("没有贡献明细的 `NOT_CALCULABLE` 汇总仍从调度参数取值", summary_contract)
+        self.assertIn("本算法第 3.1 节应产出门店群清单", summary_contract)
+        self.assertIn("本算法第 9.3、16.1 节全量有效交易聚合", summary_contract)
 
     def test_shared_city_snapshot_contract(self):
         snapshot = self.texts[CITY_SNAPSHOT]
@@ -588,6 +667,7 @@ class DocumentContracts(unittest.TestCase):
             "SUCCESS",
             "SINGLE_PROFILE",
             "NO_OBVIOUS_MAIN",
+            "NOT_CALCULABLE",
         ):
             self.assertIn(token, self.d3)
             self.assertIn(token, self.texts[B3])
