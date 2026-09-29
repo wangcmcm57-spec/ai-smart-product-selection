@@ -12,8 +12,8 @@
 
 口径要求：
 
-1. 出库到店成本必须取含税口径，字段名统一为“出库到店成本含税”。
-2. 出库到店金额必须取含税口径，字段名统一为“出库到店金额含税”。
+1. `outbound_arrival_cost_tax_included（出库到店成本含税）`为条件交付字段；当前生产尚未交付，后续算法明确启用时必须取含税口径。
+2. `outbound_arrival_amt_tax_included（出库到店金额含税）`为条件交付字段；当前生产尚未交付，后续算法明确启用时必须取含税口径。
 3. 不要取“出库到店成本（不含税）”和“出库到店金额（不含税）”。
 4. 销售商品编码必须能和小票商品明细表里的 `article_id` 对齐。
 5. 门店编码必须能和小票商品明细表里的 `store_id` 对齐。
@@ -48,8 +48,8 @@
 | 商品平均售价 | `avg_sale_price` | decimal(18,6) | 建议 | 经营日表或 `sales_amt / sales_qty` | 实际成交均价 |
 | 19 点前平均售价 | `pre19_avg_sale_price` | decimal(18,6) | 建议 | 经营日表或时段加工 | 19 点前销售均价 |
 | 19 点后售价 | `post19_sale_price` | decimal(18,6) | 建议 | 价格系统、经营日表或时段加工 | 19 点后销售价或晚间折扣后售价 |
-| 出库到店成本含税 | `outbound_arrival_cost_tax_included` | decimal(18,6) | 必须 | 出库、验收或成本系统 | 含税口径的出库到店成本 |
-| 出库到店金额含税 | `outbound_arrival_amt_tax_included` | decimal(18,6) | 必须 | 出库、验收或成本系统 | 含税口径的出库到店金额 |
+| 出库到店成本含税 | `outbound_arrival_cost_tax_included` | decimal(18,6) | 条件必须 | 出库、验收或成本系统 | 当前生产尚未交付；仅在算法当前版本明确启用该成本口径时要求交付，算法 02 当前 V1 不读取 |
+| 出库到店金额含税 | `outbound_arrival_amt_tax_included` | decimal(18,6) | 条件必须 | 出库、验收或成本系统 | 当前生产尚未交付；算法 02 当前 V1 不读取，未来恢复严重损耗风险线前须按本表粒度正式交付并验收 |
 | 门店进货金额 | `receipt_amt` | decimal(18,6) | 建议 | 验收、进货或经营日表 | 门店验收/进货金额 |
 | 销售金额 | `sales_amt` | decimal(18,6) | 建议 | 经营日表 | 实际销售金额 |
 | 原价销售金额 | `original_sales_amt` | decimal(18,6) | 建议 | 价格系统或经营日表 | 按销售原价计算的销售金额 |
@@ -62,6 +62,6 @@
 1. 主键字段 `business_date`、`store_id`、`sku_id`、`receipt_sku_id` 不能为空。
 2. 价格、成本、金额字段缺失时保留空值，不写 0；0 只表示真实业务价格或金额为 0。
 3. `original_sale_price` 是标价/原价，不能用 `avg_sale_price` 或 `sales_amt / sales_qty` 直接替代。
-4. `outbound_arrival_cost_tax_included` 和 `outbound_arrival_amt_tax_included` 必须使用含税口径；不含税字段不得落入这两个字段。
+4. `outbound_arrival_cost_tax_included（出库到店成本含税）`和 `outbound_arrival_amt_tax_included（出库到店金额含税）`如按算法当前版本要求交付，必须使用含税口径；尚未交付时保留空值，不得用不含税字段、其他粒度金额或推算值补造。
 5. 验收商品编码和销售商品编码都要保留；如存在一对多或多对一映射，开发需在交付反馈中说明映射规则。
 ```

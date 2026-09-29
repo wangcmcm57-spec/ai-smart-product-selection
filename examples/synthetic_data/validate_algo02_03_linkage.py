@@ -17,6 +17,7 @@ D2 = "04_algorithm_cards/developer_version/算法卡_02_门店品类等级.md"
 D3 = "04_algorithm_cards/developer_version/算法卡_03_门店群消费者画像贡献.md"
 B2 = "04_algorithm_cards/business_readable/算法02_门店品类等级_业务解读版.md"
 B3 = "04_algorithm_cards/business_readable/算法03_门店群消费者画像贡献_业务解读版.md"
+OVERVIEW = "00_start_here/03_算法与结果表总览.md"
 CITY_SNAPSHOT = (
     "03_data_contracts/base_tables/"
     "dim_algorithm_batch_city_region_snapshot_统一算法批次城市区域映射快照表.md"
@@ -24,6 +25,10 @@ CITY_SNAPSHOT = (
 MARGIN_LOSS_CONTRACT = (
     "03_data_contracts/base_tables/"
     "mart_sku_margin_loss_毛利损耗表.md"
+)
+PRICE_CONTRACT = (
+    "03_data_contracts/base_tables/"
+    "mart_store_sku_daily_price_门店商品日价格表.md"
 )
 D = Decimal
 
@@ -94,27 +99,18 @@ def jenks(values):
         }
 
 
-def rating_group_gate(release, rows):
-    """用最小发布记录和正式结果行判断算法 03 是否可读。"""
-    if not release or release.get("release_status") != "AUTO_PUBLISHED":
+def rating_group_gate(task, rows):
+    """用平台任务成功状态和正式结果行判断算法 03 是否可读。"""
+    if not task or task.get("task_status") != "SUCCESS":
         return "BLOCKED"
-    if not rows or any(row.get("run_id") != release.get("latest_run_id") for row in rows):
+    if not rows or any(row.get("run_id") != task.get("run_id") for row in rows):
         return "BLOCKED"
-    if any(row.get("source_data_version") != release.get("source_data_version") for row in rows):
-        return "BLOCKED"
-    group_reasons = {
-        reason
-        for row in rows
-        for reason in row.get("degraded_reason", [])
-    }
-    if group_reasons & {"GROUP_SOURCE_GAP", "GROUP_RELIABILITY_UNVERIFIED"}:
-        return "BLOCKED"
-    if release.get("rating_population_completeness_status") == "PASSED":
+    if task.get("rating_population_completeness_status") == "PASSED":
         counts_match = (
-            release.get("expected_key_missing_result_cnt") == 0
-            and release.get("unexpected_result_key_cnt") == 0
-            and release.get("expected_rating_key_cnt")
-            == release.get("result_rating_key_cnt")
+            task.get("expected_key_missing_result_cnt") == 0
+            and task.get("unexpected_result_key_cnt") == 0
+            and task.get("expected_rating_key_cnt")
+            == task.get("result_rating_key_cnt")
         )
         return "AVAILABLE" if counts_match else "BLOCKED"
     return "UNAVAILABLE"
@@ -180,10 +176,9 @@ def loss_cost_rate(sale_cost_amt, loss_amt):
 
 class SyntheticRules(unittest.TestCase):
     def setUp(self):
-        self.release = {
-            "release_status": "AUTO_PUBLISHED",
-            "latest_run_id": "r1",
-            "source_data_version": "src1",
+        self.task = {
+            "task_status": "SUCCESS",
+            "run_id": "r1",
             "rating_population_completeness_status": "PASSED",
             "expected_rating_key_cnt": 2,
             "result_rating_key_cnt": 2,
@@ -193,47 +188,34 @@ class SyntheticRules(unittest.TestCase):
         self.rows = [
             {
                 "run_id": "r1",
-                "source_data_version": "src1",
                 "result_status": "SUCCESS",
                 "degraded_reason": [],
             },
             {
                 "run_id": "r1",
-                "source_data_version": "src1",
                 "result_status": "SUCCESS",
                 "degraded_reason": [],
             },
         ]
 
     def test_complete_group(self):
-        self.assertEqual(rating_group_gate(self.release, self.rows), "AVAILABLE")
+        self.assertEqual(rating_group_gate(self.task, self.rows), "AVAILABLE")
 
     def test_coverage_only_unavailable(self):
-        release = dict(self.release, rating_population_completeness_status="UNAVAILABLE")
-        self.assertEqual(rating_group_gate(release, self.rows), "UNAVAILABLE")
+        task = dict(self.task, rating_population_completeness_status="UNAVAILABLE")
+        self.assertEqual(rating_group_gate(task, self.rows), "UNAVAILABLE")
 
-    def test_group_source_gap_blocks(self):
-        rows = [dict(self.rows[0], degraded_reason=["GROUP_SOURCE_GAP"]), self.rows[1]]
-        self.assertEqual(rating_group_gate(self.release, rows), "BLOCKED")
-
-    def test_group_reliability_unverified_blocks(self):
-        rows = [
-            dict(self.rows[0], degraded_reason=["GROUP_RELIABILITY_UNVERIFIED"]),
-            self.rows[1],
-        ]
-        self.assertEqual(rating_group_gate(self.release, rows), "BLOCKED")
-
-    def test_release_count_mismatch_blocks(self):
-        release = dict(self.release, expected_rating_key_cnt=3)
-        self.assertEqual(rating_group_gate(release, self.rows), "BLOCKED")
+    def test_task_count_mismatch_blocks(self):
+        task = dict(self.task, expected_rating_key_cnt=3)
+        self.assertEqual(rating_group_gate(task, self.rows), "BLOCKED")
 
     def test_stale_run_blocks(self):
         rows = [dict(row, run_id="r0") for row in self.rows]
-        self.assertEqual(rating_group_gate(self.release, rows), "BLOCKED")
+        self.assertEqual(rating_group_gate(self.task, rows), "BLOCKED")
 
-    def test_source_data_version_mismatch_blocks(self):
-        rows = [dict(self.rows[0], source_data_version="src2"), self.rows[1]]
-        self.assertEqual(rating_group_gate(self.release, rows), "BLOCKED")
+    def test_failed_task_blocks(self):
+        task = dict(self.task, task_status="FAILED")
+        self.assertEqual(rating_group_gate(task, self.rows), "BLOCKED")
 
     def test_historical_daily_state(self):
         rows = [("d1", True, True, True, "100"), ("d2", False, True, True, "200")]
@@ -326,7 +308,16 @@ class SyntheticRules(unittest.TestCase):
 class DocumentContracts(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        paths = (D2, D3, B2, B3, CITY_SNAPSHOT, MARGIN_LOSS_CONTRACT)
+        paths = (
+            D2,
+            D3,
+            B2,
+            B3,
+            OVERVIEW,
+            CITY_SNAPSHOT,
+            MARGIN_LOSS_CONTRACT,
+            PRICE_CONTRACT,
+        )
         cls.texts = {path: (ROOT / path).read_text() for path in paths}
         cls.d2 = cls.texts[D2]
         cls.d3 = cls.texts[D3]
@@ -373,8 +364,6 @@ class DocumentContracts(unittest.TestCase):
         expected = (
             "mart_store_category_level",
             "mart_store_category_level_sell_through_param",
-            "mart_store_category_level_loss_threshold_param",
-            "mart_store_category_level_run_release",
         )
         for table in expected:
             self.assertIn(table, self.d2)
@@ -384,9 +373,12 @@ class DocumentContracts(unittest.TestCase):
             "mart_store_category_level_critic_weight",
             "mart_store_category_level_critic_corr",
             "mart_store_category_level_segment_param",
+            "mart_store_category_level_loss_threshold_param",
+            "mart_store_category_level_run_release",
         )
         for table in removed:
             self.assertNotIn(table, self.d2)
+            self.assertNotIn(table, self.texts[OVERVIEW])
 
     def test_algorithm_03_keeps_two_formal_outputs_only(self):
         for table in (
@@ -403,11 +395,12 @@ class DocumentContracts(unittest.TestCase):
         self.assertIn("is_active（是否当前有效）", snapshot)
         self.assertIn("不用于回算历史批次", snapshot)
 
-    def test_source_data_version_boundary_is_explicit(self):
+    def test_platform_lineage_replaces_result_source_version(self):
         for content in (self.d2, self.d3):
-            self.assertIn("调度系统", content)
-            self.assertIn("source_data_version（源数据版本）", content)
-            self.assertIn("不要求算法 01 正式结果新增字段或表", content)
+            self.assertIn("平台现有任务血缘", content)
+            self.assertNotIn("source_data_version（源数据版本）", content)
+        self.assertIn("不为算法结果新增源数据版本字段", self.d2)
+        self.assertIn("不要求算法正式结果新增源数据版本字段或发布记录表", self.d3)
 
     def test_q1_candidate_window_timing_is_closed(self):
         for token in ("30 / 60 / 90", "全部候选统一", "入选窗口"):
@@ -447,14 +440,32 @@ class DocumentContracts(unittest.TestCase):
         self.assertIn("MISSING_ARRIVAL_AMOUNT", self.d2)
 
     def test_current_v1_does_not_fabricate_severe_loss_line(self):
+        self.assertIn("当前 V1 只按第 10.7 节计算", self.d2)
+        self.assertIn("不建立损耗风险线参数表", self.d2)
+        self.assertIn("`sale_cost_amt（销售成本金额）`不得冒充含税到店金额", self.d2)
+        self.assertIn("outbound_arrival_amt_tax_included（出库到店金额含税）", self.d2)
         for token in (
-            "当前 V1 不生成严重损耗候选",
-            "severe_loss_flag = NULL",
-            "loss_level_cap = NULL",
-            "loss_param_status = MISSING_AUTO_PARAM",
+            "outbound_arrival_cost_tax_included",
+            "net_operating_contribution_rate",
+            "severe_loss_flag",
+            "loss_param_status",
+            "loss_threshold_unstable_flag",
+            "loss_parameter_record_id",
+            "mart_store_category_level_loss_threshold_param",
         ):
-            self.assertIn(token, self.d2)
-        self.assertIn("不能用 `sale_cost_amt` 冒充含税到店金额训练严重损耗风险线", self.d2)
+            self.assertNotIn(token, self.d2, token)
+
+    def test_tax_included_price_fields_are_conditional_contracts(self):
+        price_contract = self.texts[PRICE_CONTRACT]
+        for field in (
+            "outbound_arrival_cost_tax_included",
+            "outbound_arrival_amt_tax_included",
+        ):
+            self.assertRegex(
+                price_contract,
+                rf"(?m)^\| [^|]+ \| `{field}` \| decimal\(18,6\) \| 条件必须 \|",
+            )
+        self.assertIn("算法 02 当前 V1 不读取", price_contract)
 
     def test_output_fields_use_six_column_contract(self):
         outputs = (
@@ -484,9 +495,7 @@ class DocumentContracts(unittest.TestCase):
     def test_formal_tables_have_no_duplicate_fields(self):
         sections = {
             "algo02_result": self.d2.split("## 14. 输出表结构", 1)[1].split("## 15.", 1)[0],
-            "algo02_release": self.d2.split("表名：`mart_store_category_level_run_release`", 1)[1].split("### 15.1", 1)[0],
             "algo02_sell_param": self.d2.split("表名：`mart_store_category_level_sell_through_param`", 1)[1].split("### 15.2", 1)[0],
-            "algo02_loss_param": self.d2.split("表名：`mart_store_category_level_loss_threshold_param`", 1)[1].split("### 15.3", 1)[0],
             "algo03_detail": self.d3.split("## 15. 输出字段", 1)[1].split("## 16.", 1)[0],
             "algo03_summary": self.d3.split("## 16. 输出字段", 1)[1].split("### 16.1", 1)[0],
             "city_snapshot": self.texts[CITY_SNAPSHOT].split("## 5. 完整字段合同", 1)[1].split("## 6.", 1)[0],
@@ -501,9 +510,7 @@ class DocumentContracts(unittest.TestCase):
     def test_all_stable_table_keys_use_unified_batch(self):
         required_key_fragments = (
             "algorithm_batch_version\nscope_type\nscope_id\nstore_id",
-            "algorithm_code + algorithm_batch_version",
             "algorithm_batch_version + scope_type + scope_id + category_granularity + category_code + measurement_type",
-            "algorithm_batch_version + scope_type + scope_id + category_granularity + category_code + loss_trigger_month_count",
             "algorithm_batch_version\nscope_type\nscope_id\ncategory_granularity\ncategory_code\nstore_group_type",
             "algorithm_batch_version + city",
         )
@@ -560,7 +567,8 @@ class DocumentContracts(unittest.TestCase):
         self.assertIn("dim_date_calendar（日期日历表）", self.d2)
         self.assertNotIn("date_calendar_runtime", self.d2)
         for content in (self.d3, self.texts[B3]):
-            self.assertIn("algorithm_02_release_id（算法02发布记录ID）", content)
+            self.assertNotIn("algorithm_02_release_id（算法02发布记录ID）", content)
+            self.assertIn("同批算法 02 任务成功", content)
 
     def test_algorithm_03_business_json_outputs_preserved(self):
         for field in (
@@ -580,8 +588,6 @@ class DocumentContracts(unittest.TestCase):
             "SUCCESS",
             "SINGLE_PROFILE",
             "NO_OBVIOUS_MAIN",
-            "GROUP_SOURCE_GAP",
-            "GROUP_RELIABILITY_UNVERIFIED",
         ):
             self.assertIn(token, self.d3)
             self.assertIn(token, self.texts[B3])
@@ -592,7 +598,6 @@ class DocumentContracts(unittest.TestCase):
             "Jenks",
             "BIC",
             "Bootstrap",
-            "Isotonic Regression",
             "promotion_health_score",
             "loss_health_score",
         ):
