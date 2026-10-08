@@ -1,6 +1,6 @@
 # 算法卡_04_目标画像 SKU 表现算法
 
-更新时间：2026-10-07
+更新时间：2026-10-08
 
 业务原始依据：`算法卡_04_目标画像SKU表现_业务提供最新原始版_20260731.md`
 
@@ -85,12 +85,12 @@
 
 | 上游结果 | 可消费状态 | 不可消费状态/处理 | 版本和周期闸门 |
 |---|---|---|---|
-| `dim_customer_profile` | 同一 `algorithm_batch_version + customer_id` 唯一且 `final_profile` 非空 | 缺失、重复或画像批次与本算法不一致：阻断算法 04 整批发布 | 校验 `algorithm_batch_version`、`calculation_end_date` 和 `dim_customer_profile_region_param.published_flag = 1`；会员交易继承算法 01 固定过滤条件 |
+| `dim_customer_profile` | 平台确认算法 01 同批任务成功，且同一 `algorithm_batch_version + customer_id` 唯一、`final_profile` 非空 | 上游同批任务未成功，或画像缺失、重复、批次与本算法不一致：阻断算法 04 整批发布 | 按调度传入批次校验 `algorithm_batch_version`和 `calculation_end_date`；不读取算法 01 参数表行级发布字段；会员交易继承算法 01 固定过滤条件 |
 | `mart_store_category_level` | 只使用同批次 `result_status = SUCCESS` 的门店品类行；读取 `promotion_discount_scope` 固定口径 | `NOT_CALCULABLE` 门店不得进入门店群 | 校验 `algorithm_batch_version`、`calculation_start_date/end_date`、范围、品类和门店唯一；上游成功状态由平台依赖调度保证，不读取算法 02 专用发布表 |
 | `mart_store_group_consumer_summary` | 作为算法 04 应处理门店群骨架；读取合法门店群、`store_cnt`、周期和 `result_status` | `NOT_CALCULABLE` 表示合法门店群无有效会员消费；该组不伪造 `final_profile` 或算法 04 正式结果行 | 校验同批、同周期、门店群唯一；必须与贡献明细由算法 03 同批原子发布 |
 | `mart_store_group_consumer_contribution` | 对汇总状态为 `SUCCESS`、`SINGLE_PROFILE`、`NO_OBVIOUS_MAIN` 的门店群，读取画像明细、主力标记和销售额 | 汇总表为 `NOT_CALCULABLE` 时明细应为 0 行；其他缺失或不一致属于上游交付失败 | 校验 `algorithm_batch_version`、`contribution_start_date/end_date`、门店群、`final_profile` 唯一，并与汇总表双向对账 |
 
-平台未确认算法 01、02、03 同一批次成功发布，或算法 03 两张正式表未能证明整体可读时：
+平台未确认算法 01、02、03 同一批次任务成功，或算法 03 两张正式表未能证明整体可读时：
 
 ```text
 不启动算法 04 正式计算；不重算上游、不跨范围回退、不写或覆盖任何算法 04 正式结果及参数。
