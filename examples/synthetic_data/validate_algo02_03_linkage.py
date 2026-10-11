@@ -176,15 +176,18 @@ def algorithm_03_output_boundary(has_legal_group, valid_member_cnt):
 
 
 def loss_cost_rate(sale_cost_amt, loss_amt):
-    """算法 02 当前 V1 的销售成本降级口径。"""
+    """算法 02 当前 V1 的销售成本降级口径及结果边界。"""
     if sale_cost_amt is None or loss_amt is None:
         return None
     sale_cost_amt = D(sale_cost_amt)
     loss_amt = D(loss_amt)
     denominator = sale_cost_amt + loss_amt
-    if loss_amt < 0 or denominator <= 0:
+    if sale_cost_amt < 0 or loss_amt < 0 or denominator <= 0:
         return None
-    return loss_amt / denominator
+    rate = loss_amt / denominator
+    if rate < 0 or rate > 1:
+        return None
+    return rate
 
 
 class SyntheticRules(unittest.TestCase):
@@ -338,6 +341,15 @@ class SyntheticRules(unittest.TestCase):
 
     def test_sale_cost_loss_rate_negative_loss_is_null(self):
         self.assertIsNone(loss_cost_rate("60", "-1"))
+
+    def test_sale_cost_loss_rate_negative_sale_cost_is_null(self):
+        self.assertIsNone(loss_cost_rate("-99.99", "100"))
+
+    def test_sale_cost_loss_rate_large_valid_amount_is_bounded(self):
+        self.assertEqual(
+            loss_cost_rate("900000000000", "100000000000"),
+            D("0.1"),
+        )
 
 
 class DocumentContracts(unittest.TestCase):
@@ -517,6 +529,26 @@ class DocumentContracts(unittest.TestCase):
         )
         self.assertIn("loss_cost_rule_degraded_flag = 1", self.d2)
         self.assertIn("MISSING_ARRIVAL_AMOUNT", self.d2)
+
+    def test_loss_cost_rate_numeric_safety_contract_is_closed(self):
+        required_developer_tokens = (
+            "sale_cost_amt < 0",
+            "0 <= rounded_loss_cost_rate <= 1",
+            "CAST(loss_amt_sum AS DOUBLE)",
+            "CAST(rounded_loss_cost_rate AS DECIMAL(10,6))",
+            "不得通过放宽正式字段类型",
+            "当前批次质量验收失败",
+        )
+        for token in required_developer_tokens:
+            self.assertIn(token, self.d2, token)
+
+        required_business_tokens = (
+            "合法的 `loss_cost_rate（损耗成本率）`只能在 0～1 之间",
+            "不能取绝对值",
+            "不能为了让任务通过而放宽正式字段类型",
+        )
+        for token in required_business_tokens:
+            self.assertIn(token, self.texts[B2], token)
 
     def test_current_v1_does_not_fabricate_severe_loss_line(self):
         self.assertIn("当前 V1 只按第 10.7 节计算", self.d2)
