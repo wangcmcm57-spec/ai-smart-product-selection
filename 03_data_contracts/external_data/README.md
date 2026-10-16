@@ -1,6 +1,6 @@
 # 外部数据合同
 
-这里存放 V1 需要接入 Doris 的外部竞品数据合同。
+这里存放 V1 需要接入 Doris 的久谦竞品和公开外部证据数据合同。合同已定义不等于生产建表、来源稳定性或真实数据验收已经完成。
 
 ## 合同统一格式
 
@@ -16,13 +16,31 @@
 7. API 不提供字段时的缺失和降级写法。
 ```
 
-当前外部数据来自久谦 API，第一版拆成 3 张表：
+久谦竞品链路保留以下 3 张合同：
 
 | 表合同 | 目标表建议名 | 用途 |
 | --- | --- | --- |
 | [久谦接口原始表](ods_jiuqian_api_raw_久谦接口原始表.md) | `ods_jiuqian_api_raw` | 保存每次接口返回原文，方便追溯、排错、重跑 |
 | [竞品 SKU 基础表](dim_competitor_sku_竞品SKU基础表.md) | `dim_competitor_sku` | 保存竞品商品稳定属性 |
 | [竞品每日快照表](fact_competitor_sku_daily_snapshot_竞品每日快照表.md) | `fact_competitor_sku_daily_snapshot` | 保存价格、销量、促销、评价、覆盖门店数等每日变化指标 |
+
+公开外部源补齐以下合同；官方价量不进入竞品渠道渗透率分母：
+
+| 表合同 | 正式表名 | 粒度与用途 |
+|---|---|---|
+| [公开外部源原始快照表](ods_external_source_raw_snapshot_公开外部源原始快照表.md) | `ods_external_source_raw_snapshot` | 一次请求的完整原始响应；按采集事实保留，不维护算法业务版本 |
+| [标准化外部证据表](dwd_external_evidence_normalized_标准化外部证据表.md) | `dwd_external_evidence_normalized` | `algorithm_batch_version + evidence_id`；一条原始行的一种指标/文本事实，价量分行 |
+| [外部证据字段质量明细表](mart_external_evidence_quality_issue_外部证据字段质量明细表.md) | `mart_external_evidence_quality_issue` | BATCH＋证据＋字段＋问题代码；多问题不等于多商品 |
+| [外部批次输入锁定清单](mart_external_batch_input_manifest_外部批次输入锁定清单.md) | `mart_external_batch_input_manifest` | BATCH＋实际运行＋证据；锁定观测选择、原始/标准哈希和规则血缘 |
+| [外部证据解释规则表](../rule_tables/dim_external_evidence_interpretation_rule_外部证据解释规则表.md) | `dim_external_evidence_interpretation_rule` | BATCH＋规则 ID；权威身份、单位、日期、食品范围、用途、覆盖/时效及修订参数 |
+
+先保存完整原始快照，随后按当批锁定规则拆分标准证据、检查字段质量、选择唯一观测，最后交算法 07。来源采集成功、技术 PASS、商品身份匹配、允许用途、食品业务准入与正式趋势准入必须分开。
+
+`collection_batch_id` 是采集技术标识；`run_id` 是实际运行审计；两者都不能替代 `algorithm_batch_version = BATCH_YYYYMM`。正式标准证据、质量明细、输入清单和解释参数都包含 BATCH 并进入主键。同月重跑沿用原 BATCH、规则和区域快照，正常重跑不得读取新 SUCCESS 批次；源数据修正按清单保留前后 ID/hash 和原因，不引入新规则。
+
+算法 07 已限定食品业务：权威类别确证的花卉排除食品用途，原始响应保留；未知类别独立隔离，不按花卉删除。官方代码字典取得及覆盖验证属于技术交付验收，不要求业务逐代码补名；未核实单位、相对日期和业务用途不自动启用。来源缺报保留 NULL 和状态，本轮不插值。
+
+真正待业务登记的参数为商务趋势允许用途、香港额外用途/时效、最低覆盖率/最大延迟及规则/发布责任，集中在算法 07 待确认项，不在每张合同重复发问。算法按已登记规则自动运行，人工结果复核不成为逐批运行批准按钮。
 
 外部数据采集模块实现边界见：
 
@@ -41,3 +59,5 @@
 - 标准规格重量
 
 如果 API 第一版不能提供，可以字段保留为空，但需要在开发反馈中明确缺失原因。
+
+2026-10-16补充：[来源覆盖时效审计](mart_external_source_coverage_audit_外部来源覆盖时效审计表.md)提供可复算缺报/覆盖/延迟；[候选价格交接输入](mart_external_candidate_price_input_外部候选价格交接输入表.md)供05按完整来源商品键读取。图片主要用久谦，其他来源不单独抓图，已有链接保留。无图文字路径及其验收见07开发卡17.3/17.4。

@@ -24,7 +24,7 @@
 | `doris_tables/` | 必读 | 已有 Doris 小票源表事实和当前主表说明 | 是 |
 | `base_tables/` | 必读 | 内部门店、商品、毛利损耗、价格、可订可售等基础表合同 | 是 |
 | `Doris_data_db基础表查漏补缺清单_2026-08-10.md` | 必读 | 当前 Doris `data_db` 对基础表合同的字段覆盖和缺口清单，给开发补字段用 | 当前补数工作清单 |
-| `external_data/` | 涉及竞品时必读 | 久谦 API 原始表、竞品 SKU、竞品每日快照表合同 | 是 |
+| `external_data/` | 涉及外部证据时必读 | 久谦三表、公开源原始快照、单指标标准证据、质量明细和输入锁定清单 | 是 |
 | `rule_tables/` | 涉及规则配置时必读 | 业务规则 Excel 标准化后的规则表、配置表、复核辅助表合同 | 是 |
 | `rule_tables/import_specs/` | 需要追溯首版转换时读 | 首版不标准 Excel 到标准表的导入映射说明 | 审计 / 迁移说明 |
 | `rule_tables/import_ready/` | 首版导入时读 | 评审期临时放入 Git 的标准 CSV / Excel 导入包，开发可先使用其中 `csv/` 落 Doris | 临时数据包，不是字段合同 |
@@ -57,6 +57,18 @@
 | [久谦接口原始表](external_data/ods_jiuqian_api_raw_久谦接口原始表.md) | `ods_jiuqian_api_raw` | 必做 | 保存每次 API 返回原文，方便追溯、排错、重跑 |
 | [竞品 SKU 基础表](external_data/dim_competitor_sku_竞品SKU基础表.md) | `dim_competitor_sku` | 必做 | 保存竞品商品稳定属性 |
 | [竞品每日快照表](external_data/fact_competitor_sku_daily_snapshot_竞品每日快照表.md) | `fact_competitor_sku_daily_snapshot` | 必做 | 保存竞品每天变化的价格、销量、促销、评价、售罄等数据 |
+
+算法 07 公开来源同时按以下正式合同准备，不以服务器已经导入记录替代字段验收：
+
+| 表合同 | 正式表名 | 用途 |
+|---|---|---|
+| [公开源原始快照](external_data/ods_external_source_raw_snapshot_公开外部源原始快照表.md) | `ods_external_source_raw_snapshot` | 不可变请求响应与原始依据 |
+| [标准化外部证据](external_data/dwd_external_evidence_normalized_标准化外部证据表.md) | `dwd_external_evidence_normalized` | 单指标证据、单位/日期/身份及用途准入 |
+| [字段质量明细](external_data/mart_external_evidence_quality_issue_外部证据字段质量明细表.md) | `mart_external_evidence_quality_issue` | 分字段问题和排除/隔离审计 |
+| [批次输入锁定清单](external_data/mart_external_batch_input_manifest_外部批次输入锁定清单.md) | `mart_external_batch_input_manifest` | 按统一BATCH锁定来源、观测及重跑血缘 |
+| [外部证据解释规则](rule_tables/dim_external_evidence_interpretation_rule_外部证据解释规则表.md) | `dim_external_evidence_interpretation_rule` | 权威身份、单位、日期及用途规则的当批快照 |
+
+花卉排除食品计算但保留快照；未知类别单独隔离。正式证据、参数及审计使用 `algorithm_batch_version = BATCH_YYYYMM`，采集批次及run_id只追溯实际任务。
 
 ### 需要开发准备的规则配置表
 
@@ -121,3 +133,5 @@
 8. 当前缺失字段和替代字段。
 
 正式 Git 交付不放真实业务 Excel、真实 CSV 明细、Doris 查询结果明细和 API 原始返回。如需提交样例，请放入 `examples/synthetic_data/`，并确保是脱敏或人造数据。
+
+算法07本期新增[外部来源覆盖时效审计](external_data/mart_external_source_coverage_audit_外部来源覆盖时效审计表.md)和[外部候选价格交接输入](external_data/mart_external_candidate_price_input_外部候选价格交接输入表.md)。覆盖/缺报用独立应报集合复算，05按逐来源完整商品键消费；文档合同不代表生产或旧消费者已经验收。
