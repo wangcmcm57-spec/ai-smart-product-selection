@@ -294,6 +294,62 @@ def check_mathematics(repo_root, output_dir):
     (output_dir/'algo07_math_validation.json').write_text(json.dumps(result,ensure_ascii=False,indent=2))
     return result
 
+def check_jiuqian_inputs(repo_root, output_dir):
+    """Check the current two-table dependency graph, without querying real data."""
+    import re
+    retired = 'ods_jiuqian_api_raw'
+    retired_path = repo_root / '03_data_contracts/external_data/ods_jiuqian_api_raw_久谦接口原始表.md'
+    issues = []
+    if retired_path.exists():
+        issues.append(['retired_contract_still_present', str(retired_path)])
+    active_paths = [
+        '00_start_here/03_算法与结果表总览.md',
+        '03_data_contracts/README.md',
+        '03_data_contracts/external_data/README.md',
+        '03_data_contracts/external_data/外部数据采集模块_开发说明.md',
+        '03_data_contracts/external_data/dim_competitor_sku_竞品SKU基础表.md',
+        '03_data_contracts/external_data/fact_competitor_sku_daily_snapshot_竞品每日快照表.md',
+        '03_data_contracts/external_data/mart_external_candidate_price_input_外部候选价格交接输入表.md',
+        '04_algorithm_cards/developer_version/算法卡_07_竞品与全球外部趋势新品发现.md',
+        '04_algorithm_cards/business_readable/算法07_竞品与全球外部趋势新品发现_业务解读版.md',
+    ]
+    for name in active_paths:
+        p = repo_root / name
+        if not p.exists():
+            issues.append([name, 'missing_document'])
+            continue
+        text = p.read_text()
+        for token in [retired, 'raw_response_json', '久谦三表', '久谦三张', '原三张合同表', '久谦原始请求键']:
+            if token in text:
+                issues.append([name, 'retired_dependency', token])
+        for target in re.findall(r'\]\(([^)]+)\)', text):
+            if target.startswith(('https:', 'http:', '#', 'mailto:')):
+                continue
+            target = target.split('#')[0]
+            if target and not (p.parent / target).exists():
+                issues.append([name, 'broken_local_link', target])
+    entity_key = ['data_provider', 'competitor_platform', 'city_name', 'competitor_sku_id']
+    inputs = [
+        ('dim_competitor_sku_竞品SKU基础表.md', entity_key),
+        ('fact_competitor_sku_daily_snapshot_竞品每日快照表.md', ['collection_date'] + entity_key),
+    ]
+    for filename, expected_key in inputs:
+        text = (repo_root / '03_data_contracts/external_data' / filename).read_text()
+        match = re.search(r'主键建议：`([^`]+)`', text)
+        key = [v.strip() for v in match.group(1).split('+')] if match else []
+        if key != expected_key:
+            issues.append([filename, 'native_key_mismatch', key, expected_key])
+        for field in expected_key + ['collection_batch_id']:
+            if f'| `{field}` |' not in text:
+                issues.append([filename, 'missing_native_field', field])
+    if not (repo_root / '03_data_contracts/external_data/ods_external_source_raw_snapshot_公开外部源原始快照表.md').exists():
+        issues.append(['public_raw_snapshot_contract_missing'])
+    result = {'native_inputs_checked': len(inputs), 'dependency_documents_checked': len(active_paths), 'issues': issues}
+    (output_dir / 'algo07_jiuqian_input_validation.json').write_text(json.dumps(result, ensure_ascii=False, indent=2))
+    if issues:
+        raise AssertionError(json.dumps(issues, ensure_ascii=False))
+    return result
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[2])
@@ -301,6 +357,7 @@ def main():
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
     structure = check_documents(args.repo_root, args.output_dir)
+    native_inputs = check_jiuqian_inputs(args.repo_root, args.output_dir)
     boundary = check_boundaries(args.repo_root, args.output_dir)
     maths = check_mathematics(args.repo_root, args.output_dir)
     summary = {
@@ -308,6 +365,8 @@ def main():
         "files_checked": structure["files_checked"],
         "formal_table_definitions_checked": structure["formal_tables_checked"],
         "document_issue_count": len(structure["issues"]),
+        "jiuqian_native_inputs_checked": native_inputs["native_inputs_checked"],
+        "jiuqian_dependency_issue_count": len(native_inputs["issues"]),
         "synthetic_cases_passed": boundary["passed"],
         "beta_cases_passed": len(maths["beta_cases"]),
         "fdr_counterexample_passed": maths["fdr_test"]["selected_count"] == 3,
