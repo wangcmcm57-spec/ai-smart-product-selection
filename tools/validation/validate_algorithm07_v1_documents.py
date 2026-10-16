@@ -8,6 +8,7 @@ from pathlib import Path
 import argparse
 import json
 import tempfile
+from algorithm07_contract_checks import parse_field_contract, check_four_fix_contracts
 
 def check_documents(repo_root, output_dir):
     from pathlib import Path
@@ -62,15 +63,8 @@ def check_documents(repo_root, output_dir):
      for b in blocks:
       name=re.search(r'### 10\.\d+ `([^`]+)`|正式表名：`([^`]+)`',b)
       name=next((x for x in name.groups() if x),None) if name else p.stem
-      rows=[];active=False;good_header=False
-      for l in b.splitlines():
-       if not l.startswith('|'):active=False;continue
-       c=[x.strip() for x in l.strip('|').split('|')]
-       if c==header:active=True;good_header=True;continue
-       if active and len(c)==6 and re.fullmatch(r'`[a-z][a-z0-9_]*`',c[1]):rows.append(c)
-      if not good_header:issues.append([rel,0,'missing field contract',name])
-      fields={c[1].strip('`'):c for c in rows}
-      if len(fields)!=len(rows):issues.append([rel,0,'duplicate field',name])
+      fields,field_issues=parse_field_contract(b,name)
+      issues.extend([[rel]+issue for issue in field_issues])
       raw=name=='ods_external_source_raw_snapshot'
       if not raw and 'algorithm_batch_version' not in fields:issues.append([rel,0,'missing batch field',name])
       key=re.search(r'主键：`([^`]+)`',b)
@@ -356,6 +350,7 @@ def main():
     parser.add_argument("--output-dir", type=Path, default=Path(tempfile.gettempdir()) / "algorithm07-v1-validation")
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
+    four_fixes = check_four_fix_contracts(args.repo_root, args.output_dir)
     structure = check_documents(args.repo_root, args.output_dir)
     native_inputs = check_jiuqian_inputs(args.repo_root, args.output_dir)
     boundary = check_boundaries(args.repo_root, args.output_dir)
@@ -365,6 +360,8 @@ def main():
         "files_checked": structure["files_checked"],
         "formal_table_definitions_checked": structure["formal_tables_checked"],
         "document_issue_count": len(structure["issues"]),
+        "four_fix_contract_issue_count": len(four_fixes["issues"]),
+        "execution_contracts_checked": four_fixes["execution_contracts_checked"],
         "jiuqian_native_inputs_checked": native_inputs["native_inputs_checked"],
         "jiuqian_dependency_issue_count": len(native_inputs["issues"]),
         "synthetic_cases_passed": boundary["passed"],

@@ -80,6 +80,8 @@
 
 `data_provider`和`collection_batch_id`来自实际数据供给/导入任务；字段仍按本合同验收，缺失时不能伪造接口请求或采集批次。两表按`data_provider + competitor_platform + city_name + competitor_sku_id`关联，日快照另以`collection_date`区分；禁止只用批次号关联或省略提供方。两表批次号各自留存，不以批次相等替代实体关联。截止日有效性须有日期/供给规则依据，不能用后续更新的属性回填历史输入。
 
-算法07在`external_trend_run.input_assets_snapshot_json`登记实际读取列、完整业务键、读取范围、不可变`snapshot_reference`、内容`content_hash`和记录数，并保存可定位到冻结行的证据索引。`source_audit_json`保存实际供给批次、更新时间及可取得的供给依据；未知的上游API细节保持缺失，不猜补。输入行可定位且可冻结时，缺少供应商最初API原文不单独阻断07；行键冲突、无法定位或无法冻结时，只阻断依赖该输入的输出。
+算法07在`external_trend_run.input_assets_snapshot_json`登记实际读取列、完整业务键、读取范围、不可变`snapshot_reference`、内容`content_hash`和记录数，并保存可定位到冻结行的证据索引。`external_trend_run.input_assets_snapshot_json[*].source_audit_json`保存实际供给批次、更新时间及可取得的供给依据；未知的上游API细节保持缺失，不猜补。输入行可定位且可冻结时，缺少供应商最初API原文不单独阻断07；行键冲突、无法定位或无法冻结时，只阻断依赖该输入的输出。
 
 同批次重跑读取父运行冻结行，不读取当前可变维表重建历史。已有历史不可变输入包继续保留；原包不可取得时明确阻断该历史重跑，不以当前两表内容冒充原输入。公开外部源的原始响应快照合同独立保留。
+
+审计对象按07开发卡10.10.1的固定类型保存collection_batch_ids、upstream_run_ids、row_audit_reference、row_audit_hash及audit_missing_fields。逐行审计引用保存完整业务键和原始更新时间/时区依据，非空输入必须能一对一读回；collection_batch_id和data_update_time列入父资产audit_source_fields，不进入事实source_fields及content_hash。真实观测日期collection_date仍参与日快照业务键及事实哈希。重跑复用原事实与审计快照，不把当前更新时间改写为历史事实。
